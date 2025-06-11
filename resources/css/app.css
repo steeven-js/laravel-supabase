@@ -157,3 +157,105 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Styles personnalisés pour l'amélioration du tableau des clients */
+@layer components {
+    /* Animation pour la sélection des lignes */
+    .table-row-selected {
+        @apply bg-accent/50 transition-colors duration-200;
+    }
+
+    /* Amélioration du hover des boutons de tri */
+    .sort-button {
+        @apply transition-all duration-200 hover:bg-accent/50 hover:text-accent-foreground;
+    }
+
+    /* Style pour la pagination interactive */
+    .pagination-button {
+        @apply transition-all duration-200 hover:scale-105 hover:shadow-sm;
+    }
+
+    /* Amélioration du focus des éléments interactifs */
+    .focus-ring {
+        @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    }
+
+    /* Style pour les filtres actifs */
+    .filter-active {
+        @apply ring-2 ring-primary/20 bg-primary/5;
+    }
+
+    /* Animation pour le chargement */
+    .loading-shimmer {
+        background: linear-gradient(90deg,
+            transparent,
+            var(--color-muted),
+            transparent
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Amélioration des badges avec le thème */
+    .status-badge-active {
+        @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+    }
+
+    .status-badge-inactive {
+        @apply bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400;
+    }
+
+    /* Style pour la recherche avec animation */
+    .search-input-focused {
+        @apply ring-2 ring-primary/20 border-primary/50 shadow-sm;
+    }
+
+    /* Amélioration de la responsivité du tableau */
+    .table-responsive {
+        @apply overflow-x-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-background;
+    }
+
+    /* Style pour les actions du tableau */
+    .table-actions {
+        @apply opacity-0 group-hover:opacity-100 transition-opacity duration-200;
+    }
+}
+
+/* Styles utilitaires pour la scrollbar personnalisée */
+@layer utilities {
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+
+    .scrollbar-thumb-border {
+        scrollbar-color: var(--color-border) transparent;
+    }
+
+    .scrollbar-track-background {
+        scrollbar-color: var(--color-border) var(--color-background);
+    }
+
+    /* Pour WebKit (Chrome, Safari) */
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: var(--color-background);
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: var(--color-border);
+        border-radius: 3px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: var(--color-muted-foreground);
+    }
+}
