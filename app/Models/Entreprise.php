@@ -23,8 +23,6 @@ class Entreprise extends Model
         'telephone',
         'email',
         'site_web',
-        'nombre_employes',
-        'chiffre_affaires',
         'active',
         'notes',
     ];
@@ -34,8 +32,6 @@ class Entreprise extends Model
      */
     protected $casts = [
         'active' => 'boolean',
-        'chiffre_affaires' => 'decimal:2',
-        'nombre_employes' => 'integer',
     ];
 
     /**

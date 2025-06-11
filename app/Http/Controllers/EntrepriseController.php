@@ -52,8 +52,6 @@ class EntrepriseController extends Controller
                 'telephone' => 'nullable|string|max:255',
                 'email' => 'nullable|email|max:255',
                 'site_web' => 'nullable|url|max:255',
-                'nombre_employes' => 'nullable|integer|min:0',
-                'chiffre_affaires' => 'nullable|numeric|min:0',
                 'notes' => 'nullable|string',
             ]);
 
@@ -115,8 +113,6 @@ class EntrepriseController extends Controller
                 'telephone' => 'nullable|string|max:255',
                 'email' => 'nullable|email|max:255',
                 'site_web' => 'nullable|url|max:255',
-                'nombre_employes' => 'nullable|integer|min:0',
-                'chiffre_affaires' => 'nullable|numeric|min:0',
                 'active' => 'boolean',
                 'notes' => 'nullable|string',
             ]);

@@ -42,8 +42,7 @@ class EntrepriseSeeder extends Seeder
                 'email' => $faker->unique()->companyEmail,
                 'site_web' => $faker->url,
                 'secteur_activite' => $type['secteur'],
-                'nombre_employes' => $faker->numberBetween(1, 50),
-                'chiffre_affaires' => $faker->randomFloat(2, 100000, 2000000),
+
                 'active' => true,
                 'notes' => $faker->optional(0.3)->sentence(),
             ]);
@@ -73,8 +72,7 @@ class EntrepriseSeeder extends Seeder
                 'email' => $faker->unique()->companyEmail,
                 'site_web' => $faker->optional(0.8)->url,
                 'secteur_activite' => $secteur,
-                'nombre_employes' => $faker->numberBetween(1, 200),
-                'chiffre_affaires' => $faker->randomFloat(2, 50000, 5000000),
+
                 'active' => $faker->boolean(95), // 95% d'entreprises actives
                 'notes' => $faker->optional(0.2)->sentence(),
             ]);
