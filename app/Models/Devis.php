@@ -52,6 +52,14 @@ class Devis extends Model
     }
 
     /**
+     * Relation avec la facture générée à partir de ce devis.
+     */
+    public function facture()
+    {
+        return $this->hasOne(Facture::class);
+    }
+
+    /**
      * Scope pour les devis non archivés.
      */
     public function scopeActifs($query)
@@ -165,5 +173,35 @@ class Devis extends Model
             'expire' => 'Expiré',
             default => ucfirst($this->statut)
         };
+    }
+
+    /**
+     * Vérifier si le devis peut être transformé en facture.
+     */
+    public function peutEtreTransformeEnFacture(): bool
+    {
+        return $this->statut === 'accepte' && !$this->facture()->exists();
+    }
+
+    /**
+     * Transformer le devis en facture.
+     */
+    public function transformerEnFacture(array $parametres = []): Facture
+    {
+        if (!$this->peutEtreTransformeEnFacture()) {
+            throw new \Exception('Ce devis ne peut pas être transformé en facture.');
+        }
+
+        // Créer la facture à partir du devis
+        $facture = Facture::creerDepuisDevis($this);
+
+        // Appliquer les paramètres personnalisés si fournis
+        if (!empty($parametres)) {
+            $facture->fill($parametres);
+            $facture->calculerMontants();
+            $facture->save();
+        }
+
+        return $facture;
     }
 }

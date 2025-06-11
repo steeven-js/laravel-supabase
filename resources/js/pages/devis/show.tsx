@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Edit, FileText, CheckCircle, XCircle, Clock, AlertCircle, Calendar, Euro, User, Building2 } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, CheckCircle, XCircle, Clock, AlertCircle, Calendar, Euro, User, Building2, Receipt } from 'lucide-react';
 
 interface Devis {
     id: number;
@@ -17,6 +17,11 @@ interface Devis {
     taux_tva: number;
     montant_ttc: number;
     notes?: string;
+    peut_etre_transforme_en_facture?: boolean;
+    facture?: {
+        id: number;
+        numero_facture: string;
+    };
     client: {
         id: number;
         nom: string;
@@ -150,14 +155,37 @@ export default function DevisShow({ devis }: Props) {
                             <p className="text-muted-foreground">
                                 {devis.objet}
                             </p>
+                            {devis.facture && (
+                                <p className="text-sm text-green-600 font-medium">
+                                    Transformé en facture : {devis.facture.numero_facture}
+                                </p>
+                            )}
                         </div>
                     </div>
-                    <Button asChild>
-                        <Link href={`/devis/${devis.id}/edit`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Modifier
-                        </Link>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {devis.facture ? (
+                            <Button variant="outline" asChild>
+                                <Link href={`/factures/${devis.facture.id}`}>
+                                    <Receipt className="mr-2 h-4 w-4" />
+                                    Voir la facture
+                                </Link>
+                            </Button>
+                        ) : devis.statut === 'accepte' && (devis.peut_etre_transforme_en_facture ?? true) ? (
+                            <Button variant="default" asChild className="bg-green-600 hover:bg-green-700">
+                                <Link href={`/devis/${devis.id}/transformer-facture`}>
+                                    <Receipt className="mr-2 h-4 w-4" />
+                                    Transformer en facture
+                                </Link>
+                            </Button>
+                        ) : null}
+
+                        <Button variant="outline" asChild>
+                            <Link href={`/devis/${devis.id}/edit`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Modifier
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\DevisController;
+use App\Http\Controllers\FactureController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +29,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Actions spéciales pour les devis
     Route::patch('devis/{devis}/accepter', [DevisController::class, 'accepter'])->name('devis.accepter');
     Route::patch('devis/{devis}/refuser', [DevisController::class, 'refuser'])->name('devis.refuser');
+
+    // Transformation devis en facture
+    Route::get('devis/{devis}/transformer-facture', [DevisController::class, 'transformerEnFacture'])->name('devis.transformer-facture');
+    Route::post('devis/{devis}/confirmer-transformation', [DevisController::class, 'confirmerTransformationFacture'])->name('devis.confirmer-transformation');
+
+    // Routes pour les factures
+    Route::resource('factures', FactureController::class)->parameters(['factures' => 'facture']);
+
+    // Actions spéciales pour les factures
+    Route::patch('factures/{facture}/marquer-payee', [FactureController::class, 'marquerPayee'])->name('factures.marquer-payee');
+    Route::patch('factures/{facture}/envoyer', [FactureController::class, 'envoyer'])->name('factures.envoyer');
 });
+
+// Routes de développement (seulement en mode local)
+if (app()->environment('local')) {
+    Route::middleware(['auth', 'verified'])->prefix('dev')->name('dev.')->group(function () {
+        Route::post('reset-keep-user', [App\Http\Controllers\DevDataController::class, 'resetKeepUser'])->name('reset-keep-user');
+        Route::post('reset-all', [App\Http\Controllers\DevDataController::class, 'resetAll'])->name('reset-all');
+        Route::post('generate-more', [App\Http\Controllers\DevDataController::class, 'generateMore'])->name('generate-more');
+        Route::get('stats', [App\Http\Controllers\DevDataController::class, 'stats'])->name('stats');
+    });
+}
 
 // Inclusion des autres fichiers de routes
 require __DIR__.'/settings.php';

@@ -49,6 +49,14 @@ class Client extends Model
     }
 
     /**
+     * Relation avec les factures.
+     */
+    public function factures(): HasMany
+    {
+        return $this->hasMany(Facture::class);
+    }
+
+    /**
      * Retourne le nom complet du client.
      */
     public function getNomCompletAttribute(): string
