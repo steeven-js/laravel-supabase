@@ -16,7 +16,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Récupérer les statistiques
+        // Récupérer les statistiques générales (pour fallback et données globales)
         $stats = [
             'clients' => Client::where('actif', true)->count(),
             'entreprises' => Entreprise::where('active', true)->count(),
@@ -39,8 +39,19 @@ class DashboardController extends Controller
             ]
         ];
 
+        // Récupérer les données détaillées pour le filtrage temporel
+        $devis_data = Devis::where('archive', false)
+            ->select('id', 'statut', 'created_at')
+            ->get();
+
+        $factures_data = Facture::where('archive', false)
+            ->select('id', 'statut', 'montant_ttc', 'created_at')
+            ->get();
+
         return Inertia::render('dashboard', [
             'stats' => $stats,
+            'devis_data' => $devis_data,
+            'factures_data' => $factures_data,
             'isLocal' => App::environment('local')
         ]);
     }

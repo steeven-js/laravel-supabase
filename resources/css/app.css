@@ -217,45 +217,11 @@
 
     /* Amélioration de la responsivité du tableau */
     .table-responsive {
-        @apply overflow-x-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-background;
+        @apply overflow-x-auto;
     }
 
     /* Style pour les actions du tableau */
     .table-actions {
         @apply opacity-0 group-hover:opacity-100 transition-opacity duration-200;
-    }
-}
-
-/* Styles utilitaires pour la scrollbar personnalisée */
-@layer utilities {
-    .scrollbar-thin {
-        scrollbar-width: thin;
-    }
-
-    .scrollbar-thumb-border {
-        scrollbar-color: var(--color-border) transparent;
-    }
-
-    .scrollbar-track-background {
-        scrollbar-color: var(--color-border) var(--color-background);
-    }
-
-    /* Pour WebKit (Chrome, Safari) */
-    .scrollbar-thin::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .scrollbar-thin::-webkit-scrollbar-track {
-        background: var(--color-background);
-    }
-
-    .scrollbar-thin::-webkit-scrollbar-thumb {
-        background: var(--color-border);
-        border-radius: 3px;
-    }
-
-    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-        background: var(--color-muted-foreground);
     }
 }
