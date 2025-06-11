@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Edit, FileText, CheckCircle, XCircle, Clock, AlertCircle, Calendar, Euro, User, Building2, Receipt, Mail, MailCheck, MailX } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, CheckCircle, XCircle, Clock, AlertCircle, Calendar, Euro, User, Building2, Receipt, Mail, MailCheck, MailX, Download, Eye } from 'lucide-react';
 
 interface Devis {
     id: number;
@@ -240,6 +240,21 @@ export default function DevisShow({ devis }: Props) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        {/* Bouton PDF */}
+                        <Button variant="outline" asChild>
+                            <Link href={`/devis/${devis.id}/pdf`} target="_blank">
+                                <Eye className="mr-2 h-4 w-4" />
+                                Voir PDF
+                            </Link>
+                        </Button>
+
+                        <Button variant="outline" asChild>
+                            <Link href={`/devis/${devis.id}/telecharger-pdf`}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Télécharger PDF
+                            </Link>
+                        </Button>
+
                         {devis.peut_etre_envoye && (
                             <Button variant="default" className="bg-blue-600 hover:bg-blue-700" asChild>
                                 <Link href={`/devis/${devis.id}/envoyer-email`}>

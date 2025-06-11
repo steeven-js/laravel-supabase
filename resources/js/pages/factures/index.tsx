@@ -309,8 +309,15 @@ export default function FacturesIndex({ factures }: Props) {
                                                                     </Link>
                                                                 </Button>
                                                             )}
-                                                            <Button variant="ghost" size="sm">
-                                                                <Download className="h-4 w-4" />
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <a href={`/factures/${facture.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                                                                    <FileText className="h-4 w-4" />
+                                                                </a>
+                                                            </Button>
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <a href={`/factures/${facture.id}/telecharger-pdf`}>
+                                                                    <Download className="h-4 w-4" />
+                                                                </a>
                                                             </Button>
                                                         </div>
                                                     </td>

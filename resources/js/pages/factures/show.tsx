@@ -150,9 +150,18 @@ export default function FactureShow({ facture }: Props) {
                             </Button>
                         )}
 
-                        <Button variant="outline">
-                            <Download className="mr-2 h-4 w-4" />
-                            Télécharger PDF
+                        <Button variant="outline" asChild>
+                            <a href={`/factures/${facture.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Voir PDF
+                            </a>
+                        </Button>
+
+                        <Button variant="outline" asChild>
+                            <a href={`/factures/${facture.id}/telecharger-pdf`}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Télécharger PDF
+                            </a>
                         </Button>
                     </div>
                 </div>

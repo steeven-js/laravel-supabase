@@ -37,6 +37,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('devis/{devis}/transformer-facture', [DevisController::class, 'transformerEnFacture'])->name('devis.transformer-facture');
     Route::post('devis/{devis}/confirmer-transformation', [DevisController::class, 'confirmerTransformationFacture'])->name('devis.confirmer-transformation');
 
+    // PDF devis
+    Route::get('devis/{devis}/pdf', [DevisController::class, 'voirPdf'])->name('devis.pdf');
+    Route::get('devis/{devis}/telecharger-pdf', [DevisController::class, 'telechargerPdf'])->name('devis.telecharger-pdf');
+    Route::post('devis/{devis}/regenerer-pdf', [DevisController::class, 'regenererPdf'])->name('devis.regenerer-pdf');
+
     // Routes pour les factures
     Route::resource('factures', FactureController::class)->parameters(['factures' => 'facture']);
 
@@ -44,6 +49,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('factures/{facture}/marquer-payee', [FactureController::class, 'marquerPayee'])->name('factures.marquer-payee');
     Route::post('factures/{facture}/envoyer-email', [FactureController::class, 'envoyerEmail'])->name('factures.envoyer-email');
     Route::patch('factures/{facture}/envoyer', [FactureController::class, 'envoyer'])->name('factures.envoyer');
+
+    // PDF factures
+    Route::get('factures/{facture}/pdf', [FactureController::class, 'voirPdf'])->name('factures.pdf');
+    Route::get('factures/{facture}/telecharger-pdf', [FactureController::class, 'telechargerPdf'])->name('factures.telecharger-pdf');
+    Route::post('factures/{facture}/regenerer-pdf', [FactureController::class, 'regenererPdf'])->name('factures.regenerer-pdf');
 
     // Routes temporaires pour les tests (supprimer après validation)
     if (config('app.env') === 'local') {

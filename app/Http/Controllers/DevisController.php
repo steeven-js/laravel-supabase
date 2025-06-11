@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Devis;
 use App\Models\Facture;
+use App\Services\DevisPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -14,6 +15,12 @@ use Exception;
 
 class DevisController extends Controller
 {
+    protected $devisPdfService;
+
+    public function __construct(DevisPdfService $devisPdfService)
+    {
+        $this->devisPdfService = $devisPdfService;
+    }
     /**
      * Affiche la liste des devis
      */
@@ -92,6 +99,23 @@ class DevisController extends Controller
             $devis->statut_envoi = 'non_envoye'; // Statut par défaut
             $devis->calculerMontants();
             $devis->save();
+
+            // Générer et sauvegarder le PDF
+            try {
+                $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichierPdf;
+                $devis->save();
+
+                Log::info('PDF généré lors de la création du devis', [
+                    'devis_id' => $devis->id,
+                    'fichier_pdf' => $nomFichierPdf
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur génération PDF lors création devis', [
+                    'devis_id' => $devis->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return redirect()->route('devis.show', $devis)
                 ->with('success', '✅ Devis ' . $devis->numero_devis . ' créé avec succès !');
@@ -237,6 +261,23 @@ class DevisController extends Controller
             $devis->calculerMontants();
             $devis->save();
 
+            // Mettre à jour le PDF après modification
+            try {
+                $nomFichierPdf = $this->devisPdfService->mettreAJour($devis);
+                $devis->pdf_file = $nomFichierPdf;
+                $devis->save();
+
+                Log::info('PDF mis à jour lors de la modification du devis', [
+                    'devis_id' => $devis->id,
+                    'fichier_pdf' => $nomFichierPdf
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur mise à jour PDF lors modification devis', [
+                    'devis_id' => $devis->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             return redirect()->route('devis.index')
                 ->with('success', '🎉 Devis ' . $devis->numero_devis . ' mis à jour avec succès !');
 
@@ -259,6 +300,21 @@ class DevisController extends Controller
     {
         try {
             $numero_devis = $devis->numero_devis;
+
+            // Supprimer le PDF avant de supprimer le devis
+            try {
+                $this->devisPdfService->supprimer($devis);
+                Log::info('PDF supprimé lors de la suppression du devis', [
+                    'devis_id' => $devis->id,
+                    'numero_devis' => $numero_devis
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur suppression PDF lors suppression devis', [
+                    'devis_id' => $devis->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             $devis->delete();
 
             return redirect()->route('devis.index')
@@ -384,7 +440,7 @@ class DevisController extends Controller
                 'client_prenom' => $devis->client->prenom,
             ]);
 
-            // Envoyer email au client
+            // Envoyer email au client avec PDF en pièce jointe
             $this->envoyerEmailClientDevis($devis, $validated['message_client'] ?? null);
 
             // Mettre à jour le statut
@@ -733,6 +789,108 @@ class DevisController extends Controller
                 'error' => $e->getMessage()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Affiche le PDF du devis dans le navigateur
+     */
+    public function voirPdf(Devis $devis)
+    {
+        try {
+            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                // Générer le PDF s'il n'existe pas
+                $nomFichier = $this->devisPdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichier;
+                $devis->save();
+
+                $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+            }
+
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                return response()->file($cheminPdf, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="Devis_' . $devis->numero_devis . '.pdf"'
+                ]);
+            }
+
+            return redirect()->back()
+                ->with('error', '❌ PDF non trouvé pour ce devis.');
+
+        } catch (Exception $e) {
+            Log::error('Erreur affichage PDF devis', [
+                'devis_numero' => $devis->numero_devis,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de l\'affichage du PDF.');
+        }
+    }
+
+    /**
+     * Télécharge le PDF du devis
+     */
+    public function telechargerPdf(Devis $devis)
+    {
+        try {
+            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                // Générer le PDF s'il n'existe pas
+                $nomFichier = $this->devisPdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichier;
+                $devis->save();
+
+                $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+            }
+
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                return response()->download($cheminPdf, "Devis_{$devis->numero_devis}.pdf");
+            }
+
+            return redirect()->back()
+                ->with('error', '❌ PDF non trouvé pour ce devis.');
+
+        } catch (Exception $e) {
+            Log::error('Erreur téléchargement PDF devis', [
+                'devis_numero' => $devis->numero_devis,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors du téléchargement du PDF.');
+        }
+    }
+
+    /**
+     * Régénère le PDF du devis
+     */
+    public function regenererPdf(Devis $devis)
+    {
+        try {
+            $nomFichier = $this->devisPdfService->mettreAJour($devis);
+            $devis->pdf_file = $nomFichier;
+            $devis->save();
+
+            Log::info('PDF régénéré manuellement', [
+                'devis_numero' => $devis->numero_devis,
+                'fichier' => $nomFichier
+            ]);
+
+            return redirect()->back()
+                ->with('success', '✅ PDF du devis ' . $devis->numero_devis . ' régénéré avec succès !');
+
+        } catch (Exception $e) {
+            Log::error('Erreur régénération PDF devis', [
+                'devis_numero' => $devis->numero_devis,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de la régénération du PDF.');
         }
     }
 }

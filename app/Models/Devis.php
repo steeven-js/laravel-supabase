@@ -18,6 +18,7 @@ class Devis extends Model
         'date_validite',
         'statut',
         'statut_envoi',
+        'pdf_file',
         'objet',
         'description',
         'montant_ht',

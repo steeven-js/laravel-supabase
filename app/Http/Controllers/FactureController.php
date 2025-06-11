@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Facture;
+use App\Services\FacturePdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -13,6 +14,12 @@ use Exception;
 
 class FactureController extends Controller
 {
+    protected $facturePdfService;
+
+    public function __construct(FacturePdfService $facturePdfService)
+    {
+        $this->facturePdfService = $facturePdfService;
+    }
     /**
      * Affiche la liste des factures
      */
@@ -64,6 +71,23 @@ class FactureController extends Controller
             $facture->statut_envoi = 'non_envoyee'; // Statut par défaut
             $facture->calculerMontants();
             $facture->save();
+
+            // Générer et sauvegarder le PDF
+            try {
+                $nomFichierPdf = $this->facturePdfService->genererEtSauvegarder($facture);
+                $facture->pdf_file = $nomFichierPdf;
+                $facture->save();
+
+                Log::info('PDF généré lors de la création de la facture', [
+                    'facture_id' => $facture->id,
+                    'fichier_pdf' => $nomFichierPdf
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur génération PDF lors création facture', [
+                    'facture_id' => $facture->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return redirect()->route('factures.index')
                 ->with('success', '✅ Facture ' . $facture->numero_facture . ' créée avec succès !');
@@ -209,6 +233,23 @@ class FactureController extends Controller
             $facture->calculerMontants();
             $facture->save();
 
+            // Mettre à jour le PDF après modification
+            try {
+                $nomFichierPdf = $this->facturePdfService->mettreAJour($facture);
+                $facture->pdf_file = $nomFichierPdf;
+                $facture->save();
+
+                Log::info('PDF mis à jour lors de la modification de la facture', [
+                    'facture_id' => $facture->id,
+                    'fichier_pdf' => $nomFichierPdf
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur mise à jour PDF lors modification facture', [
+                    'facture_id' => $facture->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             return redirect()->route('factures.index')
                 ->with('success', '🎉 Facture ' . $facture->numero_facture . ' mise à jour avec succès !');
 
@@ -231,6 +272,21 @@ class FactureController extends Controller
     {
         try {
             $numero_facture = $facture->numero_facture;
+
+            // Supprimer le PDF avant de supprimer la facture
+            try {
+                $this->facturePdfService->supprimer($facture);
+                Log::info('PDF supprimé lors de la suppression de la facture', [
+                    'facture_id' => $facture->id,
+                    'numero_facture' => $numero_facture
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur suppression PDF lors suppression facture', [
+                    'facture_id' => $facture->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             $facture->delete();
 
             return redirect()->route('factures.index')
@@ -408,6 +464,108 @@ class FactureController extends Controller
                 'error' => $e->getMessage()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Affiche le PDF de la facture dans le navigateur
+     */
+    public function voirPdf(Facture $facture)
+    {
+        try {
+            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                // Générer le PDF s'il n'existe pas
+                $nomFichier = $this->facturePdfService->genererEtSauvegarder($facture);
+                $facture->pdf_file = $nomFichier;
+                $facture->save();
+
+                $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+            }
+
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                return response()->file($cheminPdf, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="Facture_' . $facture->numero_facture . '.pdf"'
+                ]);
+            }
+
+            return redirect()->back()
+                ->with('error', '❌ PDF non trouvé pour cette facture.');
+
+        } catch (Exception $e) {
+            Log::error('Erreur affichage PDF facture', [
+                'facture_numero' => $facture->numero_facture,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de l\'affichage du PDF.');
+        }
+    }
+
+    /**
+     * Télécharge le PDF de la facture
+     */
+    public function telechargerPdf(Facture $facture)
+    {
+        try {
+            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                // Générer le PDF s'il n'existe pas
+                $nomFichier = $this->facturePdfService->genererEtSauvegarder($facture);
+                $facture->pdf_file = $nomFichier;
+                $facture->save();
+
+                $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+            }
+
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                return response()->download($cheminPdf, "Facture_{$facture->numero_facture}.pdf");
+            }
+
+            return redirect()->back()
+                ->with('error', '❌ PDF non trouvé pour cette facture.');
+
+        } catch (Exception $e) {
+            Log::error('Erreur téléchargement PDF facture', [
+                'facture_numero' => $facture->numero_facture,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors du téléchargement du PDF.');
+        }
+    }
+
+    /**
+     * Régénère le PDF de la facture
+     */
+    public function regenererPdf(Facture $facture)
+    {
+        try {
+            $nomFichier = $this->facturePdfService->mettreAJour($facture);
+            $facture->pdf_file = $nomFichier;
+            $facture->save();
+
+            Log::info('PDF régénéré manuellement', [
+                'facture_numero' => $facture->numero_facture,
+                'fichier' => $nomFichier
+            ]);
+
+            return redirect()->back()
+                ->with('success', '✅ PDF de la facture ' . $facture->numero_facture . ' régénéré avec succès !');
+
+        } catch (Exception $e) {
+            Log::error('Erreur régénération PDF facture', [
+                'facture_numero' => $facture->numero_facture,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de la régénération du PDF.');
         }
     }
 }

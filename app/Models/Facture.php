@@ -33,6 +33,7 @@ class Facture extends Model
         'archive',
         'date_envoi_client',
         'date_envoi_admin',
+        'pdf_file',
     ];
 
     /**

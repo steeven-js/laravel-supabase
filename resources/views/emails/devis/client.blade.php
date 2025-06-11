@@ -45,13 +45,25 @@ Nous avons le plaisir de vous faire parvenir votre devis pour le projet : **{{ $
 
 Ce devis est valable jusqu'au **{{ \Carbon\Carbon::parse($devis->date_validite)->format('d/m/Y') }}**.
 
-Le devis est disponible en pièce jointe de cet email.
+## 📄 Accès au document PDF
+
+Le devis est disponible :
+- **En pièce jointe** de cet email au format PDF
+@if($urlPdfSupabase)
+- **En ligne** : [Télécharger le PDF]({{ $urlPdfSupabase }})
+@endif
 
 Pour accepter ce devis ou pour toute question, n'hésitez pas à nous contacter.
 
 <x-mail::button :url="route('devis.show', $devis->id)">
-Voir le devis
+Voir le devis en ligne
 </x-mail::button>
+
+@if($urlPdfSupabase)
+<x-mail::button :url="$urlPdfSupabase">
+Télécharger le PDF
+</x-mail::button>
+@endif
 
 Cordialement,<br>
 {{ config('app.name') }}
