@@ -78,7 +78,7 @@ class DevisSeeder extends Seeder
             $dateValidite = (clone $dateDevis)->modify('+30 days');
 
             // Déterminer le statut en fonction de la date
-            $statut = $this->determinerStatut($faker, $dateDevis, $dateValidite);
+            $statut = $this->determinerStatut($faker, $dateValidite);
 
             // Calculer les montants
             $montantHT = $faker->randomFloat(2, $prestation['montant_base'][0], $prestation['montant_base'][1]);
@@ -86,11 +86,13 @@ class DevisSeeder extends Seeder
             $montantTVA = ($montantHT * $tauxTVA) / 100;
             $montantTTC = $montantHT + $montantTVA;
 
-            // Déterminer le statut d'envoi
+            // Déterminer le statut d'envoi de façon logique
             $statutEnvoi = match($statut) {
-                'brouillon' => 'non_envoye',
-                'envoye', 'accepte', 'refuse' => $faker->randomElement(['envoye', 'non_envoye']),
-                'expire' => $faker->randomElement(['envoye', 'non_envoye', 'echec_envoi']),
+                'brouillon' => 'non_envoye', // Les brouillons ne sont jamais envoyés
+                'accepte' => 'envoye', // Les devis acceptés ont forcément été envoyés
+                'envoye' => $faker->randomElement(['envoye', 'non_envoye']), // Les envoyés peuvent avoir différents statuts d'envoi
+                'refuse' => $faker->randomElement(['envoye', 'echec_envoi']), // Les refusés ont été envoyés ou ont échoué
+                'expire' => $faker->randomElement(['envoye', 'non_envoye', 'echec_envoi']), // Les expirés peuvent avoir tous les statuts
                 default => 'non_envoye'
             };
 
@@ -126,21 +128,25 @@ class DevisSeeder extends Seeder
     /**
      * Détermine le statut du devis en fonction des dates
      */
-    private function determinerStatut($faker, $dateDevis, $dateValidite): string
+    private function determinerStatut($faker, $dateValidite): string
     {
         $now = Carbon::now();
 
         // Si la date de validité est passée, le devis est expiré (sauf s'il a été accepté)
         if ($dateValidite < $now) {
-            return $faker->randomElement(['expire', 'accepte', 'refuse']);
+            return $faker->randomElement([
+                'expire', 'expire', // Plus d'expirés
+                'accepte', // Peu d'acceptés même pour les anciens
+                'refuse', 'refuse' // Quelques refusés
+            ]);
         }
 
-        // Pour les devis récents, distribution normale
+        // Pour les devis récents, distribution plus réaliste
         return $faker->randomElement([
-            'brouillon', 'brouillon', // Plus de brouillons
-            'envoye', 'envoye', 'envoye', // Beaucoup d'envoyés
-            'accepte', 'accepte', // Quelques acceptés
-            'refuse' // Peu de refusés
+            'brouillon', 'brouillon', 'brouillon', // Beaucoup de brouillons
+            'envoye', 'envoye', 'envoye', 'envoye', // Beaucoup d'envoyés
+            'accepte', // Très peu d'acceptés
+            'refuse', 'refuse' // Quelques refusés
         ]);
     }
 

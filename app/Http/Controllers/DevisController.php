@@ -94,15 +94,17 @@ class DevisController extends Controller
             $devis->save();
 
             return redirect()->route('devis.show', $devis)
-                ->with('success', 'Devis créé avec succès.');
+                ->with('success', '✅ Devis ' . $devis->numero_devis . ' créé avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la création du devis.');
         }
     }
 
@@ -236,15 +238,17 @@ class DevisController extends Controller
             $devis->save();
 
             return redirect()->route('devis.index')
-                ->with('success', 'Devis mis à jour avec succès.');
+                ->with('success', '🎉 Devis ' . $devis->numero_devis . ' mis à jour avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la mise à jour du devis.');
         }
     }
 
@@ -258,10 +262,11 @@ class DevisController extends Controller
             $devis->delete();
 
             return redirect()->route('devis.index')
-                ->with('success', 'Devis supprimé avec succès.');
+                ->with('warning', '⚠️ Devis ' . $numero_devis . ' supprimé avec succès.');
 
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Impossible de supprimer le devis. Il pourrait être lié à d\'autres données.');
         }
     }
 
@@ -274,10 +279,11 @@ class DevisController extends Controller
             $devis->accepter();
 
             return redirect()->back()
-                ->with('success', 'Devis accepté avec succès.');
+                ->with('success', '✅ Devis ' . $devis->numero_devis . ' accepté avec succès !');
 
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Une erreur est survenue lors de l\'acceptation du devis.');
         }
     }
 
@@ -290,10 +296,11 @@ class DevisController extends Controller
             $devis->refuser();
 
             return redirect()->back()
-                ->with('success', 'Devis refusé.');
+                ->with('success', '⛔ Devis ' . $devis->numero_devis . ' refusé.');
 
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Une erreur est survenue lors du refus du devis.');
         }
     }
 
@@ -304,7 +311,7 @@ class DevisController extends Controller
     {
         if (!$devis->peutEtreEnvoye()) {
             return redirect()->back()
-                ->with('error', 'Ce devis ne peut pas être envoyé.');
+                ->with('error', '❌ Ce devis ne peut pas être envoyé.');
         }
 
         $devis->load(['client.entreprise']);
@@ -353,7 +360,7 @@ class DevisController extends Controller
                 'statut_envoi' => $devis->statut_envoi,
             ]);
             return redirect()->back()
-                ->with('error', 'Ce devis ne peut pas être envoyé.');
+                ->with('error', '❌ Ce devis ne peut pas être envoyé.');
         }
 
         $validated = $request->validate([
@@ -414,7 +421,7 @@ class DevisController extends Controller
             ]);
 
             return redirect()->route('devis.index')
-                ->with('success', 'Devis envoyé avec succès au client.');
+                ->with('success', '📧 Devis ' . $devis->numero_devis . ' envoyé avec succès au client !');
         } catch (\Exception $e) {
             $devis->marquerEchecEnvoi();
 
@@ -427,7 +434,7 @@ class DevisController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Erreur lors de l\'envoi du devis : ' . $e->getMessage());
+                ->with('error', '❌ Erreur lors de l\'envoi du devis : ' . $e->getMessage());
         }
     }
 
@@ -439,7 +446,7 @@ class DevisController extends Controller
         // Vérifier que le devis peut être transformé
         if (!$devis->peutEtreTransformeEnFacture()) {
             return redirect()->back()
-                ->with('error', 'Ce devis ne peut pas être transformé en facture.');
+                ->with('error', '❌ Ce devis ne peut pas être transformé en facture.');
         }
 
         $devis->load(['client.entreprise']);
@@ -480,7 +487,7 @@ class DevisController extends Controller
         // Vérifier que le devis peut être transformé
         if (!$devis->peutEtreTransformeEnFacture()) {
             return redirect()->back()
-                ->with('error', 'Ce devis ne peut pas être transformé en facture.');
+                ->with('error', '❌ Ce devis ne peut pas être transformé en facture.');
         }
 
         $validated = $request->validate([
@@ -537,7 +544,7 @@ class DevisController extends Controller
                 }
             }
 
-            $message = 'Devis transformé en facture avec succès. Facture n°' . $facture->numero_facture . ' créée.';
+            $message = '🧾 Devis ' . $devis->numero_devis . ' transformé en facture avec succès ! Facture n°' . $facture->numero_facture . ' créée.';
 
             if (!empty($erreursMails)) {
                 $message .= ' Cependant, des erreurs sont survenues lors de l\'envoi des emails : ' . implode(', ', $erreursMails);
@@ -549,7 +556,7 @@ class DevisController extends Controller
                 ->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Erreur lors de la transformation : ' . $e->getMessage());
+                ->with('error', '❌ Erreur lors de la transformation : ' . $e->getMessage());
         }
     }
 

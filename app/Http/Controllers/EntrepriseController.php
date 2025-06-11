@@ -60,15 +60,17 @@ class EntrepriseController extends Controller
             $entreprise = Entreprise::create($validated);
 
             return redirect()->route('entreprises.index')
-                ->with('success', 'Entreprise créée avec succès.');
+                ->with('success', '✅ Entreprise ' . ($entreprise->nom_commercial ?: $entreprise->nom) . ' créée avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la création de l\'entreprise.');
         }
     }
 
@@ -122,15 +124,17 @@ class EntrepriseController extends Controller
             $entreprise->update($validated);
 
             return redirect()->route('entreprises.index')
-                ->with('success', 'Entreprise mise à jour avec succès.');
+                ->with('success', '🎉 Entreprise ' . ($entreprise->nom_commercial ?: $entreprise->nom) . ' mise à jour avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la mise à jour de l\'entreprise.');
         }
     }
 
@@ -140,14 +144,15 @@ class EntrepriseController extends Controller
     public function destroy(Entreprise $entreprise)
     {
         try {
-            $nom_entreprise = $entreprise->nom;
+            $nom_entreprise = $entreprise->nom_commercial ?: $entreprise->nom;
             $entreprise->delete();
 
             return redirect()->route('entreprises.index')
-                ->with('success', 'Entreprise supprimée avec succès.');
+                ->with('warning', '⚠️ Entreprise ' . $nom_entreprise . ' supprimée avec succès.');
 
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Impossible de supprimer l\'entreprise. Elle pourrait être liée à d\'autres données.');
         }
     }
 }

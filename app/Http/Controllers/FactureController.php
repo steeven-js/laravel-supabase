@@ -66,15 +66,17 @@ class FactureController extends Controller
             $facture->save();
 
             return redirect()->route('factures.index')
-                ->with('success', 'Facture créée avec succès.');
+                ->with('success', '✅ Facture ' . $facture->numero_facture . ' créée avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la création de la facture.');
         }
     }
 
@@ -208,15 +210,17 @@ class FactureController extends Controller
             $facture->save();
 
             return redirect()->route('factures.index')
-                ->with('success', 'Facture mise à jour avec succès.');
+                ->with('success', '🎉 Facture ' . $facture->numero_facture . ' mise à jour avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la mise à jour de la facture.');
         }
     }
 
@@ -230,10 +234,11 @@ class FactureController extends Controller
             $facture->delete();
 
             return redirect()->route('factures.index')
-                ->with('success', 'Facture supprimée avec succès.');
+                ->with('warning', '⚠️ Facture ' . $numero_facture . ' supprimée avec succès.');
 
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Impossible de supprimer la facture. Elle pourrait être liée à d\'autres données.');
         }
     }
 
@@ -254,13 +259,15 @@ class FactureController extends Controller
             );
 
             return redirect()->back()
-                ->with('success', 'Facture marquée comme payée.');
+                ->with('success', '💰 Facture ' . $facture->numero_facture . ' marquée comme payée !');
 
         } catch (ValidationException $e) {
             return back()
-                ->withErrors($e->errors());
+                ->withErrors($e->errors())
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Une erreur est survenue lors de la mise à jour du statut de paiement.');
         }
     }
 
@@ -271,7 +278,7 @@ class FactureController extends Controller
     {
         if (!$facture->peutEtreEnvoyee()) {
             return redirect()->back()
-                ->with('error', 'Cette facture ne peut pas être envoyée.');
+                ->with('error', '❌ Cette facture ne peut pas être envoyée.');
         }
 
         $validated = $request->validate([
@@ -308,7 +315,7 @@ class FactureController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('success', 'Facture envoyée avec succès au client.');
+                ->with('success', '📧 Facture ' . $facture->numero_facture . ' envoyée avec succès au client !');
 
         } catch (\Exception $e) {
             $facture->marquerEchecEnvoi();
@@ -319,7 +326,7 @@ class FactureController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Erreur lors de l\'envoi de la facture : ' . $e->getMessage());
+                ->with('error', '❌ Erreur lors de l\'envoi de la facture : ' . $e->getMessage());
         }
     }
 

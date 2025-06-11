@@ -198,6 +198,11 @@ class Devis extends Model
      */
     public function marquerEnvoye(): bool
     {
+        // Si le devis est en brouillon, il passe automatiquement en "envoyé"
+        if ($this->statut === 'brouillon') {
+            $this->statut = 'envoye';
+        }
+
         $this->statut_envoi = 'envoye';
         $this->date_envoi_client = now();
         return $this->save();
@@ -213,12 +218,14 @@ class Devis extends Model
     }
 
     /**
-     * Vérifier si le devis peut être envoyé.
+     * Vérifier si le devis peut être envoyé ou renvoyé.
      */
     public function peutEtreEnvoye(): bool
     {
-        return in_array($this->statut, ['brouillon', 'envoye']) &&
-               in_array($this->statut_envoi, ['non_envoye', 'echec_envoi']);
+        // Peut être envoyé si :
+        // - Le statut permet l'envoi (brouillon ou envoyé)
+        // - ET ce n'est pas un devis accepté, refusé ou expiré (ceux-ci ne doivent plus être modifiés)
+        return in_array($this->statut, ['brouillon', 'envoye']);
     }
 
     /**

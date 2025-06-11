@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { router } from '@inertiajs/react';
 import { Trash2, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface DeleteConfirmationDialogProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ interface DeleteConfirmationDialogProps {
     itemName: string;
     deleteUrl: string;
     isDeleting?: boolean;
+    onDelete?: () => void;
 }
 
 export function DeleteConfirmationDialog({
@@ -27,16 +29,19 @@ export function DeleteConfirmationDialog({
     description,
     itemName,
     deleteUrl,
-    isDeleting = false
+    isDeleting = false,
+    onDelete
 }: DeleteConfirmationDialogProps) {
 
     const handleDelete = () => {
         router.delete(deleteUrl, {
             onSuccess: () => {
                 onClose();
+                toast.success('Élément supprimé avec succès');
             },
             onError: (errors) => {
                 console.error('Erreur lors de la suppression:', errors);
+                toast.error('Une erreur est survenue lors de la suppression');
             }
         });
     };
@@ -66,7 +71,7 @@ export function DeleteConfirmationDialog({
                     </Button>
                     <Button
                         variant="destructive"
-                        onClick={handleDelete}
+                        onClick={onDelete}
                         disabled={isDeleting}
                     >
                         <Trash2 className="mr-2 h-4 w-4" />

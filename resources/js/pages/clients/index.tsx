@@ -4,9 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Eye, Edit, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -43,6 +44,7 @@ export default function ClientsIndex({ clients }: Props) {
         isOpen: boolean;
         client: Client | null;
     }>({ isOpen: false, client: null });
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const openDeleteDialog = (client: Client) => {
         setDeleteDialog({ isOpen: true, client });
@@ -50,6 +52,21 @@ export default function ClientsIndex({ clients }: Props) {
 
     const closeDeleteDialog = () => {
         setDeleteDialog({ isOpen: false, client: null });
+    };
+
+    const handleDeleteClient = async (deleteUrl: string, onClose: () => void) => {
+        setIsDeleting(true);
+        router.delete(deleteUrl, {
+            onSuccess: () => {
+                setIsDeleting(false);
+                onClose();
+                toast.success('Client supprimé avec succès');
+            },
+            onError: (errors) => {
+                setIsDeleting(false);
+                toast.error('Une erreur est survenue lors de la suppression du client');
+            }
+        });
     };
 
     return (
@@ -138,14 +155,16 @@ export default function ClientsIndex({ clients }: Props) {
                     </CardContent>
                 </Card>
 
-                {deleteDialog.client && (
+                {deleteDialog.isOpen && deleteDialog.client !== null && (
                     <DeleteConfirmationDialog
                         isOpen={deleteDialog.isOpen}
                         onClose={closeDeleteDialog}
                         title="Supprimer le client"
                         description="Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
-                        itemName={`${deleteDialog.client.prenom} ${deleteDialog.client.nom}`}
-                        deleteUrl={`/clients/${deleteDialog.client.id}`}
+                        itemName={`${deleteDialog.client!.prenom} ${deleteDialog.client!.nom}`}
+                        deleteUrl={`/clients/${deleteDialog.client!.id}`}
+                        isDeleting={isDeleting}
+                        onDelete={() => handleDeleteClient(`/clients/${deleteDialog.client!.id}`, closeDeleteDialog)}
                     />
                 )}
             </div>

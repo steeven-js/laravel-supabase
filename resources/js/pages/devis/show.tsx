@@ -63,6 +63,23 @@ const getStatusVariant = (statut: string) => {
     }
 };
 
+const getStatusStyles = (statut: string) => {
+    switch (statut) {
+        case 'accepte':
+            return 'bg-green-600 text-white hover:bg-green-700';
+        case 'envoye':
+            return 'bg-blue-600 text-white hover:bg-blue-700';
+        case 'refuse':
+            return 'bg-red-600 text-white hover:bg-red-700';
+        case 'expire':
+            return 'bg-orange-600 text-white hover:bg-orange-700';
+        case 'brouillon':
+            return 'bg-gray-600 text-white hover:bg-gray-700';
+        default:
+            return 'bg-gray-600 text-white hover:bg-gray-700';
+    }
+};
+
 const getStatusIcon = (statut: string) => {
     switch (statut) {
         case 'accepte':
@@ -103,6 +120,19 @@ const getStatusEnvoiVariant = (statutEnvoi: string) => {
             return 'destructive';
         default:
             return 'secondary';
+    }
+};
+
+const getStatusEnvoiStyles = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'envoye':
+            return 'bg-emerald-600 text-white hover:bg-emerald-700';
+        case 'echec_envoi':
+            return 'bg-red-600 text-white hover:bg-red-700';
+        case 'non_envoye':
+            return 'bg-amber-600 text-white hover:bg-amber-700';
+        default:
+            return 'bg-gray-600 text-white hover:bg-gray-700';
     }
 };
 
@@ -183,13 +213,13 @@ export default function DevisShow({ devis }: Props) {
                         <div>
                             <div className="flex items-center gap-3">
                                 <h1 className="text-2xl font-bold">{devis.numero_devis}</h1>
-                                <Badge variant={getStatusVariant(devis.statut)}>
+                                <Badge className={`${getStatusStyles(devis.statut)} border-0`}>
                                     <span className="flex items-center gap-1">
                                         {getStatusIcon(devis.statut)}
                                         {formatStatut(devis.statut)}
                                     </span>
                                 </Badge>
-                                <Badge variant={getStatusEnvoiVariant(devis.statut_envoi)} className="text-xs">
+                                <Badge className={`${getStatusEnvoiStyles(devis.statut_envoi)} border-0 text-xs`}>
                                     <span className="flex items-center gap-1">
                                         {getStatusEnvoiIcon(devis.statut_envoi)}
                                         {formatStatutEnvoi(devis.statut_envoi)}
@@ -214,7 +244,7 @@ export default function DevisShow({ devis }: Props) {
                             <Button variant="default" className="bg-blue-600 hover:bg-blue-700" asChild>
                                 <Link href={`/devis/${devis.id}/envoyer-email`}>
                                     <Mail className="mr-2 h-4 w-4" />
-                                    Envoyer par email
+                                    {devis.statut_envoi === 'envoye' ? 'Renvoyer par email' : 'Envoyer par email'}
                                 </Link>
                             </Button>
                         )}

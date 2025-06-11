@@ -5,7 +5,7 @@ import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-di
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Plus, Eye, Edit, Trash2, FileText, CheckCircle, XCircle, Clock, AlertCircle, Mail, MailCheck, MailX } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, FileText, CheckCircle, XCircle, Clock, AlertCircle, Mail, MailCheck, MailX, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -47,18 +47,20 @@ interface Props {
     devis: Devis[];
 }
 
-const getStatusVariant = (statut: string) => {
+const getStatusStyles = (statut: string) => {
     switch (statut) {
         case 'accepte':
-            return 'default';
+            return 'bg-green-600 text-white hover:bg-green-700';
         case 'envoye':
-            return 'outline';
+            return 'bg-blue-600 text-white hover:bg-blue-700';
         case 'refuse':
-            return 'destructive';
+            return 'bg-red-600 text-white hover:bg-red-700';
         case 'expire':
-            return 'destructive';
+            return 'bg-orange-600 text-white hover:bg-orange-700';
+        case 'brouillon':
+            return 'bg-gray-600 text-white hover:bg-gray-700';
         default:
-            return 'secondary';
+            return 'bg-gray-600 text-white hover:bg-gray-700';
     }
 };
 
@@ -94,14 +96,16 @@ const formatStatut = (statut: string) => {
     }
 };
 
-const getStatusEnvoiVariant = (statutEnvoi: string) => {
+const getStatusEnvoiStyles = (statutEnvoi: string) => {
     switch (statutEnvoi) {
         case 'envoye':
-            return 'default';
+            return 'bg-emerald-600 text-white hover:bg-emerald-700';
         case 'echec_envoi':
-            return 'destructive';
+            return 'bg-red-600 text-white hover:bg-red-700';
+        case 'non_envoye':
+            return 'bg-amber-600 text-white hover:bg-amber-700';
         default:
-            return 'secondary';
+            return 'bg-gray-600 text-white hover:bg-gray-700';
     }
 };
 
@@ -185,13 +189,13 @@ export default function DevisIndex({ devis }: Props) {
                                     <div className="flex-1 space-y-1">
                                         <div className="flex items-center gap-3">
                                             <h3 className="font-medium">{item.numero_devis}</h3>
-                                            <Badge variant={getStatusVariant(item.statut)}>
+                                            <Badge className={`${getStatusStyles(item.statut)} border-0`}>
                                                 <span className="flex items-center gap-1">
                                                     {getStatusIcon(item.statut)}
                                                     {formatStatut(item.statut)}
                                                 </span>
                                             </Badge>
-                                            <Badge variant={getStatusEnvoiVariant(item.statut_envoi)} className="text-xs">
+                                            <Badge className={`${getStatusEnvoiStyles(item.statut_envoi)} border-0 text-xs`}>
                                                 <span className="flex items-center gap-1">
                                                     {getStatusEnvoiIcon(item.statut_envoi)}
                                                     {formatStatutEnvoi(item.statut_envoi)}
@@ -222,9 +226,18 @@ export default function DevisIndex({ devis }: Props) {
                                     </div>
                                     <div className="flex gap-2">
                                         {item.peut_etre_envoye && (
-                                            <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700" asChild>
+                                            <Button
+                                                size="sm"
+                                                variant="default"
+                                                className={`${item.statut_envoi === 'envoye' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                                asChild
+                                                title={item.statut_envoi === 'envoye' ? 'Renvoyer par email' : 'Envoyer par email'}
+                                            >
                                                 <Link href={`/devis/${item.id}/envoyer-email`}>
-                                                    <Mail className="h-4 w-4" />
+                                                    {item.statut_envoi === 'envoye' ?
+                                                        <RefreshCw className="h-4 w-4" /> :
+                                                        <Mail className="h-4 w-4" />
+                                                    }
                                                 </Link>
                                             </Button>
                                         )}

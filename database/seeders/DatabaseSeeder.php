@@ -118,8 +118,8 @@ class DatabaseSeeder extends Seeder
         set_time_limit(120);
 
         DB::transaction(function () {
-            // Désactiver les contraintes de clés étrangères temporairement
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            // Désactiver les contraintes de clés étrangères temporairement (PostgreSQL)
+            DB::statement('SET session_replication_role = replica;');
 
             try {
                 // Utiliser truncate pour plus d'efficacité (plus rapide que delete)
@@ -131,8 +131,8 @@ class DatabaseSeeder extends Seeder
                 // Garder seulement l'utilisateur principal (utiliser delete pour la condition WHERE)
                 \App\Models\User::where('email', '!=', 'jacques.steeven@gmail.com')->delete();
 
-                // Réactiver les contraintes de clés étrangères
-                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                // Réactiver les contraintes de clés étrangères (PostgreSQL)
+                DB::statement('SET session_replication_role = DEFAULT;');
 
                 // Recréer les données
                 $seeder = new self();
@@ -144,8 +144,8 @@ class DatabaseSeeder extends Seeder
                 ]);
 
             } catch (\Exception $e) {
-                // Réactiver les contraintes en cas d'erreur
-                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                // Réactiver les contraintes en cas d'erreur (PostgreSQL)
+                DB::statement('SET session_replication_role = DEFAULT;');
                 throw $e;
             }
         });
@@ -160,8 +160,8 @@ class DatabaseSeeder extends Seeder
         set_time_limit(120);
 
         DB::transaction(function () {
-            // Désactiver les contraintes de clés étrangères temporairement
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            // Désactiver les contraintes de clés étrangères temporairement (PostgreSQL)
+            DB::statement('SET session_replication_role = replica;');
 
             try {
                 // Utiliser truncate pour plus d'efficacité
@@ -171,16 +171,16 @@ class DatabaseSeeder extends Seeder
                 DB::table('entreprises')->truncate();
                 DB::table('users')->truncate();
 
-                // Réactiver les contraintes de clés étrangères
-                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                // Réactiver les contraintes de clés étrangères (PostgreSQL)
+                DB::statement('SET session_replication_role = DEFAULT;');
 
                 // Recréer toutes les données
                 $seeder = new self();
                 $seeder->run();
 
             } catch (\Exception $e) {
-                // Réactiver les contraintes en cas d'erreur
-                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                // Réactiver les contraintes en cas d'erreur (PostgreSQL)
+                DB::statement('SET session_replication_role = DEFAULT;');
                 throw $e;
             }
         });
