@@ -6,6 +6,7 @@ use App\Http\Controllers\DevisController;
 use App\Http\Controllers\FactureController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MonitoringController;
 use Illuminate\Support\Facades\Route;
 
 // Page d'accueil
@@ -50,6 +51,21 @@ if (app()->environment('local')) {
         Route::post('generate-more', [App\Http\Controllers\DevDataController::class, 'generateMore'])->name('generate-more');
         Route::get('stats', [App\Http\Controllers\DevDataController::class, 'stats'])->name('stats');
     });
+
+    // Routes de monitoring (seulement en mode local)
+    Route::middleware(['auth', 'verified'])->prefix('monitoring')->name('monitoring.')->group(function () {
+        Route::get('/', [MonitoringController::class, 'index'])->name('index');
+        Route::post('test-email', [MonitoringController::class, 'testEmail'])->name('test-email');
+        Route::post('test-database', [MonitoringController::class, 'testDatabase'])->name('test-database');
+        Route::post('clear-cache', [MonitoringController::class, 'clearCache'])->name('clear-cache');
+    });
+
+    // Route pour prévisualiser l'email Markdown (développement uniquement)
+    Route::get('preview-email', function () {
+        $monitoringController = new MonitoringController();
+        $diagnostics = $monitoringController->getDiagnostics();
+        return new \App\Mail\TestEmailMark($diagnostics, 'preview@example.com');
+    })->middleware(['auth', 'verified']);
 }
 
 // Inclusion des autres fichiers de routes

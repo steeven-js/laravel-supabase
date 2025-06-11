@@ -3,8 +3,8 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -49,6 +49,19 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { props } = usePage();
+    const isLocal = (props as any).app_env === 'local';
+
+    // Ajouter le lien de monitoring si on est en mode local
+    const navigationItems = isLocal ? [
+        ...mainNavItems,
+        {
+            title: 'Monitoring & Tests',
+            href: '/monitoring',
+            icon: Monitor,
+        }
+    ] : mainNavItems;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -64,7 +77,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navigationItems} />
             </SidebarContent>
 
             <SidebarFooter>
