@@ -18,6 +18,7 @@ class Facture extends Model
         'date_facture',
         'date_echeance',
         'statut',
+        'statut_envoi',
         'objet',
         'description',
         'montant_ht',
@@ -182,6 +183,7 @@ class Facture extends Model
     public function marquerEnvoyee(): bool
     {
         $this->statut = 'envoyee';
+        $this->statut_envoi = 'envoyee';
         $this->date_envoi_client = now();
 
         return $this->save();
@@ -200,6 +202,37 @@ class Facture extends Model
             'annulee' => 'Annulée',
             default => ucfirst($this->statut)
         };
+    }
+
+    /**
+     * Obtenir le statut d'envoi en français.
+     */
+    public function getStatutEnvoiFrAttribute(): string
+    {
+        return match($this->statut_envoi) {
+            'non_envoyee' => 'Non envoyée',
+            'envoyee' => 'Envoyée',
+            'echec_envoi' => 'Échec d\'envoi',
+            default => ucfirst($this->statut_envoi)
+        };
+    }
+
+    /**
+     * Vérifier si la facture peut être envoyée.
+     */
+    public function peutEtreEnvoyee(): bool
+    {
+        return in_array($this->statut, ['brouillon', 'envoyee']) &&
+               in_array($this->statut_envoi, ['non_envoyee', 'echec_envoi']);
+    }
+
+    /**
+     * Marquer la facture comme échec d'envoi.
+     */
+    public function marquerEchecEnvoi(): bool
+    {
+        $this->statut_envoi = 'echec_envoi';
+        return $this->save();
     }
 
     /**

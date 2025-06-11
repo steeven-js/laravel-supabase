@@ -86,12 +86,21 @@ class DevisSeeder extends Seeder
             $montantTVA = ($montantHT * $tauxTVA) / 100;
             $montantTTC = $montantHT + $montantTVA;
 
+            // Déterminer le statut d'envoi
+            $statutEnvoi = match($statut) {
+                'brouillon' => 'non_envoye',
+                'envoye', 'accepte', 'refuse' => $faker->randomElement(['envoye', 'non_envoye']),
+                'expire' => $faker->randomElement(['envoye', 'non_envoye', 'echec_envoi']),
+                default => 'non_envoye'
+            };
+
             $devis = Devis::create([
                 'numero_devis' => $this->genererNumeroDevis($dateDevis),
                 'client_id' => $client->id,
                 'date_devis' => $dateDevis,
                 'date_validite' => $dateValidite,
                 'statut' => $statut,
+                'statut_envoi' => $statutEnvoi,
                 'objet' => $prestation['objet'],
                 'description' => $prestation['description'],
                 'montant_ht' => $montantHT,
@@ -102,6 +111,10 @@ class DevisSeeder extends Seeder
                 'notes' => $faker->optional(0.4)->sentence(),
                 'date_acceptation' => $statut === 'accepte' ?
                     $faker->dateTimeBetween($dateDevis, $dateValidite) : null,
+                'date_envoi_client' => $statutEnvoi === 'envoye' ?
+                    $faker->dateTimeBetween($dateDevis, min($dateValidite, now())) : null,
+                'date_envoi_admin' => $statutEnvoi === 'envoye' ?
+                    $faker->dateTimeBetween($dateDevis, min($dateValidite, now())) : null,
                 'archive' => $faker->boolean(5), // 5% archivés
             ]);
         }
@@ -174,6 +187,7 @@ class DevisSeeder extends Seeder
             'date_devis' => now()->subDays(5),
             'date_validite' => now()->addDays(25),
             'statut' => 'accepte',
+            'statut_envoi' => 'envoye',
             'objet' => 'Développement site e-commerce',
             'description' => 'Développement complet d\'un site e-commerce avec paiement sécurisé, gestion des stocks et interface d\'administration. Formation incluse.',
             'montant_ht' => 8500.00,
@@ -183,6 +197,8 @@ class DevisSeeder extends Seeder
             'conditions' => 'Devis valable 30 jours. Acompte de 40% à la commande, 40% à mi-parcours, solde à la livraison.',
             'notes' => 'Client prioritaire - Livraison souhaitée avant fin de mois',
             'date_acceptation' => now()->subDays(2),
+            'date_envoi_client' => now()->subDays(4),
+            'date_envoi_admin' => now()->subDays(4),
             'archive' => false,
         ]);
     }

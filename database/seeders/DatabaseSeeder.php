@@ -6,6 +6,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -113,22 +114,41 @@ class DatabaseSeeder extends Seeder
      */
     public static function resetDataKeepUser(): void
     {
-        // Supprimer les données dans l'ordre inverse des dépendances
-        \App\Models\Facture::query()->delete();
-        \App\Models\Devis::query()->delete();
-        \App\Models\Client::query()->delete();
-        \App\Models\Entreprise::query()->delete();
+        // Augmenter le timeout pour cette opération
+        set_time_limit(120);
 
-        // Garder seulement l'utilisateur principal
-        User::where('email', '!=', 'jacques.steeven@gmail.com')->delete();
+        DB::transaction(function () {
+            // Désactiver les contraintes de clés étrangères temporairement
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-        // Recréer les données
-        (new self())->call([
-            EntrepriseSeeder::class,
-            ClientSeeder::class,
-            DevisSeeder::class,
-            FactureSeeder::class,
-        ]);
+            try {
+                // Utiliser truncate pour plus d'efficacité (plus rapide que delete)
+                DB::table('factures')->truncate();
+                DB::table('devis')->truncate();
+                DB::table('clients')->truncate();
+                DB::table('entreprises')->truncate();
+
+                // Garder seulement l'utilisateur principal (utiliser delete pour la condition WHERE)
+                \App\Models\User::where('email', '!=', 'jacques.steeven@gmail.com')->delete();
+
+                // Réactiver les contraintes de clés étrangères
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+                // Recréer les données
+                $seeder = new self();
+                $seeder->call([
+                    EntrepriseSeeder::class,
+                    ClientSeeder::class,
+                    DevisSeeder::class,
+                    FactureSeeder::class,
+                ]);
+
+            } catch (\Exception $e) {
+                // Réactiver les contraintes en cas d'erreur
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                throw $e;
+            }
+        });
     }
 
     /**
@@ -136,14 +156,33 @@ class DatabaseSeeder extends Seeder
      */
     public static function resetAllData(): void
     {
-        // Supprimer toutes les données
-        \App\Models\Facture::query()->delete();
-        \App\Models\Devis::query()->delete();
-        \App\Models\Client::query()->delete();
-        \App\Models\Entreprise::query()->delete();
-        User::query()->delete();
+        // Augmenter le timeout pour cette opération
+        set_time_limit(120);
 
-        // Recréer toutes les données
-        (new self())->run();
+        DB::transaction(function () {
+            // Désactiver les contraintes de clés étrangères temporairement
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+            try {
+                // Utiliser truncate pour plus d'efficacité
+                DB::table('factures')->truncate();
+                DB::table('devis')->truncate();
+                DB::table('clients')->truncate();
+                DB::table('entreprises')->truncate();
+                DB::table('users')->truncate();
+
+                // Réactiver les contraintes de clés étrangères
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+                // Recréer toutes les données
+                $seeder = new self();
+                $seeder->run();
+
+            } catch (\Exception $e) {
+                // Réactiver les contraintes en cas d'erreur
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                throw $e;
+            }
+        });
     }
 }

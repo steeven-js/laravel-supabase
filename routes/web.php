@@ -18,7 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Routes pour les clients
+        // Routes pour les clients
     Route::resource('clients', ClientController::class);
 
     // Routes pour les entreprises
@@ -30,6 +30,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Actions spéciales pour les devis
     Route::patch('devis/{devis}/accepter', [DevisController::class, 'accepter'])->name('devis.accepter');
     Route::patch('devis/{devis}/refuser', [DevisController::class, 'refuser'])->name('devis.refuser');
+    Route::get('devis/{devis}/envoyer-email', [DevisController::class, 'afficherEnvoiEmail'])->name('devis.afficher-envoi-email');
+    Route::post('devis/{devis}/envoyer-email', [DevisController::class, 'envoyerEmail'])->name('devis.envoyer-email');
 
     // Transformation devis en facture
     Route::get('devis/{devis}/transformer-facture', [DevisController::class, 'transformerEnFacture'])->name('devis.transformer-facture');
@@ -40,7 +42,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Actions spéciales pour les factures
     Route::patch('factures/{facture}/marquer-payee', [FactureController::class, 'marquerPayee'])->name('factures.marquer-payee');
+    Route::post('factures/{facture}/envoyer-email', [FactureController::class, 'envoyerEmail'])->name('factures.envoyer-email');
     Route::patch('factures/{facture}/envoyer', [FactureController::class, 'envoyer'])->name('factures.envoyer');
+
+    // Routes temporaires pour les tests (supprimer après validation)
+    if (config('app.env') === 'local') {
+        Route::get('/test-toast', function () {
+            session()->flash('toast', [
+                'type' => 'success',
+                'message' => 'Test réussi !',
+                'description' => 'Cette notification prouve que le système toast fonctionne correctement.'
+            ]);
+
+            return redirect()->route('dashboard');
+        })->name('test.toast');
+
+        Route::get('/test-toast-error', function () {
+            session()->flash('toast', [
+                'type' => 'error',
+                'message' => 'Test d\'erreur',
+                'description' => 'Ceci est un test de notification d\'erreur.'
+            ]);
+
+            return redirect()->route('dashboard');
+        })->name('test.toast.error');
+
+        // Test simple sans toast - pour vérifier qu'aucun toast ne s'affiche
+        Route::get('/test-no-toast', function () {
+            return redirect()->route('dashboard');
+        })->name('test.no-toast');
+    }
 });
 
 // Routes de développement (seulement en mode local)

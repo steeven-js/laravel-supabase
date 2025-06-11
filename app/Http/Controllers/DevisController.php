@@ -8,7 +8,9 @@ use App\Models\Facture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Exception;
 
 class DevisController extends Controller
 {
@@ -20,7 +22,32 @@ class DevisController extends Controller
         $devis = Devis::with(['client.entreprise'])
             ->actifs()
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($devis) {
+                return [
+                    'id' => $devis->id,
+                    'numero_devis' => $devis->numero_devis,
+                    'objet' => $devis->objet,
+                    'statut' => $devis->statut,
+                    'statut_envoi' => $devis->statut_envoi,
+                    'date_devis' => $devis->date_devis->format('Y-m-d'),
+                    'date_validite' => $devis->date_validite->format('Y-m-d'),
+                    'date_envoi_client' => $devis->date_envoi_client?->toISOString(),
+                    'date_envoi_admin' => $devis->date_envoi_admin?->toISOString(),
+                    'montant_ttc' => $devis->montant_ttc,
+                    'peut_etre_envoye' => $devis->peutEtreEnvoye(),
+                    'client' => [
+                        'nom' => $devis->client->nom,
+                        'prenom' => $devis->client->prenom,
+                        'email' => $devis->client->email,
+                        'entreprise' => $devis->client->entreprise ? [
+                            'nom' => $devis->client->entreprise->nom,
+                            'nom_commercial' => $devis->client->entreprise->nom_commercial,
+                        ] : null
+                    ],
+                    'created_at' => $devis->created_at->toISOString(),
+                ];
+            });
 
         return Inertia::render('devis/index', [
             'devis' => $devis
@@ -45,25 +72,38 @@ class DevisController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'numero_devis' => 'required|string|unique:devis,numero_devis',
-            'client_id' => 'required|exists:clients,id',
-            'date_devis' => 'required|date',
-            'date_validite' => 'required|date|after:date_devis',
-            'objet' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'montant_ht' => 'required|numeric|min:0',
-            'taux_tva' => 'required|numeric|min:0|max:100',
-            'conditions' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'client_id' => 'required|exists:clients,id',
+                'date_devis' => 'required|date',
+                'date_validite' => 'required|date|after:date_devis',
+                'objet' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'montant_ht' => 'required|numeric|min:0',
+                'taux_tva' => 'required|numeric|min:0|max:100',
+                'conditions' => 'nullable|string',
+                'notes' => 'nullable|string',
+            ]);
 
-        $devis = new Devis($validated);
-        $devis->calculerMontants();
-        $devis->save();
+            // Générer automatiquement le numéro de devis
+            $validated['numero_devis'] = Devis::genererNumeroDevis();
 
-        return redirect()->route('devis.index')
-            ->with('success', 'Devis créé avec succès.');
+            $devis = new Devis($validated);
+            $devis->statut_envoi = 'non_envoye'; // Statut par défaut
+            $devis->calculerMontants();
+            $devis->save();
+
+            return redirect()->route('devis.show', $devis)
+                ->with('success', 'Devis créé avec succès.');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (Exception $e) {
+            return back()
+                ->withInput();
+        }
     }
 
     /**
@@ -80,15 +120,21 @@ class DevisController extends Controller
             'client_id' => $devis->client_id,
             'objet' => $devis->objet,
             'statut' => $devis->statut,
+            'statut_envoi' => $devis->statut_envoi,
             'date_devis' => $devis->date_devis?->format('Y-m-d') ?? '',
             'date_validite' => $devis->date_validite?->format('Y-m-d') ?? '',
+            'date_envoi_client' => $devis->date_envoi_client?->toISOString(),
+            'date_envoi_admin' => $devis->date_envoi_admin?->toISOString(),
             'montant_ht' => $devis->montant_ht,
             'taux_tva' => $devis->taux_tva,
             'montant_ttc' => $devis->montant_ttc,
             'notes' => $devis->notes,
+            'description' => $devis->description,
+            'conditions' => $devis->conditions,
             'created_at' => $devis->created_at->toISOString(),
             'updated_at' => $devis->updated_at->toISOString(),
             'peut_etre_transforme_en_facture' => $devis->peutEtreTransformeEnFacture(),
+            'peut_etre_envoye' => $devis->peutEtreEnvoye(),
             'facture' => $devis->facture ? [
                 'id' => $devis->facture->id,
                 'numero_facture' => $devis->facture->numero_facture,
@@ -161,35 +207,45 @@ class DevisController extends Controller
      */
     public function update(Request $request, Devis $devis)
     {
-        $validated = $request->validate([
-            'numero_devis' => 'required|string|unique:devis,numero_devis,' . $devis->id,
-            'client_id' => 'required|exists:clients,id',
-            'date_devis' => 'required|date',
-            'date_validite' => 'required|date|after:date_devis',
-            'statut' => 'required|in:brouillon,envoye,accepte,refuse,expire',
-            'objet' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'montant_ht' => 'required|numeric|min:0',
-            'taux_tva' => 'required|numeric|min:0|max:100',
-            'conditions' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'archive' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'numero_devis' => 'required|string|unique:devis,numero_devis,' . $devis->id,
+                'client_id' => 'required|exists:clients,id',
+                'date_devis' => 'required|date',
+                'date_validite' => 'required|date|after:date_devis',
+                'statut' => 'required|in:brouillon,envoye,accepte,refuse,expire',
+                'objet' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'montant_ht' => 'required|numeric|min:0',
+                'taux_tva' => 'required|numeric|min:0|max:100',
+                'conditions' => 'nullable|string',
+                'notes' => 'nullable|string',
+                'archive' => 'boolean',
+            ]);
 
-        // Convertir explicitement les montants en float pour éviter les problèmes de type
-        if (isset($validated['montant_ht'])) {
-            $validated['montant_ht'] = (float) $validated['montant_ht'];
+            // Convertir explicitement les montants en float pour éviter les problèmes de type
+            if (isset($validated['montant_ht'])) {
+                $validated['montant_ht'] = (float) $validated['montant_ht'];
+            }
+            if (isset($validated['taux_tva'])) {
+                $validated['taux_tva'] = (float) $validated['taux_tva'];
+            }
+
+            $devis->fill($validated);
+            $devis->calculerMontants();
+            $devis->save();
+
+            return redirect()->route('devis.index')
+                ->with('success', 'Devis mis à jour avec succès.');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (Exception $e) {
+            return back()
+                ->withInput();
         }
-        if (isset($validated['taux_tva'])) {
-            $validated['taux_tva'] = (float) $validated['taux_tva'];
-        }
-
-        $devis->fill($validated);
-        $devis->calculerMontants();
-        $devis->save();
-
-        return redirect()->route('devis.index')
-            ->with('success', 'Devis mis à jour avec succès.');
     }
 
     /**
@@ -197,10 +253,16 @@ class DevisController extends Controller
      */
     public function destroy(Devis $devis)
     {
-        $devis->delete();
+        try {
+            $numero_devis = $devis->numero_devis;
+            $devis->delete();
 
-        return redirect()->route('devis.index')
-            ->with('success', 'Devis supprimé avec succès.');
+            return redirect()->route('devis.index')
+                ->with('success', 'Devis supprimé avec succès.');
+
+        } catch (Exception $e) {
+            return back();
+        }
     }
 
     /**
@@ -208,10 +270,15 @@ class DevisController extends Controller
      */
     public function accepter(Devis $devis)
     {
-        $devis->accepter();
+        try {
+            $devis->accepter();
 
-        return redirect()->back()
-            ->with('success', 'Devis accepté avec succès.');
+            return redirect()->back()
+                ->with('success', 'Devis accepté avec succès.');
+
+        } catch (Exception $e) {
+            return back();
+        }
     }
 
     /**
@@ -219,10 +286,149 @@ class DevisController extends Controller
      */
     public function refuser(Devis $devis)
     {
-        $devis->refuser();
+        try {
+            $devis->refuser();
 
-        return redirect()->back()
-            ->with('success', 'Devis refusé.');
+            return redirect()->back()
+                ->with('success', 'Devis refusé.');
+
+        } catch (Exception $e) {
+            return back();
+        }
+    }
+
+    /**
+     * Afficher la page d'envoi d'email pour un devis
+     */
+    public function afficherEnvoiEmail(Devis $devis)
+    {
+        if (!$devis->peutEtreEnvoye()) {
+            return redirect()->back()
+                ->with('error', 'Ce devis ne peut pas être envoyé.');
+        }
+
+        $devis->load(['client.entreprise']);
+
+        // Préparer les données pour la page d'envoi
+        $devisData = [
+            'id' => $devis->id,
+            'numero_devis' => $devis->numero_devis,
+            'client' => [
+                'id' => $devis->client->id,
+                'nom' => $devis->client->nom,
+                'prenom' => $devis->client->prenom,
+                'email' => $devis->client->email,
+                'entreprise' => $devis->client->entreprise ? [
+                    'nom' => $devis->client->entreprise->nom,
+                    'nom_commercial' => $devis->client->entreprise->nom_commercial,
+                ] : null
+            ],
+            'objet' => $devis->objet,
+            'montant_ht' => $devis->montant_ht,
+            'montant_ttc' => $devis->montant_ttc,
+            'taux_tva' => $devis->taux_tva,
+            'statut' => $devis->statut,
+            'statut_envoi' => $devis->statut_envoi,
+        ];
+
+        return Inertia::render('devis/envoyer-email', [
+            'devis' => $devisData
+        ]);
+    }
+
+    /**
+     * Envoyer un devis au client par email
+     */
+    public function envoyerEmail(Request $request, Devis $devis)
+    {
+        Log::info('=== DÉBUT ENVOI EMAIL DEVIS ===', [
+            'devis_id' => $devis->id,
+            'devis_numero' => $devis->numero_devis,
+        ]);
+
+        if (!$devis->peutEtreEnvoye()) {
+            Log::warning('Devis ne peut pas être envoyé', [
+                'devis_id' => $devis->id,
+                'statut' => $devis->statut,
+                'statut_envoi' => $devis->statut_envoi,
+            ]);
+            return redirect()->back()
+                ->with('error', 'Ce devis ne peut pas être envoyé.');
+        }
+
+        $validated = $request->validate([
+            'message_client' => 'nullable|string',
+            'envoyer_copie_admin' => 'boolean',
+        ]);
+
+        Log::info('Données validées pour envoi email', [
+            'devis_id' => $devis->id,
+            'message_client_length' => strlen($validated['message_client'] ?? ''),
+            'envoyer_copie_admin' => $validated['envoyer_copie_admin'] ?? false,
+        ]);
+
+        try {
+            $devis->load('client.entreprise');
+
+            Log::info('Devis chargé avec relations', [
+                'devis_id' => $devis->id,
+                'client_email' => $devis->client->email,
+                'client_nom' => $devis->client->nom,
+                'client_prenom' => $devis->client->prenom,
+            ]);
+
+            // Envoyer email au client
+            $this->envoyerEmailClientDevis($devis, $validated['message_client'] ?? null);
+
+            // Mettre à jour le statut
+            $devis->marquerEnvoye();
+            Log::info('Statut devis mis à jour vers envoyé', [
+                'devis_id' => $devis->id,
+                'nouveau_statut_envoi' => $devis->statut_envoi,
+            ]);
+
+            // Envoyer copie à l'admin si demandé
+            if ($validated['envoyer_copie_admin'] ?? false) {
+                try {
+                    Log::info('Tentative envoi copie admin', ['devis_id' => $devis->id]);
+                    $this->envoyerEmailAdminDevis($devis);
+                    $devis->date_envoi_admin = now();
+                    $devis->save();
+                    Log::info('Copie admin envoyée avec succès', ['devis_id' => $devis->id]);
+                } catch (\Exception $e) {
+                    Log::warning('Erreur lors de l\'envoi de la copie admin', [
+                        'devis_numero' => $devis->numero_devis,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            }
+
+            Log::info('Devis envoyé par email avec succès', [
+                'devis_numero' => $devis->numero_devis,
+                'client_email' => $devis->client->email
+            ]);
+
+            Log::info('=== FIN ENVOI EMAIL DEVIS (SUCCÈS) ===', [
+                'devis_id' => $devis->id,
+            ]);
+
+            return redirect()->route('devis.index')
+                ->with('success', 'Devis envoyé avec succès au client.');
+        } catch (\Exception $e) {
+            $devis->marquerEchecEnvoi();
+
+            Log::error('=== ERREUR ENVOI EMAIL DEVIS ===', [
+                'devis_numero' => $devis->numero_devis,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Erreur lors de l\'envoi du devis : ' . $e->getMessage());
+        }
     }
 
     /**
@@ -341,7 +547,6 @@ class DevisController extends Controller
 
             return redirect()->route('factures.show', $facture)
                 ->with('success', $message);
-
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Erreur lors de la transformation : ' . $e->getMessage());
@@ -406,6 +611,118 @@ class DevisController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur lors de l\'envoi de l\'email admin', [
                 'facture_numero' => $donnees['facture']->numero_facture,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Envoyer un email de notification au client lors de la création d'un devis
+     */
+    private function envoyerEmailClientDevis(Devis $devis, ?string $messagePersonnalise)
+    {
+        Log::info('=== DÉBUT ENVOI EMAIL CLIENT DEVIS ===', [
+            'devis_id' => $devis->id,
+            'devis_numero' => $devis->numero_devis,
+            'client_email' => $devis->client->email,
+            'message_personnalise_length' => strlen($messagePersonnalise ?? ''),
+        ]);
+
+        // Vérifier la configuration mail
+        Log::info('Configuration mail actuelle', [
+            'mail_mailer' => config('mail.default'),
+            'mail_host' => config('mail.mailers.smtp.host'),
+            'mail_port' => config('mail.mailers.smtp.port'),
+            'mail_from_address' => config('mail.from.address'),
+            'mail_from_name' => config('mail.from.name'),
+        ]);
+
+        try {
+            Log::info('Tentative de création de DevisClientMail', [
+                'devis_numero' => $devis->numero_devis,
+                'client_email' => $devis->client->email,
+            ]);
+
+            $mailInstance = new \App\Mail\DevisClientMail(
+                $devis,
+                $devis->client,
+                $messagePersonnalise
+            );
+
+            Log::info('DevisClientMail créé avec succès', [
+                'mail_class' => get_class($mailInstance),
+                'implements_should_queue' => $mailInstance instanceof \Illuminate\Contracts\Queue\ShouldQueue,
+            ]);
+
+            Log::info('Tentative d\'envoi via Mail::to()', [
+                'destination_email' => $devis->client->email,
+            ]);
+
+            Mail::to($devis->client->email)->send($mailInstance);
+
+            Log::info('Mail::send() exécuté sans exception', [
+                'devis_numero' => $devis->numero_devis,
+                'client_email' => $devis->client->email,
+            ]);
+
+            // Vérifier l'état des queues si on utilise les queues
+            if ($mailInstance instanceof \Illuminate\Contracts\Queue\ShouldQueue) {
+                Log::info('Email mis en queue (ShouldQueue)', [
+                    'queue_connection' => config('queue.default'),
+                    'devis_numero' => $devis->numero_devis,
+                ]);
+            } else {
+                Log::info('Email envoyé directement (pas de queue)', [
+                    'devis_numero' => $devis->numero_devis,
+                ]);
+            }
+
+            Log::info('=== EMAIL CLIENT DEVIS ENVOYÉ AVEC SUCCÈS ===', [
+                'devis_numero' => $devis->numero_devis,
+                'client_email' => $devis->client->email
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('=== ERREUR ENVOI EMAIL CLIENT DEVIS ===', [
+                'devis_numero' => $devis->numero_devis,
+                'client_email' => $devis->client->email,
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'error_trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Envoyer un email de notification à l'admin lors de la création d'un devis
+     */
+    private function envoyerEmailAdminDevis(Devis $devis)
+    {
+        try {
+            $adminEmail = config('mail.admin_email');
+
+            if (!$adminEmail) {
+                Log::warning('Email admin non configuré, envoi ignoré');
+                return;
+            }
+
+            Mail::to($adminEmail)->send(
+                new \App\Mail\DevisAdminMail(
+                    $devis,
+                    $devis->client
+                )
+            );
+
+            Log::info('Email de notification admin devis envoyé', [
+                'devis_numero' => $devis->numero_devis
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur envoi email admin devis', [
+                'devis_numero' => $devis->numero_devis,
                 'error' => $e->getMessage()
             ]);
             throw $e;

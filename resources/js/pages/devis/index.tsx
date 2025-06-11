@@ -5,7 +5,7 @@ import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-di
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Plus, Eye, Edit, Trash2, FileText, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, FileText, CheckCircle, XCircle, Clock, AlertCircle, Mail, MailCheck, MailX } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -24,12 +24,17 @@ interface Devis {
     numero_devis: string;
     objet: string;
     statut: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire';
+    statut_envoi: 'non_envoye' | 'envoye' | 'echec_envoi';
     date_devis: string;
     date_validite: string;
+    date_envoi_client?: string;
+    date_envoi_admin?: string;
     montant_ttc: number;
+    peut_etre_envoye?: boolean;
     client: {
         nom: string;
         prenom: string;
+        email: string;
         entreprise?: {
             nom: string;
             nom_commercial?: string;
@@ -86,6 +91,41 @@ const formatStatut = (statut: string) => {
             return 'Expiré';
         default:
             return statut;
+    }
+};
+
+const getStatusEnvoiVariant = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'envoye':
+            return 'default';
+        case 'echec_envoi':
+            return 'destructive';
+        default:
+            return 'secondary';
+    }
+};
+
+const getStatusEnvoiIcon = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'envoye':
+            return <MailCheck className="h-3 w-3" />;
+        case 'echec_envoi':
+            return <MailX className="h-3 w-3" />;
+        default:
+            return <Mail className="h-3 w-3" />;
+    }
+};
+
+const formatStatutEnvoi = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'non_envoye':
+            return 'Non envoyé';
+        case 'envoye':
+            return 'Envoyé';
+        case 'echec_envoi':
+            return 'Échec envoi';
+        default:
+            return statutEnvoi;
     }
 };
 
@@ -151,6 +191,12 @@ export default function DevisIndex({ devis }: Props) {
                                                     {formatStatut(item.statut)}
                                                 </span>
                                             </Badge>
+                                            <Badge variant={getStatusEnvoiVariant(item.statut_envoi)} className="text-xs">
+                                                <span className="flex items-center gap-1">
+                                                    {getStatusEnvoiIcon(item.statut_envoi)}
+                                                    {formatStatutEnvoi(item.statut_envoi)}
+                                                </span>
+                                            </Badge>
                                         </div>
                                         <div className="text-sm font-medium text-foreground">
                                             {item.objet}
@@ -167,11 +213,21 @@ export default function DevisIndex({ devis }: Props) {
                                             <div className="flex items-center gap-4">
                                                 <span>📅 {formatDate(item.date_devis)}</span>
                                                 <span>⏰ Expire le {formatDate(item.date_validite)}</span>
+                                                {item.date_envoi_client && (
+                                                    <span>📧 Envoyé le {formatDate(item.date_envoi_client)}</span>
+                                                )}
                                                 <span className="font-medium">{formatPrice(item.montant_ttc)}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
+                                        {item.peut_etre_envoye && (
+                                            <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700" asChild>
+                                                <Link href={`/devis/${item.id}/envoyer-email`}>
+                                                    <Mail className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        )}
                                         <Button size="sm" variant="outline" asChild>
                                             <Link href={`/devis/${item.id}`}>
                                                 <Eye className="h-4 w-4" />

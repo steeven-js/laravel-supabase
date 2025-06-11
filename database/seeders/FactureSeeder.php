@@ -43,6 +43,15 @@ class FactureSeeder extends Seeder
             // Déterminer le statut de la facture
             $statut = $this->determinerStatutFacture($faker, $dateFacture, $dateEcheance);
 
+            // Déterminer le statut d'envoi
+            $statutEnvoi = match($statut) {
+                'brouillon' => 'non_envoyee',
+                'envoyee', 'payee' => 'envoyee',
+                'en_retard' => $faker->randomElement(['envoyee', 'non_envoyee']),
+                'annulee' => $faker->randomElement(['envoyee', 'non_envoyee', 'echec_envoi']),
+                default => 'non_envoyee'
+            };
+
             $facture = Facture::create([
                 'numero_facture' => $this->genererNumeroFacture($dateFacture),
                 'devis_id' => $devis->id,
@@ -50,6 +59,7 @@ class FactureSeeder extends Seeder
                 'date_facture' => $dateFacture,
                 'date_echeance' => $dateEcheance,
                 'statut' => $statut,
+                'statut_envoi' => $statutEnvoi,
                 'objet' => $devis->objet,
                 'description' => $devis->description,
                 'montant_ht' => $devis->montant_ht,
@@ -64,8 +74,8 @@ class FactureSeeder extends Seeder
                     $faker->randomElement(['Virement bancaire', 'Chèque', 'Carte bancaire', 'Espèces']) : null,
                 'reference_paiement' => $statut === 'payee' ?
                     $faker->optional(0.7)->regexify('[A-Z0-9]{8,12}') : null,
-                                'archive' => false,
-                'date_envoi_client' => in_array($statut, ['envoyee', 'payee']) ?
+                'archive' => false,
+                'date_envoi_client' => $statutEnvoi === 'envoyee' ?
                     $faker->dateTimeBetween($dateFacture, max($dateFacture, $maintenant)) : null,
                 'date_envoi_admin' => $faker->dateTimeBetween($dateFacture, max($dateFacture, $maintenant)),
             ]);
@@ -148,6 +158,14 @@ class FactureSeeder extends Seeder
             $montantTVA = ($montantHT * $tauxTVA) / 100;
             $montantTTC = $montantHT + $montantTVA;
 
+            // Déterminer le statut d'envoi
+            $statutEnvoi = match($statut) {
+                'brouillon' => 'non_envoyee',
+                'envoyee', 'payee' => 'envoyee',
+                'en_retard' => $faker->randomElement(['envoyee', 'non_envoyee']),
+                default => 'non_envoyee'
+            };
+
             Facture::create([
                 'numero_facture' => $this->genererNumeroFacture($dateFacture),
                 'devis_id' => null,
@@ -155,6 +173,7 @@ class FactureSeeder extends Seeder
                 'date_facture' => $dateFacture,
                 'date_echeance' => $dateEcheance,
                 'statut' => $statut,
+                'statut_envoi' => $statutEnvoi,
                 'objet' => $faker->randomElement($prestationsSimples),
                 'description' => $faker->sentence(10),
                 'montant_ht' => $montantHT,
@@ -173,8 +192,8 @@ class FactureSeeder extends Seeder
                     $faker->randomElement(['Virement bancaire', 'Chèque', 'Carte bancaire']) : null,
                 'reference_paiement' => $statut === 'payee' ?
                     $faker->optional(0.6)->regexify('[A-Z0-9]{6,10}') : null,
-                                'archive' => $faker->boolean(10), // 10% archivées
-                'date_envoi_client' => in_array($statut, ['envoyee', 'payee']) ?
+                'archive' => $faker->boolean(10), // 10% archivées
+                'date_envoi_client' => $statutEnvoi === 'envoyee' ?
                     $faker->dateTimeBetween($dateFacture, 'now') : null,
                 'date_envoi_admin' => $faker->dateTimeBetween($dateFacture, 'now'),
             ]);
@@ -198,6 +217,7 @@ class FactureSeeder extends Seeder
             'date_facture' => now()->subDays(3),
             'date_echeance' => now()->addDays(27),
             'statut' => 'envoyee',
+            'statut_envoi' => 'envoyee',
             'objet' => 'Développement module personnalisé',
             'description' => 'Développement d\'un module personnalisé pour l\'intégration de l\'API de paiement et gestion des webhooks.',
             'montant_ht' => 3500.00,
@@ -223,6 +243,7 @@ class FactureSeeder extends Seeder
             'date_facture' => now()->subDays(45),
             'date_echeance' => now()->subDays(15),
             'statut' => 'en_retard',
+            'statut_envoi' => 'envoyee',
             'objet' => 'Maintenance serveur décembre',
             'description' => 'Maintenance préventive du serveur, mise à jour sécurité et monitoring mensuel.',
             'montant_ht' => 850.00,

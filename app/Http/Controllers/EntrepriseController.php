@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Exception;
 
 class EntrepriseController extends Controller
 {
@@ -36,28 +38,38 @@ class EntrepriseController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'nom_commercial' => 'nullable|string|max:255',
-            'siret' => 'nullable|string|max:14|unique:entreprises,siret',
-            'siren' => 'nullable|string|max:9',
-            'secteur_activite' => 'nullable|string|max:255',
-            'adresse' => 'nullable|string',
-            'ville' => 'nullable|string|max:255',
-            'code_postal' => 'nullable|string|max:10',
-            'pays' => 'nullable|string|max:255',
-            'telephone' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'site_web' => 'nullable|url|max:255',
-            'nombre_employes' => 'nullable|integer|min:0',
-            'chiffre_affaires' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'nom' => 'required|string|max:255',
+                'nom_commercial' => 'nullable|string|max:255',
+                'siret' => 'nullable|string|max:14|unique:entreprises,siret',
+                'siren' => 'nullable|string|max:9',
+                'secteur_activite' => 'nullable|string|max:255',
+                'adresse' => 'nullable|string',
+                'ville' => 'nullable|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'pays' => 'nullable|string|max:255',
+                'telephone' => 'nullable|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'site_web' => 'nullable|url|max:255',
+                'nombre_employes' => 'nullable|integer|min:0',
+                'chiffre_affaires' => 'nullable|numeric|min:0',
+                'notes' => 'nullable|string',
+            ]);
 
-        Entreprise::create($validated);
+            $entreprise = Entreprise::create($validated);
 
-        return redirect()->route('entreprises.index')
-            ->with('success', 'Entreprise créée avec succès.');
+            return redirect()->route('entreprises.index')
+                ->with('success', 'Entreprise créée avec succès.');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (Exception $e) {
+            return back()
+                ->withInput();
+        }
     }
 
     /**
@@ -87,29 +99,39 @@ class EntrepriseController extends Controller
      */
     public function update(Request $request, Entreprise $entreprise)
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'nom_commercial' => 'nullable|string|max:255',
-            'siret' => 'nullable|string|max:14|unique:entreprises,siret,' . $entreprise->id,
-            'siren' => 'nullable|string|max:9',
-            'secteur_activite' => 'nullable|string|max:255',
-            'adresse' => 'nullable|string',
-            'ville' => 'nullable|string|max:255',
-            'code_postal' => 'nullable|string|max:10',
-            'pays' => 'nullable|string|max:255',
-            'telephone' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'site_web' => 'nullable|url|max:255',
-            'nombre_employes' => 'nullable|integer|min:0',
-            'chiffre_affaires' => 'nullable|numeric|min:0',
-            'active' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'nom' => 'required|string|max:255',
+                'nom_commercial' => 'nullable|string|max:255',
+                'siret' => 'nullable|string|max:14|unique:entreprises,siret,' . $entreprise->id,
+                'siren' => 'nullable|string|max:9',
+                'secteur_activite' => 'nullable|string|max:255',
+                'adresse' => 'nullable|string',
+                'ville' => 'nullable|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'pays' => 'nullable|string|max:255',
+                'telephone' => 'nullable|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'site_web' => 'nullable|url|max:255',
+                'nombre_employes' => 'nullable|integer|min:0',
+                'chiffre_affaires' => 'nullable|numeric|min:0',
+                'active' => 'boolean',
+                'notes' => 'nullable|string',
+            ]);
 
-        $entreprise->update($validated);
+            $entreprise->update($validated);
 
-        return redirect()->route('entreprises.index')
-            ->with('success', 'Entreprise mise à jour avec succès.');
+            return redirect()->route('entreprises.index')
+                ->with('success', 'Entreprise mise à jour avec succès.');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (Exception $e) {
+            return back()
+                ->withInput();
+        }
     }
 
     /**
@@ -117,9 +139,15 @@ class EntrepriseController extends Controller
      */
     public function destroy(Entreprise $entreprise)
     {
-        $entreprise->delete();
+        try {
+            $nom_entreprise = $entreprise->nom;
+            $entreprise->delete();
 
-        return redirect()->route('entreprises.index')
-            ->with('success', 'Entreprise supprimée avec succès.');
+            return redirect()->route('entreprises.index')
+                ->with('success', 'Entreprise supprimée avec succès.');
+
+        } catch (Exception $e) {
+            return back();
+        }
     }
 }

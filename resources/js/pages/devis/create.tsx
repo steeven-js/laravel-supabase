@@ -42,10 +42,12 @@ export default function DevisCreate({ clients }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
         objet: '',
+        description: '',
         date_devis: new Date().toISOString().split('T')[0],
         date_validite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +30 jours
         montant_ht: '',
         taux_tva: '20',
+        conditions: '',
         notes: '',
     });
 
@@ -123,6 +125,20 @@ export default function DevisCreate({ clients }: Props) {
                                     />
                                     {errors.objet && (
                                         <div className="text-sm text-destructive">{errors.objet}</div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="description">Description</Label>
+                                    <textarea
+                                        id="description"
+                                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        placeholder="Description détaillée du devis..."
+                                    />
+                                    {errors.description && (
+                                        <div className="text-sm text-destructive">{errors.description}</div>
                                     )}
                                 </div>
 
@@ -212,6 +228,20 @@ export default function DevisCreate({ clients }: Props) {
                                         </div>
                                     </div>
                                 )}
+
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="conditions">Conditions générales</Label>
+                                    <textarea
+                                        id="conditions"
+                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={data.conditions}
+                                        onChange={(e) => setData('conditions', e.target.value)}
+                                        placeholder="Conditions générales du devis..."
+                                    />
+                                    {errors.conditions && (
+                                        <div className="text-sm text-destructive">{errors.conditions}</div>
+                                    )}
+                                </div>
 
                                 <div className="space-y-2 md:col-span-2">
                                     <Label htmlFor="notes">Notes</Label>

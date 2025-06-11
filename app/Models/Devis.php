@@ -17,6 +17,7 @@ class Devis extends Model
         'date_devis',
         'date_validite',
         'statut',
+        'statut_envoi',
         'objet',
         'description',
         'montant_ht',
@@ -26,6 +27,8 @@ class Devis extends Model
         'conditions',
         'notes',
         'date_acceptation',
+        'date_envoi_client',
+        'date_envoi_admin',
         'archive',
     ];
 
@@ -36,6 +39,8 @@ class Devis extends Model
         'date_devis' => 'date',
         'date_validite' => 'date',
         'date_acceptation' => 'date',
+        'date_envoi_client' => 'datetime',
+        'date_envoi_admin' => 'datetime',
         'montant_ht' => 'decimal:2',
         'taux_tva' => 'decimal:2',
         'montant_tva' => 'decimal:2',
@@ -173,6 +178,47 @@ class Devis extends Model
             'expire' => 'Expiré',
             default => ucfirst($this->statut)
         };
+    }
+
+    /**
+     * Obtenir le statut d'envoi en français.
+     */
+    public function getStatutEnvoiFrAttribute(): string
+    {
+        return match($this->statut_envoi) {
+            'non_envoye' => 'Non envoyé',
+            'envoye' => 'Envoyé',
+            'echec_envoi' => 'Échec d\'envoi',
+            default => ucfirst($this->statut_envoi)
+        };
+    }
+
+    /**
+     * Marquer le devis comme envoyé au client.
+     */
+    public function marquerEnvoye(): bool
+    {
+        $this->statut_envoi = 'envoye';
+        $this->date_envoi_client = now();
+        return $this->save();
+    }
+
+    /**
+     * Marquer le devis comme échec d'envoi.
+     */
+    public function marquerEchecEnvoi(): bool
+    {
+        $this->statut_envoi = 'echec_envoi';
+        return $this->save();
+    }
+
+    /**
+     * Vérifier si le devis peut être envoyé.
+     */
+    public function peutEtreEnvoye(): bool
+    {
+        return in_array($this->statut, ['brouillon', 'envoye']) &&
+               in_array($this->statut_envoi, ['non_envoye', 'echec_envoi']);
     }
 
     /**

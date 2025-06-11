@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Exception;
 
 class ClientController extends Controller
 {
@@ -41,23 +43,42 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'email' => 'required|email|unique:clients,email',
-            'telephone' => 'nullable|string|max:255',
-            'adresse' => 'nullable|string',
-            'ville' => 'nullable|string|max:255',
-            'code_postal' => 'nullable|string|max:10',
-            'pays' => 'nullable|string|max:255',
-            'entreprise_id' => 'nullable|exists:entreprises,id',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            // Convertir "none" en null pour entreprise_id
+            $requestData = $request->all();
+            if (isset($requestData['entreprise_id']) && $requestData['entreprise_id'] === 'none') {
+                $requestData['entreprise_id'] = null;
+            }
 
-        Client::create($validated);
+            // Créer une nouvelle instance de Request avec les données corrigées
+            $request->replace($requestData);
 
-        return redirect()->route('clients.index')
-            ->with('success', 'Client créé avec succès.');
+            $validated = $request->validate([
+                'nom' => 'required|string|max:255',
+                'prenom' => 'required|string|max:255',
+                'email' => 'required|email|unique:clients,email',
+                'telephone' => 'nullable|string|max:255',
+                'adresse' => 'nullable|string',
+                'ville' => 'nullable|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'pays' => 'nullable|string|max:255',
+                'entreprise_id' => 'nullable|exists:entreprises,id',
+                'notes' => 'nullable|string',
+            ]);
+
+            $client = Client::create($validated);
+
+            return redirect()->route('clients.index')
+                ->with('success', 'Client créé avec succès.');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (Exception $e) {
+            return back()
+                ->withInput();
+        }
     }
 
     /**
@@ -90,24 +111,44 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'email' => 'required|email|unique:clients,email,' . $client->id,
-            'telephone' => 'nullable|string|max:255',
-            'adresse' => 'nullable|string',
-            'ville' => 'nullable|string|max:255',
-            'code_postal' => 'nullable|string|max:10',
-            'pays' => 'nullable|string|max:255',
-            'entreprise_id' => 'nullable|exists:entreprises,id',
-            'actif' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            // Convertir "none" en null pour entreprise_id
+            $requestData = $request->all();
+            if (isset($requestData['entreprise_id']) && $requestData['entreprise_id'] === 'none') {
+                $requestData['entreprise_id'] = null;
+            }
 
-        $client->update($validated);
+            // Créer une nouvelle instance de Request avec les données corrigées
+            $request->replace($requestData);
 
-        return redirect()->route('clients.index')
-            ->with('success', 'Client mis à jour avec succès.');
+            $validated = $request->validate([
+                'nom' => 'required|string|max:255',
+                'prenom' => 'required|string|max:255',
+                'email' => 'required|email|unique:clients,email,' . $client->id,
+                'telephone' => 'nullable|string|max:255',
+                'adresse' => 'nullable|string',
+                'ville' => 'nullable|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'pays' => 'nullable|string|max:255',
+                'entreprise_id' => 'nullable|exists:entreprises,id',
+                'actif' => 'boolean',
+                'notes' => 'nullable|string',
+            ]);
+
+            $client->update($validated);
+
+            return redirect()->route('clients.index')
+                ->with('success', 'Client mis à jour avec succès.');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+
+        } catch (Exception $e) {
+            return back()
+                ->withInput();
+        }
     }
 
     /**
@@ -115,9 +156,15 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
-        $client->delete();
+        try {
+            $nom_complet = "{$client->prenom} {$client->nom}";
+            $client->delete();
 
-        return redirect()->route('clients.index')
-            ->with('success', 'Client supprimé avec succès.');
+            return redirect()->route('clients.index')
+                ->with('success', 'Client supprimé avec succès.');
+
+        } catch (Exception $e) {
+            return back();
+        }
     }
 }

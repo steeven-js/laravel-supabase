@@ -4,20 +4,26 @@ import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Edit, FileText, CheckCircle, XCircle, Clock, AlertCircle, Calendar, Euro, User, Building2, Receipt } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, CheckCircle, XCircle, Clock, AlertCircle, Calendar, Euro, User, Building2, Receipt, Mail, MailCheck, MailX } from 'lucide-react';
 
 interface Devis {
     id: number;
     numero_devis: string;
     objet: string;
     statut: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire';
+    statut_envoi: 'non_envoye' | 'envoye' | 'echec_envoi';
     date_devis: string;
     date_validite: string;
+    date_envoi_client?: string;
+    date_envoi_admin?: string;
     montant_ht: number;
     taux_tva: number;
     montant_ttc: number;
     notes?: string;
+    description?: string;
+    conditions?: string;
     peut_etre_transforme_en_facture?: boolean;
+    peut_etre_envoye?: boolean;
     facture?: {
         id: number;
         numero_facture: string;
@@ -89,6 +95,41 @@ const formatStatut = (statut: string) => {
     }
 };
 
+const getStatusEnvoiVariant = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'envoye':
+            return 'default';
+        case 'echec_envoi':
+            return 'destructive';
+        default:
+            return 'secondary';
+    }
+};
+
+const getStatusEnvoiIcon = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'envoye':
+            return <MailCheck className="h-4 w-4" />;
+        case 'echec_envoi':
+            return <MailX className="h-4 w-4" />;
+        default:
+            return <Mail className="h-4 w-4" />;
+    }
+};
+
+const formatStatutEnvoi = (statutEnvoi: string) => {
+    switch (statutEnvoi) {
+        case 'non_envoye':
+            return 'Non envoyé';
+        case 'envoye':
+            return 'Envoyé';
+        case 'echec_envoi':
+            return 'Échec envoi';
+        default:
+            return statutEnvoi;
+    }
+};
+
 const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
     {
         title: 'Dashboard',
@@ -148,6 +189,12 @@ export default function DevisShow({ devis }: Props) {
                                         {formatStatut(devis.statut)}
                                     </span>
                                 </Badge>
+                                <Badge variant={getStatusEnvoiVariant(devis.statut_envoi)} className="text-xs">
+                                    <span className="flex items-center gap-1">
+                                        {getStatusEnvoiIcon(devis.statut_envoi)}
+                                        {formatStatutEnvoi(devis.statut_envoi)}
+                                    </span>
+                                </Badge>
                                 {isExpired && devis.statut === 'envoye' && (
                                     <Badge variant="destructive">Expiré</Badge>
                                 )}
@@ -163,6 +210,15 @@ export default function DevisShow({ devis }: Props) {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        {devis.peut_etre_envoye && (
+                            <Button variant="default" className="bg-blue-600 hover:bg-blue-700" asChild>
+                                <Link href={`/devis/${devis.id}/envoyer-email`}>
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    Envoyer par email
+                                </Link>
+                            </Button>
+                        )}
+
                         {devis.facture ? (
                             <Button variant="outline" asChild>
                                 <Link href={`/factures/${devis.facture.id}`}>
@@ -256,6 +312,16 @@ export default function DevisShow({ devis }: Props) {
                                 </div>
                             </div>
 
+                            {devis.date_envoi_client && (
+                                <div className="flex items-center gap-3">
+                                    <Mail className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                        <div className="text-sm text-muted-foreground">Envoyé au client</div>
+                                        <div>{formatDate(devis.date_envoi_client)}</div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="text-sm text-muted-foreground">
                                 Créé le {formatDateShort(devis.created_at)}
                                 {devis.updated_at !== devis.created_at && (
@@ -288,6 +354,34 @@ export default function DevisShow({ devis }: Props) {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Description */}
+                {devis.description && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Description</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="whitespace-pre-wrap text-sm">
+                                {devis.description}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Conditions */}
+                {devis.conditions && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Conditions générales</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="whitespace-pre-wrap text-sm">
+                                {devis.conditions}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Notes */}
                 {devis.notes && (
