@@ -240,7 +240,7 @@ class FacturePdfService
      */
     private function genererPdf(Facture $facture)
     {
-        return Pdf::loadView('pdf.facture', [
+        return Pdf::loadView('pdfs.facture', [
             'facture' => $facture,
             'client' => $facture->client,
             'entreprise' => $facture->client->entreprise,

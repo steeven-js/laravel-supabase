@@ -1,10 +1,37 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, FileText, Mail, Download, Edit, Check, AlertTriangle } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    ArrowLeft,
+    Edit,
+    FileText,
+    CheckCircle,
+    XCircle,
+    Clock,
+    AlertCircle,
+    Calendar,
+    Euro,
+    User,
+    Building2,
+    Receipt,
+    Mail,
+    Download,
+    Eye,
+    Copy,
+    Share,
+    Info,
+    DollarSign,
+    FileCheck,
+    CreditCard,
+    AlertTriangle,
+    ExternalLink
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface Facture {
     id: number;
@@ -27,7 +54,7 @@ interface Facture {
     };
     objet: string;
     description?: string;
-    statut: string;
+    statut: 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
     date_facture: string;
     date_echeance: string;
     date_paiement?: string;
@@ -46,6 +73,57 @@ interface Props {
     facture: Facture;
 }
 
+const getStatusStyles = (statut: string) => {
+    switch (statut) {
+        case 'payee':
+            return 'bg-green-600 text-white hover:bg-green-700';
+        case 'envoyee':
+            return 'bg-blue-600 text-white hover:bg-blue-700';
+        case 'en_retard':
+            return 'bg-red-600 text-white hover:bg-red-700';
+        case 'annulee':
+            return 'bg-gray-600 text-white hover:bg-gray-700';
+        case 'brouillon':
+            return 'bg-yellow-600 text-white hover:bg-yellow-700';
+        default:
+            return 'bg-gray-600 text-white hover:bg-gray-700';
+    }
+};
+
+const getStatusIcon = (statut: string) => {
+    switch (statut) {
+        case 'payee':
+            return <CheckCircle className="h-4 w-4" />;
+        case 'envoyee':
+            return <Clock className="h-4 w-4" />;
+        case 'en_retard':
+            return <AlertCircle className="h-4 w-4" />;
+        case 'annulee':
+            return <XCircle className="h-4 w-4" />;
+        case 'brouillon':
+            return <FileText className="h-4 w-4" />;
+        default:
+            return <Receipt className="h-4 w-4" />;
+    }
+};
+
+const formatStatut = (statut: string) => {
+    switch (statut) {
+        case 'brouillon':
+            return 'Brouillon';
+        case 'envoyee':
+            return 'Envoyée';
+        case 'payee':
+            return 'Payée';
+        case 'en_retard':
+            return 'En retard';
+        case 'annulee':
+            return 'Annulée';
+        default:
+            return statut;
+    }
+};
+
 const breadcrumbs = (facture: Facture): BreadcrumbItem[] => [
     {
         title: 'Dashboard',
@@ -62,39 +140,7 @@ const breadcrumbs = (facture: Facture): BreadcrumbItem[] => [
 ];
 
 export default function FactureShow({ facture }: Props) {
-    const getStatutColor = (statut: string) => {
-        switch (statut) {
-            case 'brouillon':
-                return 'bg-gray-100 text-gray-800';
-            case 'envoyee':
-                return 'bg-blue-100 text-blue-800';
-            case 'payee':
-                return 'bg-green-100 text-green-800';
-            case 'en_retard':
-                return 'bg-red-100 text-red-800';
-            case 'annulee':
-                return 'bg-gray-100 text-gray-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatutLabel = (statut: string) => {
-        switch (statut) {
-            case 'brouillon':
-                return 'Brouillon';
-            case 'envoyee':
-                return 'Envoyée';
-            case 'payee':
-                return 'Payée';
-            case 'en_retard':
-                return 'En retard';
-            case 'annulee':
-                return 'Annulée';
-            default:
-                return statut;
-        }
-    };
+    const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'documents'>('overview');
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -104,15 +150,60 @@ export default function FactureShow({ facture }: Props) {
     };
 
     const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatDateShort = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('fr-FR');
+    };
+
+    const copyToClipboard = (text: string, label: string) => {
+        navigator.clipboard.writeText(text);
+        toast.success(`${label} copié dans le presse-papiers`);
+    };
+
+    const isRetard = () => {
+        return new Date(facture.date_echeance) < new Date() &&
+               !['payee', 'annulee'].includes(facture.statut);
+    };
+
+    const getDelaiPaiement = () => {
+        const dateEcheance = new Date(facture.date_echeance);
+        const aujourdhui = new Date();
+        const diffTime = dateEcheance.getTime() - aujourdhui.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return `En retard de ${Math.abs(diffDays)} jour${Math.abs(diffDays) > 1 ? 's' : ''}`;
+        } else if (diffDays === 0) {
+            return 'Échéance aujourd\'hui';
+        } else {
+            return `${diffDays} jour${diffDays > 1 ? 's' : ''} restant${diffDays > 1 ? 's' : ''}`;
+        }
+    };
+
+    const handleMarquerPayee = () => {
+        router.patch(`/factures/${facture.id}/marquer-payee`, {}, {
+            onSuccess: () => {
+                toast.success('Facture marquée comme payée');
+            },
+            onError: () => {
+                toast.error('Erreur lors de la mise à jour');
+            }
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(facture)}>
             <Head title={`Facture ${facture.numero_facture}`} />
 
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex items-center justify-between">
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* En-tête */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/factures">
@@ -121,12 +212,20 @@ export default function FactureShow({ facture }: Props) {
                             </Link>
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold">Facture {facture.numero_facture}</h1>
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-3xl font-bold tracking-tight">{facture.numero_facture}</h1>
+                                <Badge className={`${getStatusStyles(facture.statut)} border-0`}>
+                                    <span className="flex items-center gap-1">
+                                        {getStatusIcon(facture.statut)}
+                                        {formatStatut(facture.statut)}
+                                    </span>
+                                </Badge>
+                            </div>
                             <p className="text-muted-foreground">{facture.objet}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {facture.statut === 'brouillon' && (
                             <Button variant="outline" asChild>
                                 <Link href={`/factures/${facture.id}/edit`}>
@@ -136,23 +235,20 @@ export default function FactureShow({ facture }: Props) {
                             </Button>
                         )}
 
-                        {facture.statut === 'brouillon' && (
-                            <Button variant="default">
-                                <Mail className="mr-2 h-4 w-4" />
-                                Envoyer
-                            </Button>
-                        )}
-
                         {facture.statut === 'envoyee' && (
-                            <Button variant="default" className="bg-green-600 hover:bg-green-700">
-                                <Check className="mr-2 h-4 w-4" />
+                            <Button
+                                variant="default"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={handleMarquerPayee}
+                            >
+                                <CheckCircle className="mr-2 h-4 w-4" />
                                 Marquer comme payée
                             </Button>
                         )}
 
                         <Button variant="outline" asChild>
                             <a href={`/factures/${facture.id}/pdf`} target="_blank" rel="noopener noreferrer">
-                                <FileText className="mr-2 h-4 w-4" />
+                                <Eye className="mr-2 h-4 w-4" />
                                 Voir PDF
                             </a>
                         </Button>
@@ -160,138 +256,329 @@ export default function FactureShow({ facture }: Props) {
                         <Button variant="outline" asChild>
                             <a href={`/factures/${facture.id}/telecharger-pdf`}>
                                 <Download className="mr-2 h-4 w-4" />
-                                Télécharger PDF
+                                Télécharger
                             </a>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            onClick={() => copyToClipboard(facture.numero_facture, 'Numéro de facture')}
+                        >
+                            <Copy className="mr-2 h-4 w-4" />
+                            Copier
                         </Button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Informations principales */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <FileText className="w-5 h-5" />
-                                    Détails de la facture
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Informations générales</h3>
-                                        <div className="space-y-2 text-sm">
-                                            <div className="flex justify-between">
-                                                <span>Numéro :</span>
-                                                <span className="font-medium">{facture.numero_facture}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Date :</span>
-                                                <span>{formatDate(facture.date_facture)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Échéance :</span>
-                                                <span>{formatDate(facture.date_echeance)}</span>
-                                            </div>
-                                            {facture.date_paiement && (
-                                                <div className="flex justify-between">
-                                                    <span>Date de paiement :</span>
-                                                    <span>{formatDate(facture.date_paiement)}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between">
-                                                <span>Statut :</span>
-                                                <Badge className={getStatutColor(facture.statut)}>
-                                                    {getStatutLabel(facture.statut)}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Montants</h3>
-                                        <div className="space-y-2 text-sm">
-                                            <div className="flex justify-between">
-                                                <span>Montant HT :</span>
-                                                <span>{formatPrice(facture.montant_ht)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>TVA ({facture.taux_tva}%) :</span>
-                                                <span>{formatPrice(facture.montant_ttc - facture.montant_ht)}</span>
-                                            </div>
-                                            <div className="flex justify-between border-t pt-2 font-semibold">
-                                                <span>Montant TTC :</span>
-                                                <span>{formatPrice(facture.montant_ttc)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                {/* Alerte retard */}
+                {isRetard() && (
+                    <Card className="border-red-200 bg-red-50 dark:bg-red-950/50">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="h-5 w-5 text-red-600" />
+                                <div>
+                                    <h4 className="font-medium text-red-900 dark:text-red-100">
+                                        Facture en retard de paiement
+                                    </h4>
+                                    <p className="text-sm text-red-700 dark:text-red-200">
+                                        {getDelaiPaiement()}
+                                    </p>
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
-                                {facture.description && (
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Description</h3>
-                                        <p className="text-sm whitespace-pre-wrap">{facture.description}</p>
-                                    </div>
-                                )}
+                {/* Onglets */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex space-x-1">
+                            <button
+                                onClick={() => setActiveTab('overview')}
+                                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    activeTab === 'overview'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                }`}
+                            >
+                                <Info className="w-4 h-4 inline mr-2" />
+                                Vue d'ensemble
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('details')}
+                                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    activeTab === 'details'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                }`}
+                            >
+                                <FileText className="w-4 h-4 inline mr-2" />
+                                Détails
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('documents')}
+                                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    activeTab === 'documents'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                }`}
+                            >
+                                <FileCheck className="w-4 h-4 inline mr-2" />
+                                Documents
+                            </button>
+                        </div>
+                    </CardHeader>
+                </Card>
 
-                                {facture.conditions_paiement && (
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Conditions de paiement</h3>
-                                        <p className="text-sm whitespace-pre-wrap">{facture.conditions_paiement}</p>
-                                    </div>
-                                )}
-
-                                {facture.notes && (
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Notes</h3>
-                                        <p className="text-sm whitespace-pre-wrap">{facture.notes}</p>
-                                    </div>
-                                )}
-
-                                {facture.mode_paiement && (
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Informations de paiement</h3>
-                                        <div className="space-y-1 text-sm">
-                                            <div className="flex justify-between">
-                                                <span>Mode de paiement :</span>
-                                                <span>{facture.mode_paiement}</span>
-                                            </div>
-                                            {facture.reference_paiement && (
-                                                <div className="flex justify-between">
-                                                    <span>Référence :</span>
-                                                    <span>{facture.reference_paiement}</span>
+                {/* Contenu des onglets */}
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                    {/* Contenu principal */}
+                    <div className="xl:col-span-3 space-y-6">
+                        {activeTab === 'overview' && (
+                            <>
+                                {/* Résumé financier */}
+                                <Card className="border-0 shadow-md">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Euro className="w-5 h-5 text-green-600" />
+                                            Résumé financier
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div className="text-center p-4 bg-muted/30 rounded-lg">
+                                                <div className="text-2xl font-bold text-muted-foreground mb-1">
+                                                    {formatPrice(facture.montant_ht)}
                                                 </div>
-                                            )}
+                                                <p className="text-sm text-muted-foreground">Montant HT</p>
+                                            </div>
+                                            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                                                <div className="text-2xl font-bold text-blue-600 mb-1">
+                                                    {formatPrice(facture.montant_ttc - facture.montant_ht)}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">TVA ({facture.taux_tva}%)</p>
+                                            </div>
+                                            <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                                                <div className="text-2xl font-bold text-green-600 mb-1">
+                                                    {formatPrice(facture.montant_ttc)}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">Montant TTC</p>
+                                            </div>
                                         </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Informations principales */}
+                                <Card className="border-0 shadow-md">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Calendar className="w-5 h-5 text-blue-600" />
+                                            Informations de facturation
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-center py-2 border-b border-muted">
+                                                    <span className="font-medium">Date d'émission</span>
+                                                    <span>{formatDate(facture.date_facture)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center py-2 border-b border-muted">
+                                                    <span className="font-medium">Date d'échéance</span>
+                                                    <span className={isRetard() ? 'text-red-600 font-semibold' : ''}>
+                                                        {formatDate(facture.date_echeance)}
+                                                    </span>
+                                                </div>
+                                                {facture.date_paiement && (
+                                                    <div className="flex justify-between items-center py-2 border-b border-muted">
+                                                        <span className="font-medium">Date de paiement</span>
+                                                        <span className="text-green-600">{formatDate(facture.date_paiement)}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-center py-2 border-b border-muted">
+                                                    <span className="font-medium">Délai de paiement</span>
+                                                    <span className={isRetard() ? 'text-red-600 font-semibold' : 'text-muted-foreground'}>
+                                                        {getDelaiPaiement()}
+                                                    </span>
+                                                </div>
+                                                {facture.mode_paiement && (
+                                                    <div className="flex justify-between items-center py-2 border-b border-muted">
+                                                        <span className="font-medium">Mode de paiement</span>
+                                                        <span>{facture.mode_paiement}</span>
+                                                    </div>
+                                                )}
+                                                {facture.reference_paiement && (
+                                                    <div className="flex justify-between items-center py-2 border-b border-muted">
+                                                        <span className="font-medium">Référence</span>
+                                                        <span>{facture.reference_paiement}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </>
+                        )}
+
+                        {activeTab === 'details' && (
+                            <Card className="border-0 shadow-md">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <FileText className="w-5 h-5" />
+                                        Détails de la facture
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {facture.description && (
+                                        <div>
+                                            <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                                <Info className="w-4 h-4" />
+                                                Description
+                                            </h3>
+                                            <div className="bg-muted/30 p-4 rounded-lg">
+                                                <p className="whitespace-pre-wrap">{facture.description}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {facture.conditions_paiement && (
+                                        <div>
+                                            <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                                <CreditCard className="w-4 h-4" />
+                                                Conditions de paiement
+                                            </h3>
+                                            <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
+                                                <p className="whitespace-pre-wrap">{facture.conditions_paiement}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {facture.notes && (
+                                        <div>
+                                            <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                                <FileText className="w-4 h-4" />
+                                                Notes
+                                            </h3>
+                                            <div className="bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-lg">
+                                                <p className="whitespace-pre-wrap">{facture.notes}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {activeTab === 'documents' && (
+                            <Card className="border-0 shadow-md">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <FileCheck className="w-5 h-5" />
+                                        Documents et actions
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Button variant="outline" className="h-auto p-4 justify-start" asChild>
+                                            <a href={`/factures/${facture.id}/pdf`} target="_blank" rel="noopener noreferrer">
+                                                <div className="flex items-center gap-3">
+                                                    <Eye className="w-5 h-5" />
+                                                    <div>
+                                                        <div className="font-medium">Aperçu PDF</div>
+                                                        <div className="text-sm text-muted-foreground">Voir la facture en PDF</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </Button>
+
+                                        <Button variant="outline" className="h-auto p-4 justify-start" asChild>
+                                            <a href={`/factures/${facture.id}/telecharger-pdf`}>
+                                                <div className="flex items-center gap-3">
+                                                    <Download className="w-5 h-5" />
+                                                    <div>
+                                                        <div className="font-medium">Télécharger PDF</div>
+                                                        <div className="text-sm text-muted-foreground">Enregistrer localement</div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </Button>
+
+                                        <Button
+                                            variant="outline"
+                                            className="h-auto p-4 justify-start"
+                                            onClick={() => copyToClipboard(facture.numero_facture, 'Numéro de facture')}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Copy className="w-5 h-5" />
+                                                <div>
+                                                    <div className="font-medium">Copier référence</div>
+                                                    <div className="text-sm text-muted-foreground">Copier le numéro</div>
+                                                </div>
+                                            </div>
+                                        </Button>
+
+                                        <Button variant="outline" className="h-auto p-4 justify-start">
+                                            <div className="flex items-center gap-3">
+                                                <Share className="w-5 h-5" />
+                                                <div>
+                                                    <div className="font-medium">Partager</div>
+                                                    <div className="text-sm text-muted-foreground">Envoyer par email</div>
+                                                </div>
+                                            </div>
+                                        </Button>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
 
                     {/* Sidebar */}
                     <div className="space-y-6">
                         {/* Informations client */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Client</CardTitle>
+                        <Card className="border-0 shadow-md">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2">
+                                    <User className="w-5 h-5 text-blue-600" />
+                                    Client
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div>
-                                    <p className="font-medium">{facture.client.prenom} {facture.client.nom}</p>
+                            <CardContent className="space-y-4">
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        {facture.client.entreprise ? (
+                                            <Building2 className="w-6 h-6 text-blue-600" />
+                                        ) : (
+                                            <User className="w-6 h-6 text-blue-600" />
+                                        )}
+                                    </div>
+                                    <h3 className="font-semibold">{facture.client.prenom} {facture.client.nom}</h3>
                                     {facture.client.entreprise && (
                                         <p className="text-sm text-muted-foreground">
                                             {facture.client.entreprise.nom_commercial || facture.client.entreprise.nom}
                                         </p>
                                     )}
                                 </div>
-                                <div className="space-y-1 text-sm">
-                                    <p>📧 {facture.client.email}</p>
-                                    {facture.client.telephone && <p>📞 {facture.client.telephone}</p>}
+
+                                <Separator />
+
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-muted-foreground" />
+                                        <span>{facture.client.email}</span>
+                                    </div>
+                                    {facture.client.telephone && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-4 h-4 text-muted-foreground">📞</span>
+                                            <span>{facture.client.telephone}</span>
+                                        </div>
+                                    )}
                                 </div>
+
                                 <Button variant="outline" size="sm" asChild className="w-full">
                                     <Link href={`/clients/${facture.client.id}`}>
-                                        Voir le client
+                                        <ExternalLink className="w-4 h-4 mr-2" />
+                                        Voir le profil
                                     </Link>
                                 </Button>
                             </CardContent>
@@ -299,39 +586,68 @@ export default function FactureShow({ facture }: Props) {
 
                         {/* Devis associé */}
                         {facture.devis && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Devis associé</CardTitle>
+                            <Card className="border-0 shadow-md">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Receipt className="w-5 h-5 text-purple-600" />
+                                        Devis associé
+                                    </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        <p className="font-medium">{facture.devis.numero_devis}</p>
-                                        <Button variant="outline" size="sm" asChild className="w-full">
-                                            <Link href={`/devis/${facture.devis.id}`}>
-                                                Voir le devis
-                                            </Link>
-                                        </Button>
+                                <CardContent className="space-y-4">
+                                    <div className="text-center">
+                                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <Receipt className="w-6 h-6 text-purple-600" />
+                                        </div>
+                                        <h3 className="font-semibold">{facture.devis.numero_devis}</h3>
+                                        <p className="text-sm text-muted-foreground">Devis transformé en facture</p>
                                     </div>
+                                    <Button variant="outline" size="sm" asChild className="w-full">
+                                        <Link href={`/devis/${facture.devis.id}`}>
+                                            <ExternalLink className="w-4 h-4 mr-2" />
+                                            Voir le devis
+                                        </Link>
+                                    </Button>
                                 </CardContent>
                             </Card>
                         )}
 
-                        {/* Alerte retard */}
-                        {facture.statut === 'en_retard' && (
-                            <Card className="border-red-200">
-                                <CardContent className="pt-6">
-                                    <div className="flex items-start gap-2">
-                                        <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
-                                        <div>
-                                            <h4 className="font-medium text-red-900">Facture en retard</h4>
-                                            <p className="text-sm text-red-700">
-                                                Cette facture a dépassé sa date d'échéance.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                        {/* Actions rapides */}
+                        <Card className="border-0 shadow-md">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2">
+                                    <DollarSign className="w-5 h-5 text-green-600" />
+                                    Actions rapides
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {facture.statut === 'brouillon' && (
+                                    <Button variant="outline" size="sm" asChild className="w-full">
+                                        <Link href={`/factures/${facture.id}/edit`}>
+                                            <Edit className="w-4 h-4 mr-2" />
+                                            Modifier
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {facture.statut === 'envoyee' && (
+                                    <Button
+                                        size="sm"
+                                        className="w-full bg-green-600 hover:bg-green-700"
+                                        onClick={handleMarquerPayee}
+                                    >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Marquer payée
+                                    </Button>
+                                )}
+
+                                <Button variant="outline" size="sm" asChild className="w-full">
+                                    <a href={`/factures/${facture.id}/telecharger-pdf`}>
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Télécharger
+                                    </a>
+                                </Button>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>
