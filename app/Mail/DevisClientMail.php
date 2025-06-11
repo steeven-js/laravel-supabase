@@ -13,7 +13,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class DevisClientMail extends Mailable implements ShouldQueue
+class DevisClientMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -21,21 +21,6 @@ class DevisClientMail extends Mailable implements ShouldQueue
     public Client $client;
     public ?string $messagePersonnalise;
     protected DevisPdfService $pdfService;
-
-    /**
-     * Nombre de tentatives de retry
-     */
-    public $tries = 3;
-
-    /**
-     * Timeout pour l'envoi (en secondes)
-     */
-    public $timeout = 120;
-
-    /**
-     * Délai entre les tentatives (en secondes)
-     */
-    public $backoff = [30, 60, 120];
 
     /**
      * Create a new message instance.

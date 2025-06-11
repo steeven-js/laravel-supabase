@@ -6,6 +6,7 @@ use App\Models\Devis;
 use App\Mail\DevisClientMail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class TestEmailDevis extends Command
 {
@@ -14,14 +15,14 @@ class TestEmailDevis extends Command
      *
      * @var string
      */
-    protected $signature = 'email:test-devis {devis_id : ID du devis à envoyer} {--email= : Email de destination (optionnel)}';
+    protected $signature = 'test:email-devis {devis_id} {email}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Teste l\'envoi d\'email de devis avec PDF en pièce jointe';
+    protected $description = 'Test l\'envoi d\'email avec PDF en pièce jointe pour un devis';
 
     /**
      * Execute the console command.
@@ -29,114 +30,70 @@ class TestEmailDevis extends Command
     public function handle()
     {
         $devisId = $this->argument('devis_id');
-        $emailDestination = $this->option('email');
+        $email = $this->argument('email');
 
-        $this->info("📧 Test d'envoi d'email pour le devis ID: {$devisId}");
-        $this->newLine();
-
-        // Récupérer le devis
-        $devis = Devis::with(['client.entreprise'])->find($devisId);
-
-        if (!$devis) {
-            $this->error("❌ Devis avec l'ID {$devisId} introuvable.");
-            return 1;
-        }
-
-        $this->info("✅ Devis trouvé: {$devis->numero_devis}");
-        $this->info("👤 Client: {$devis->client->prenom} {$devis->client->nom}");
-        $this->info("📧 Email: {$devis->client->email}");
-
-        // Vérifier si le PDF existe
-        $pdfService = app(\App\Services\DevisPdfService::class);
-        $cheminPdf = $pdfService->getCheminPdf($devis);
-        $urlSupabase = $pdfService->getUrlSupabasePdf($devis);
-
-        if ($cheminPdf && file_exists($cheminPdf)) {
-            $this->info("📄 PDF local: ✅ Disponible");
-            $taillePdf = filesize($cheminPdf);
-            $this->info("📏 Taille: " . $this->formatBytes($taillePdf));
-        } else {
-            $this->warn("📄 PDF local: ❌ Non trouvé");
-        }
-
-        if ($urlSupabase) {
-            $this->info("🔗 URL Supabase: {$urlSupabase}");
-        } else {
-            $this->warn("🔗 URL Supabase: ❌ Non configurée");
-        }
-
-        $this->newLine();
-
-        // Demander confirmation
-        $emailDestinationFinal = $emailDestination ?: $devis->client->email;
-
-        if (!$this->confirm("Envoyer l'email de test à {$emailDestinationFinal} ?")) {
-            $this->info("Test annulé.");
-            return 0;
-        }
-
-                // Préparer l'email
         try {
-            $this->info("📨 Préparation de l'email...");
+            $devis = Devis::with('client.entreprise')->find($devisId);
 
-            $client = $devis->client;
-
-            // Si un email personnalisé est fourni, créer un clone du client
-            if ($emailDestination) {
-                $client = clone $client;
-                $client->email = $emailDestination;
+            if (!$devis) {
+                $this->error("Devis avec l'ID {$devisId} non trouvé.");
+                return 1;
             }
 
-            $this->info("🏗️ Création de l'objet DevisClientMail...");
-            $mail = new DevisClientMail(
+            $this->info("Test d'envoi d'email pour le devis {$devis->numero_devis}");
+            $this->info("Destinataire : {$email}");
+
+            // Vérifier si le PDF existe
+            $pdfService = app(\App\Services\DevisPdfService::class);
+            $cheminPdf = $pdfService->getCheminPdf($devis);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                $this->warn("PDF non trouvé, génération en cours...");
+                $nomFichierPdf = $pdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichierPdf;
+                $devis->save();
+                $this->info("PDF généré : {$nomFichierPdf}");
+            } else {
+                $tailleFichier = filesize($cheminPdf);
+                $this->info("PDF trouvé : {$cheminPdf} ({$tailleFichier} bytes)");
+            }
+
+            // Test d'envoi d'email
+            $messageTest = "Ceci est un email de test envoyé via la commande test:email-devis. Le PDF doit être en pièce jointe.";
+
+            $this->info("Envoi de l'email en cours...");
+
+            // Utiliser Log pour capturer les détails
+            Log::info('=== TEST ENVOI EMAIL DEVIS ===', [
+                'devis_id' => $devis->id,
+                'devis_numero' => $devis->numero_devis,
+                'email_test' => $email,
+                'pdf_file' => $devis->pdf_file,
+                'pdf_path' => $cheminPdf,
+            ]);
+
+            Mail::to($email)->send(new DevisClientMail(
                 $devis,
-                $client,
-                "Ceci est un email de test envoyé via la commande artisan. 🧪"
-            );
+                $devis->client,
+                $messageTest
+            ));
 
-            $this->info("📎 Vérification des pièces jointes...");
-            $attachments = $mail->attachments();
-            $this->info("📎 Nombre de pièces jointes: " . count($attachments));
+            $this->info("✅ Email envoyé avec succès !");
+            $this->info("Vérifiez votre boîte email : {$email}");
+            $this->info("Le PDF {$devis->numero_devis} doit être en pièce jointe.");
 
-            $this->info("📤 Envoi en cours...");
-
-            // Augmenter le timeout pour l'envoi
-            ini_set('max_execution_time', 120);
-
-            // Utiliser to() au lieu de send() pour plus de contrôle
-            Mail::to($emailDestinationFinal)->send($mail);
-
-            $this->newLine();
-            $this->info("🎉 Email envoyé avec succès !");
-            $this->info("📧 Destinataire: {$emailDestinationFinal}");
-            $this->info("📄 Pièce jointe: " . ($cheminPdf ? "✅ PDF inclus" : "❌ Pas de PDF"));
-            $this->info("🔗 Lien Supabase: " . ($urlSupabase ? "✅ Inclus" : "❌ Non disponible"));
+            return 0;
 
         } catch (\Exception $e) {
-            $this->error("❌ Erreur lors de l'envoi:");
-            $this->error("Type: " . get_class($e));
-            $this->error("Message: " . $e->getMessage());
-            $this->error("Fichier: " . $e->getFile() . ":" . $e->getLine());
-
-            // Afficher plus de détails si c'est une erreur de mail
-            if (method_exists($e, 'getCode')) {
-                $this->error("Code: " . $e->getCode());
-            }
+            $this->error("❌ Erreur lors de l'envoi : " . $e->getMessage());
+            Log::error('Erreur test email devis', [
+                'devis_id' => $devisId,
+                'email' => $email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return 1;
         }
-
-        return 0;
-    }
-
-    private function formatBytes($bytes, $precision = 2)
-    {
-        $units = array('B', 'KB', 'MB', 'GB', 'TB');
-
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-
-        return round($bytes, $precision) . ' ' . $units[$i];
     }
 }

@@ -706,6 +706,31 @@ class DevisController extends Controller
         ]);
 
         try {
+            // S'assurer que le PDF existe avant l'envoi de l'email
+            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                Log::info('PDF non trouvé, génération en cours...', [
+                    'devis_numero' => $devis->numero_devis,
+                    'chemin_attendu' => $cheminPdf,
+                ]);
+
+                $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichierPdf;
+                $devis->save();
+
+                Log::info('PDF généré pour l\'envoi email', [
+                    'devis_numero' => $devis->numero_devis,
+                    'fichier_pdf' => $nomFichierPdf,
+                ]);
+            } else {
+                Log::info('PDF existant trouvé', [
+                    'devis_numero' => $devis->numero_devis,
+                    'chemin_pdf' => $cheminPdf,
+                    'taille_fichier' => filesize($cheminPdf) . ' bytes',
+                ]);
+            }
+
             Log::info('Tentative de création de DevisClientMail', [
                 'devis_numero' => $devis->numero_devis,
                 'client_email' => $devis->client->email,
