@@ -58,16 +58,46 @@ const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
 ];
 
 export default function DevisEdit({ devis, clients }: Props) {
+    // Fonction pour formater une date correctement
+    const formatDateForInput = (dateValue: any) => {
+        if (!dateValue) return '';
+
+        // Si c'est déjà au bon format (YYYY-MM-DD)
+        if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dateValue;
+        }
+
+        // Si c'est une date ISO, extraire la partie date
+        if (typeof dateValue === 'string' && dateValue.includes('T')) {
+            return dateValue.split('T')[0];
+        }
+
+        // Tenter de créer une Date et la formater
+        try {
+            const date = new Date(dateValue);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+        } catch (e) {
+            console.warn('Impossible de formater la date:', dateValue);
+        }
+
+        return '';
+    };
+
     const { data, setData, patch, processing, errors } = useForm({
-        client_id: devis.client_id.toString(),
+        numero_devis: devis.numero_devis || '',
+        client_id: devis.client_id?.toString() || '',
         objet: devis.objet || '',
-        statut: devis.statut,
-        date_devis: devis.date_devis?.split('T')[0] || '',
-        date_validite: devis.date_validite?.split('T')[0] || '',
-        montant_ht: devis.montant_ht?.toString() || '',
+        statut: devis.statut || 'brouillon',
+        date_devis: formatDateForInput(devis.date_devis) || new Date().toISOString().split('T')[0],
+        date_validite: formatDateForInput(devis.date_validite) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        montant_ht: devis.montant_ht?.toString() || '0',
         taux_tva: devis.taux_tva?.toString() || '20',
         notes: devis.notes || '',
     });
+
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -104,10 +134,24 @@ export default function DevisEdit({ devis, clients }: Props) {
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2 md:col-span-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="numero_devis">Numéro de devis *</Label>
+                                    <Input
+                                        id="numero_devis"
+                                        value={data.numero_devis}
+                                        onChange={(e) => setData('numero_devis', e.target.value)}
+                                        placeholder="DEV-2025-0001"
+                                        required
+                                    />
+                                    {errors.numero_devis && (
+                                        <div className="text-sm text-destructive">{errors.numero_devis}</div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2 md:col-span-1">
                                     <Label htmlFor="client_id">Client *</Label>
                                     <Select
-                                        value={data.client_id}
+                                        value={data.client_id || undefined}
                                         onValueChange={(value) => setData('client_id', value)}
                                         required
                                     >
