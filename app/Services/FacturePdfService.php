@@ -35,13 +35,18 @@ class FacturePdfService
             // Sauvegarder sur Supabase si configuré
             $this->sauvegarderSupabase($pdf, $nomFichier);
 
+            // Générer et stocker l'URL Supabase
+            $urlSupabase = $this->genererUrlSupabase($nomFichier);
+            $facture->pdf_url = $urlSupabase;
+            $facture->save();
+
             Log::info('PDF facture généré avec succès', [
                 'facture_id' => $facture->id,
                 'fichier' => $nomFichier,
+                'url_supabase' => $urlSupabase
             ]);
 
             return $nomFichier;
-
         } catch (Exception $e) {
             Log::error('Erreur génération PDF facture', [
                 'facture_id' => $facture->id,
@@ -82,7 +87,6 @@ class FacturePdfService
             $this->supprimerSupabase($nomFichier);
 
             return true;
-
         } catch (Exception $e) {
             Log::error('Erreur suppression PDF facture', [
                 'facture_id' => $facture->id,
@@ -132,16 +136,26 @@ class FacturePdfService
      */
     public function getUrlSupabasePdf(Facture $facture): ?string
     {
+        // Si l'URL est déjà stockée en base, la retourner
+        if ($facture->pdf_url) {
+            return $facture->pdf_url;
+        }
+
+        // Générer l'URL à partir de la configuration Supabase
         $nomFichier = $this->getNomFichier($facture);
-        $supabaseUrl = config('database.connections.pgsql.host');
-        $bucketName = 'pdfs'; // Nom du bucket par défaut
+        return $this->genererUrlSupabase($nomFichier);
+    }
 
-        if ($supabaseUrl) {
-            $projectUrl = str_replace('.supabase.co', '', $supabaseUrl);
-            $projectUrl = str_replace('db-', '', $projectUrl);
-            $projectUrl = str_replace('.pooler', '', $projectUrl);
+    /**
+     * Génère l'URL publique Supabase pour un fichier PDF
+     */
+    private function genererUrlSupabase(string $nomFichier): ?string
+    {
+        $supabaseUrl = config('supabase.url');
+        $bucketName = config('supabase.storage_bucket', 'pdfs');
 
-            return "https://{$projectUrl}.supabase.co/storage/v1/object/public/{$bucketName}/factures/{$nomFichier}";
+        if ($supabaseUrl && $nomFichier) {
+            return "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/factures/{$nomFichier}";
         }
 
         return null;
@@ -192,8 +206,14 @@ class FacturePdfService
             // Créer un objet PDF mock pour la synchronisation
             $pdf = new class($contenu) {
                 private $content;
-                public function __construct($content) { $this->content = $content; }
-                public function output() { return $this->content; }
+                public function __construct($content)
+                {
+                    $this->content = $content;
+                }
+                public function output()
+                {
+                    return $this->content;
+                }
             };
 
             $this->sauvegarderSupabase($pdf, $nomFichier);
@@ -205,7 +225,6 @@ class FacturePdfService
             ]);
 
             return true;
-
         } catch (Exception $e) {
             Log::error('Erreur synchronisation PDF vers Supabase', [
                 'facture_id' => $facture->id,
@@ -227,13 +246,13 @@ class FacturePdfService
             'entreprise' => $facture->client->entreprise,
             'devis' => $facture->devis,
         ])
-        ->setPaper('a4', 'portrait')
-        ->setOptions([
-            'dpi' => 150,
-            'defaultFont' => 'sans-serif',
-            'isRemoteEnabled' => true,
-            'chroot' => [resource_path(), public_path()],
-        ]);
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'dpi' => 150,
+                'defaultFont' => 'sans-serif',
+                'isRemoteEnabled' => true,
+                'chroot' => [resource_path(), public_path()],
+            ]);
     }
 
     /**
@@ -288,7 +307,6 @@ class FacturePdfService
                     'body' => $response->body()
                 ]);
             }
-
         } catch (Exception $e) {
             Log::error('Exception sauvegarde PDF Supabase', [
                 'fichier' => $nomFichier,
@@ -330,7 +348,6 @@ class FacturePdfService
                     'body' => $response->body()
                 ]);
             }
-
         } catch (Exception $e) {
             Log::error('Exception suppression PDF Supabase', [
                 'fichier' => $nomFichier,

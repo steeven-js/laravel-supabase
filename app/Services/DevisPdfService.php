@@ -11,7 +11,7 @@ use Exception;
 
 class DevisPdfService
 {
-        /**
+    /**
      * Génère le PDF d'un devis et le sauvegarde (double sauvegarde: local + Supabase)
      */
     public function genererEtSauvegarder(Devis $devis): string
@@ -32,13 +32,18 @@ class DevisPdfService
             // Sauvegarder sur Supabase
             $this->sauvegarderSupabase($pdf, $nomFichier);
 
+            // Générer et stocker l'URL Supabase
+            $urlSupabase = $this->genererUrlSupabase($nomFichier);
+            $devis->pdf_url = $urlSupabase;
+            $devis->save();
+
             Log::info('PDF devis généré et sauvegardé (local + Supabase)', [
                 'devis_numero' => $devis->numero_devis,
-                'fichier' => $nomFichier
+                'fichier' => $nomFichier,
+                'url_supabase' => $urlSupabase
             ]);
 
             return $nomFichier;
-
         } catch (Exception $e) {
             Log::error('Erreur génération PDF devis', [
                 'devis_numero' => $devis->numero_devis,
@@ -48,7 +53,7 @@ class DevisPdfService
         }
     }
 
-        /**
+    /**
      * Met à jour le PDF d'un devis existant
      */
     public function mettreAJour(Devis $devis): string
@@ -59,7 +64,6 @@ class DevisPdfService
 
             // Générer et sauvegarder le nouveau PDF
             return $this->genererEtSauvegarder($devis);
-
         } catch (Exception $e) {
             Log::error('Erreur mise à jour PDF devis', [
                 'devis_numero' => $devis->numero_devis,
@@ -95,7 +99,6 @@ class DevisPdfService
             }
 
             return $supprime;
-
         } catch (Exception $e) {
             Log::error('Erreur suppression PDF devis', [
                 'devis_numero' => $devis->numero_devis,
@@ -138,16 +141,26 @@ class DevisPdfService
      */
     public function getUrlSupabasePdf(Devis $devis): ?string
     {
+        // Si l'URL est déjà stockée en base, la retourner
+        if ($devis->pdf_url) {
+            return $devis->pdf_url;
+        }
+
+        // Générer l'URL à partir de la configuration Supabase
         $nomFichier = $this->getNomFichier($devis);
-        $supabaseUrl = config('database.connections.pgsql.host');
-        $bucketName = 'pdfs'; // Nom du bucket par défaut
+        return $this->genererUrlSupabase($nomFichier);
+    }
 
-        if ($supabaseUrl) {
-            $projectUrl = str_replace('.supabase.co', '', $supabaseUrl);
-            $projectUrl = str_replace('db-', '', $projectUrl);
-            $projectUrl = str_replace('.pooler', '', $projectUrl);
+    /**
+     * Génère l'URL publique Supabase pour un fichier PDF
+     */
+    private function genererUrlSupabase(string $nomFichier): ?string
+    {
+        $supabaseUrl = config('supabase.url');
+        $bucketName = config('supabase.storage_bucket', 'pdfs');
 
-            return "https://{$projectUrl}.supabase.co/storage/v1/object/public/{$bucketName}/devis/{$nomFichier}";
+        if ($supabaseUrl && $nomFichier) {
+            return "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/devis/{$nomFichier}";
         }
 
         return null;
@@ -198,8 +211,14 @@ class DevisPdfService
             // Créer un objet PDF mock pour la synchronisation
             $pdf = new class($contenu) {
                 private $content;
-                public function __construct($content) { $this->content = $content; }
-                public function output() { return $this->content; }
+                public function __construct($content)
+                {
+                    $this->content = $content;
+                }
+                public function output()
+                {
+                    return $this->content;
+                }
             };
 
             $this->sauvegarderSupabase($pdf, $nomFichier);
@@ -211,7 +230,6 @@ class DevisPdfService
             ]);
 
             return true;
-
         } catch (Exception $e) {
             Log::error('Erreur synchronisation PDF vers Supabase', [
                 'devis_id' => $devis->id,
@@ -232,13 +250,13 @@ class DevisPdfService
             'client' => $devis->client,
             'entreprise' => $devis->client->entreprise,
         ])
-        ->setPaper('a4', 'portrait')
-        ->setOptions([
-            'dpi' => 150,
-            'defaultFont' => 'sans-serif',
-            'isRemoteEnabled' => true,
-            'chroot' => [resource_path(), public_path()],
-        ]);
+            ->setPaper('a4', 'portrait')
+            ->setOptions([
+                'dpi' => 150,
+                'defaultFont' => 'sans-serif',
+                'isRemoteEnabled' => true,
+                'chroot' => [resource_path(), public_path()],
+            ]);
     }
 
     /**
@@ -264,9 +282,9 @@ class DevisPdfService
     private function sauvegarderSupabase($pdf, string $nomFichier): void
     {
         try {
-            $supabaseUrl = $this->getSupabaseProjectUrl();
-            $serviceKey = config('database.connections.pgsql.password'); // Utilise la clé service
-            $bucketName = 'pdfs';
+            $supabaseUrl = config('supabase.url');
+            $serviceKey = config('supabase.service_role_key');
+            $bucketName = config('supabase.storage_bucket', 'pdfs');
 
             if (!$supabaseUrl || !$serviceKey) {
                 Log::warning('Configuration Supabase manquante pour upload PDF');
@@ -293,7 +311,6 @@ class DevisPdfService
                     'body' => $response->body()
                 ]);
             }
-
         } catch (Exception $e) {
             Log::error('Exception sauvegarde PDF Supabase', [
                 'fichier' => $nomFichier,
@@ -308,9 +325,9 @@ class DevisPdfService
     private function supprimerSupabase(string $nomFichier): void
     {
         try {
-            $supabaseUrl = $this->getSupabaseProjectUrl();
-            $serviceKey = config('database.connections.pgsql.password');
-            $bucketName = 'pdfs';
+            $supabaseUrl = config('supabase.url');
+            $serviceKey = config('supabase.service_role_key');
+            $bucketName = config('supabase.storage_bucket', 'pdfs');
 
             if (!$supabaseUrl || !$serviceKey) {
                 Log::warning('Configuration Supabase manquante pour suppression PDF');
@@ -335,7 +352,6 @@ class DevisPdfService
                     'body' => $response->body()
                 ]);
             }
-
         } catch (Exception $e) {
             Log::error('Exception suppression PDF Supabase', [
                 'fichier' => $nomFichier,
@@ -344,26 +360,7 @@ class DevisPdfService
         }
     }
 
-    /**
-     * Récupère l'URL du projet Supabase
-     */
-    private function getSupabaseProjectUrl(): ?string
-    {
-        $host = config('database.connections.pgsql.host');
 
-        if (!$host) {
-            return null;
-        }
-
-        // Extraire le nom du projet depuis l'host de la DB
-        // Format: db-xxx.supabase.co ou xxx.pooler.supabase.com
-        if (preg_match('/^(?:db-)?([^.]+)/', $host, $matches)) {
-            $projectId = $matches[1];
-            return "https://{$projectId}.supabase.co";
-        }
-
-        return null;
-    }
 
     /**
      * Génère le nom du fichier PDF

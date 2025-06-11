@@ -11,8 +11,9 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class DevisClientMail extends Mailable
+class DevisClientMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -20,6 +21,21 @@ class DevisClientMail extends Mailable
     public Client $client;
     public ?string $messagePersonnalise;
     protected DevisPdfService $pdfService;
+
+    /**
+     * Nombre de tentatives de retry
+     */
+    public $tries = 3;
+
+    /**
+     * Timeout pour l'envoi (en secondes)
+     */
+    public $timeout = 120;
+
+    /**
+     * Délai entre les tentatives (en secondes)
+     */
+    public $backoff = [30, 60, 120];
 
     /**
      * Create a new message instance.
@@ -74,8 +90,9 @@ class DevisClientMail extends Mailable
     {
         $attachments = [];
 
-        // Ajouter le PDF en pièce jointe s'il existe
+        // Ajouter le PDF en pièce jointe si disponible
         $cheminPdf = $this->pdfService->getCheminPdf($this->devis);
+
         if ($cheminPdf && file_exists($cheminPdf)) {
             $attachments[] = Attachment::fromPath($cheminPdf)
                 ->as("Devis_{$this->devis->numero_devis}.pdf")

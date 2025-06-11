@@ -104,11 +104,13 @@ class DevisController extends Controller
             try {
                 $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
                 $devis->pdf_file = $nomFichierPdf;
+                // L'URL Supabase est déjà mise à jour dans le service
                 $devis->save();
 
                 Log::info('PDF généré lors de la création du devis', [
                     'devis_id' => $devis->id,
-                    'fichier_pdf' => $nomFichierPdf
+                    'fichier_pdf' => $nomFichierPdf,
+                    'url_supabase' => $devis->pdf_url
                 ]);
             } catch (Exception $e) {
                 Log::error('Erreur génération PDF lors création devis', [
@@ -265,11 +267,13 @@ class DevisController extends Controller
             try {
                 $nomFichierPdf = $this->devisPdfService->mettreAJour($devis);
                 $devis->pdf_file = $nomFichierPdf;
+                // L'URL Supabase est déjà mise à jour dans le service
                 $devis->save();
 
                 Log::info('PDF mis à jour lors de la modification du devis', [
                     'devis_id' => $devis->id,
-                    'fichier_pdf' => $nomFichierPdf
+                    'fichier_pdf' => $nomFichierPdf,
+                    'url_supabase' => $devis->pdf_url
                 ]);
             } catch (Exception $e) {
                 Log::error('Erreur mise à jour PDF lors modification devis', [

@@ -60,8 +60,8 @@ Voir le devis en ligne
 </x-mail::button>
 
 @if($urlPdfSupabase)
-<x-mail::button :url="$urlPdfSupabase">
-Télécharger le PDF
+<x-mail::button :url="$urlPdfSupabase" color="success">
+📄 Télécharger le PDF
 </x-mail::button>
 @endif
 
