@@ -68,17 +68,24 @@ class DevisSeeder extends Seeder
 
         $statuts = ['brouillon', 'envoye', 'accepte', 'refuse', 'expire'];
 
-        // Créer 50 devis variés
-        for ($i = 0; $i < 50; $i++) {
+        // Créer 60 devis variés (augmentation pour plus de brouillons)
+        for ($i = 0; $i < 60; $i++) {
             $prestation = $faker->randomElement($prestations);
             $client = $clients->random();
 
-            // Calculer les dates
-            $dateDevis = $faker->dateTimeBetween('-6 months', 'now');
+            // Calculer les dates - plus de variabilité pour avoir plus de brouillons récents
+            if ($i < 45) {
+                // 75% des devis sont récents (derniers 2 mois) - favorise les brouillons
+                $dateDevis = $faker->dateTimeBetween('-2 months', 'now');
+            } else {
+                // 25% des devis sont plus anciens (6 mois)
+                $dateDevis = $faker->dateTimeBetween('-6 months', '-2 months');
+            }
+
             $dateValidite = (clone $dateDevis)->modify('+30 days');
 
             // Déterminer le statut en fonction de la date
-            $statut = $this->determinerStatut($faker, $dateValidite);
+            $statut = $this->determinerStatut($faker, $dateValidite, $i);
 
             // Calculer les montants
             $montantHT = $faker->randomFloat(2, $prestation['montant_base'][0], $prestation['montant_base'][1]);
@@ -117,7 +124,7 @@ class DevisSeeder extends Seeder
                     $faker->dateTimeBetween($dateDevis, min($dateValidite, now())) : null,
                 'date_envoi_admin' => $statutEnvoi === 'envoye' ?
                     $faker->dateTimeBetween($dateDevis, min($dateValidite, now())) : null,
-                'archive' => $faker->boolean(5), // 5% archivés
+                'archive' => $faker->boolean(3), // 3% archivés (réduit)
             ]);
         }
 
@@ -126,27 +133,39 @@ class DevisSeeder extends Seeder
     }
 
     /**
-     * Détermine le statut du devis en fonction des dates
+     * Détermine le statut du devis en fonction des dates et de l'index
+     * Majorité de brouillons pour simulation réaliste d'une activité commerciale
      */
-    private function determinerStatut($faker, $dateValidite): string
+    private function determinerStatut($faker, $dateValidite, $index): string
     {
         $now = Carbon::now();
 
-        // Si la date de validité est passée, le devis est expiré (sauf s'il a été accepté)
-        if ($dateValidite < $now) {
+        // Pour les 45 premiers devis (75%), on favorise massivement les brouillons
+        if ($index < 45) {
             return $faker->randomElement([
-                'expire', 'expire', // Plus d'expirés
-                'accepte', // Peu d'acceptés même pour les anciens
-                'refuse', 'refuse' // Quelques refusés
+                'brouillon', 'brouillon', 'brouillon', 'brouillon', 'brouillon', // 50% brouillons
+                'brouillon', 'brouillon', 'brouillon', 'brouillon', 'brouillon', // 50% brouillons (total 83%)
+                'envoye', 'envoye', // 17% envoyés - en attente de réponse
             ]);
         }
 
-        // Pour les devis récents, distribution plus réaliste
+        // Pour les devis plus anciens (25%), distribution plus variée
+        if ($dateValidite < $now) {
+            // Devis expirés - principalement des brouillons non finalisés + quelques expirés
+            return $faker->randomElement([
+                'brouillon', 'brouillon', 'brouillon', 'brouillon', // 40% brouillons non finalisés
+                'expire', 'expire', 'expire', // 30% expirés
+                'accepte', // 10% acceptés (dans les temps)
+                'refuse', 'refuse', // 20% refusés
+            ]);
+        }
+
+        // Devis récents mais dans les anciens (minorité)
         return $faker->randomElement([
-            'brouillon', 'brouillon', 'brouillon', // Beaucoup de brouillons
-            'envoye', 'envoye', 'envoye', 'envoye', // Beaucoup d'envoyés
-            'accepte', // Très peu d'acceptés
-            'refuse', 'refuse' // Quelques refusés
+            'brouillon', 'brouillon', 'brouillon', // 60% brouillons
+            'envoye', // 20% envoyés
+            'accepte', // 10% acceptés
+            'refuse', // 10% refusés
         ]);
     }
 
@@ -207,5 +226,38 @@ class DevisSeeder extends Seeder
             'date_envoi_admin' => now()->subDays(4),
             'archive' => false,
         ]);
+
+        // Ajouter quelques brouillons récents très réalistes
+        for ($i = 0; $i < 8; $i++) {
+            $client = $clients->random();
+            $prestationsSimples = [
+                'Site vitrine PME',
+                'Logo et charte graphique',
+                'Formation WordPress',
+                'Maintenance site web',
+                'Audit SEO',
+                'Création newsletter',
+                'Photoshoot produits',
+                'Rédaction contenu web'
+            ];
+
+            Devis::create([
+                'numero_devis' => $this->genererNumeroDevis(now()->subDays(rand(1, 15))),
+                'client_id' => $client->id,
+                'date_devis' => now()->subDays(rand(1, 15)),
+                'date_validite' => now()->addDays(rand(15, 30)),
+                'statut' => 'brouillon',
+                'statut_envoi' => 'non_envoye',
+                'objet' => $prestationsSimples[$i],
+                'description' => 'Prestation en cours de finalisation. Détails à préciser avec le client.',
+                'montant_ht' => $faker->randomFloat(2, 800, 4000),
+                'taux_tva' => 20.0,
+                'montant_tva' => 0, // Sera calculé automatiquement
+                'montant_ttc' => 0, // Sera calculé automatiquement
+                'conditions' => 'Conditions en cours de définition.',
+                'notes' => $faker->optional(0.7)->sentence(),
+                'archive' => false,
+            ]);
+        }
     }
 }
