@@ -69,15 +69,17 @@ class ClientController extends Controller
             $client = Client::create($validated);
 
             return redirect()->route('clients.index')
-                ->with('success', 'Client créé avec succès.');
+                ->with('success', '✅ Client ' . $client->prenom . ' ' . $client->nom . ' créé avec succès !');
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la création du client.');
         }
     }
 
@@ -135,19 +137,36 @@ class ClientController extends Controller
                 'notes' => 'nullable|string',
             ]);
 
+            // Vérifier s'il y a eu des changements
+            $originalData = $client->only(array_keys($validated));
+            $hasChanges = false;
+            foreach ($validated as $key => $value) {
+                if ($originalData[$key] != $value) {
+                    $hasChanges = true;
+                    break;
+                }
+            }
+
             $client->update($validated);
 
-            return redirect()->route('clients.index')
-                ->with('success', 'Client mis à jour avec succès.');
+            if ($hasChanges) {
+                return redirect()->route('clients.index')
+                    ->with('success', '🎉 Client ' . $client->prenom . ' ' . $client->nom . ' mis à jour avec succès !');
+            } else {
+                return redirect()->route('clients.index')
+                    ->with('info', 'ℹ️ Aucune modification détectée pour ' . $client->prenom . ' ' . $client->nom);
+            }
 
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
 
         } catch (Exception $e) {
             return back()
-                ->withInput();
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la mise à jour du client.');
         }
     }
 
@@ -161,10 +180,11 @@ class ClientController extends Controller
             $client->delete();
 
             return redirect()->route('clients.index')
-                ->with('success', 'Client supprimé avec succès.');
+                ->with('warning', '⚠️ Client ' . $nom_complet . ' supprimé avec succès.');
 
         } catch (Exception $e) {
-            return back();
+            return back()
+                ->with('error', '❌ Impossible de supprimer le client. Il pourrait être lié à d\'autres données.');
         }
     }
 }

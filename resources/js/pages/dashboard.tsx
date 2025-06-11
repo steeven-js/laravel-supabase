@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ToastDemo } from '@/components/toast-demo';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
@@ -300,6 +301,9 @@ export default function Dashboard({ stats, isLocal }: Props) {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Démonstration des toasts Sonner */}
+                <ToastDemo />
 
                 {/* Alertes */}
                 {stats.factures.en_retard > 0 && (

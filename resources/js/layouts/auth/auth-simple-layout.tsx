@@ -1,6 +1,8 @@
 import AppLogoIcon from '@/components/app-logo-icon';
+import { SessionToasts } from '@/components/session-toasts';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
+import { Toaster } from 'sonner';
 
 interface AuthLayoutProps {
     name?: string;
@@ -29,6 +31,13 @@ export default function AuthSimpleLayout({ children, title, description }: Props
                     {children}
                 </div>
             </div>
+            <Toaster
+                richColors
+                position="top-right"
+                expand={true}
+                closeButton={true}
+            />
+            <SessionToasts />
         </div>
     );
 }
