@@ -136,6 +136,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/madinia', [MadiniaController::class, 'show'])->name('madinia.show');
     Route::patch('/madinia', [MadiniaController::class, 'update'])->name('madinia.update');
     Route::get('/api/madinia', [MadiniaController::class, 'api'])->name('madinia.api');
+
+    // Routes pour les modèles d'email
+    Route::prefix('email-templates')->name('email-templates.')->group(function () {
+        Route::get('/', [App\Http\Controllers\EmailTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\EmailTemplateController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\EmailTemplateController::class, 'store'])->name('store');
+        Route::get('/{emailTemplate}', [App\Http\Controllers\EmailTemplateController::class, 'show'])->name('show');
+        Route::get('/{emailTemplate}/edit', [App\Http\Controllers\EmailTemplateController::class, 'edit'])->name('edit');
+        Route::patch('/{emailTemplate}', [App\Http\Controllers\EmailTemplateController::class, 'update'])->name('update');
+        Route::delete('/{emailTemplate}', [App\Http\Controllers\EmailTemplateController::class, 'destroy'])->name('destroy');
+        Route::post('/{emailTemplate}/duplicate', [App\Http\Controllers\EmailTemplateController::class, 'duplicate'])->name('duplicate');
+        Route::patch('/{emailTemplate}/set-default', [App\Http\Controllers\EmailTemplateController::class, 'setDefault'])->name('set-default');
+        Route::get('/{emailTemplate}/preview', [App\Http\Controllers\EmailTemplateController::class, 'preview'])->name('preview');
+    });
+
+    // Routes API pour les modèles d'email (utilisées pour récupérer les templates lors de l'envoi d'emails)
+    Route::prefix('api/email-templates')->name('api.email-templates.')->group(function () {
+        Route::get('/by-category', [App\Http\Controllers\EmailTemplateController::class, 'getByCategory'])->name('by-category');
+        Route::get('/default', [App\Http\Controllers\EmailTemplateController::class, 'getDefault'])->name('default');
+    });
 });
 
 // Routes de développement (seulement en mode local)
