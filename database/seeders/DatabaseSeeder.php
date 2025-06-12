@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
 
         // Créer les données de test en ordre de dépendance
         $this->call([
+            MadiniaSeeder::class,
             EntrepriseSeeder::class,
             ClientSeeder::class,
             ServiceSeeder::class,
@@ -60,6 +61,7 @@ class DatabaseSeeder extends Seeder
     {
         $stats = [
             'Utilisateurs' => User::count(),
+            'Entreprise (Madinia)' => \App\Models\Madinia::count(),
             'Services' => \App\Models\Service::count(),
             'Entreprises' => \App\Models\Entreprise::count(),
             'Clients' => \App\Models\Client::count(),
@@ -142,6 +144,7 @@ class DatabaseSeeder extends Seeder
                 // Recréer les données
                 $seeder = new self();
                 $seeder->call([
+                    MadiniaSeeder::class,
                     EntrepriseSeeder::class,
                     ClientSeeder::class,
                     ServiceSeeder::class,

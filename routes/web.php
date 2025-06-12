@@ -7,6 +7,7 @@ use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\FactureController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\Settings\MadiniaController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Foundation\Application;
@@ -129,6 +130,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('services', ServiceController::class);
     Route::patch('/services/{service}/toggle', [ServiceController::class, 'toggleStatus'])->name('services.toggle');
     Route::post('/services/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('services.duplicate');
+
+    // Routes pour l'entreprise Madinia
+    Route::get('/madinia', [MadiniaController::class, 'show'])->name('madinia.show');
+    Route::patch('/madinia', [MadiniaController::class, 'update'])->name('madinia.update');
+    Route::get('/api/madinia', [MadiniaController::class, 'api'])->name('madinia.api');
 });
 
 // Routes de développement (seulement en mode local)
