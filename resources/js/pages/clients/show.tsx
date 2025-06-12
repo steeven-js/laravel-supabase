@@ -182,6 +182,16 @@ export default function ClientsShow({ client }: Props) {
             <Head title={`${client.prenom} ${client.nom}`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/clients">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour
+                        </Link>
+                    </Button>
+                </div>
+
                 {/* En-tête avec informations principales */}
                 <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg" />
@@ -189,12 +199,6 @@ export default function ClientsShow({ client }: Props) {
                         <CardContent className="p-6">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-start gap-4">
-                                    <Button variant="outline" size="sm" asChild className="shrink-0">
-                                        <Link href="/clients">
-                                            <ArrowLeft className="mr-2 h-4 w-4" />
-                                            Retour
-                                        </Link>
-                                    </Button>
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-3 flex-wrap">
                                             <h1 className="text-3xl font-bold tracking-tight">
