@@ -20,9 +20,9 @@ class DatabaseSeeder extends Seeder
 
         // Créer les données de test en ordre de dépendance
         $this->call([
-            ServiceSeeder::class,        // Services d'abord
             EntrepriseSeeder::class,
             ClientSeeder::class,
+            ServiceSeeder::class,
             DevisSeeder::class,
             FactureSeeder::class,
         ]);
@@ -142,9 +142,9 @@ class DatabaseSeeder extends Seeder
                 // Recréer les données
                 $seeder = new self();
                 $seeder->call([
-                    ServiceSeeder::class,
                     EntrepriseSeeder::class,
                     ClientSeeder::class,
+                    ServiceSeeder::class,
                     DevisSeeder::class,
                     FactureSeeder::class,
                 ]);

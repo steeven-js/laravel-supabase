@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,6 +22,7 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'user' => $request->user(),
         ]);
     }
 
@@ -37,7 +39,52 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return to_route('profile.edit');
+        return to_route('profile.edit')->with('success', 'Profil mis à jour avec succès.');
+    }
+
+    /**
+     * Update the user's avatar.
+     */
+    public function updateAvatar(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+
+        // Supprimer l'ancien avatar si il existe
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        // Sauvegarder le nouvel avatar
+        $avatarPath = $request->file('avatar')->store('avatars', 'public');
+
+        $user->update([
+            'avatar' => $avatarPath,
+        ]);
+
+        return to_route('profile.edit')->with('success', 'Avatar mis à jour avec succès.');
+    }
+
+    /**
+     * Delete the user's avatar.
+     */
+    public function deleteAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Supprimer le fichier avatar
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->update([
+            'avatar' => null,
+        ]);
+
+        return to_route('profile.edit')->with('success', 'Avatar supprimé avec succès.');
     }
 
     /**

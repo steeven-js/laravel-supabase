@@ -1,25 +1,37 @@
 <?php
 
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\DevisController;
-use App\Http\Controllers\FactureController;
-use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EntrepriseController;
+use App\Http\Controllers\FactureController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\ServiceController;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Page d'accueil
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/', function () {
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
+});
 
 // Routes protégées par authentification
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
 
-        // Routes pour les clients
+    // Routes pour les clients
     Route::resource('clients', ClientController::class);
 
     // Routes pour les entreprises
@@ -103,6 +115,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('dashboard');
         })->name('test.no-toast');
     }
+
+    // Routes pour le profil utilisateur
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Routes pour la gestion des avatars
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+
+    // Routes pour les services
+    Route::resource('services', ServiceController::class);
+    Route::patch('/services/{service}/toggle', [ServiceController::class, 'toggleStatus'])->name('services.toggle');
+    Route::post('/services/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('services.duplicate');
 });
 
 // Routes de développement (seulement en mode local)
@@ -129,6 +155,11 @@ if (app()->environment('local')) {
         return new \App\Mail\TestEmailMark($diagnostics, 'preview@example.com');
     })->middleware(['auth', 'verified']);
 }
+
+// Routes API pour Supabase (si nécessaire plus tard)
+// Route::prefix('api')->group(function () {
+//     // Ajouter des routes API pour la synchronisation avec Supabase si nécessaire
+// });
 
 // Inclusion des autres fichiers de routes
 require __DIR__.'/settings.php';
