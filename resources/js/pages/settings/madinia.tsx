@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import SettingsLayout from '@/layouts/settings-layout';
+import SettingsLayout from '@/layouts/settings/layout';
 import { Head, useForm } from '@inertiajs/react';
 import {
     Building2,
@@ -74,7 +74,7 @@ interface Props {
 export default function MadiniaSettings({ madinia, users }: Props) {
     const { data, setData, patch, processing, errors, clearErrors } = useForm({
         name: madinia.name || '',
-        contact_principal_id: madinia.contact_principal_id || '',
+        contact_principal_id: madinia.contact_principal_id || null,
         telephone: madinia.telephone || '',
         email: madinia.email || '',
         site_web: madinia.site_web || '',
@@ -191,7 +191,7 @@ export default function MadiniaSettings({ madinia, users }: Props) {
                                 <div className="space-y-2">
                                     <Label htmlFor="contact_principal_id">Contact principal</Label>
                                     <Select
-                                        value={data.contact_principal_id.toString()}
+                                        value={data.contact_principal_id?.toString() || ''}
                                         onValueChange={(value) => setData('contact_principal_id', value === '' ? null : parseInt(value))}
                                     >
                                         <SelectTrigger>
