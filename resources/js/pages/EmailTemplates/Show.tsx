@@ -140,22 +140,26 @@ export default function EmailTemplatesShow({ emailTemplate }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={emailTemplate.name} />
 
-            <div className="space-y-6 p-4">
-                {/* En-tête */}
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/email-templates">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour aux modèles
+                        </Link>
+                    </Button>
+                </div>
+
+                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/email-templates">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Retour à la liste
-                            </Link>
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight">{emailTemplate.name}</h1>
-                            <p className="text-muted-foreground">
-                                Détails du modèle d'email
-                            </p>
-                        </div>
+                        <h1 className="text-xl font-semibold">
+                            {emailTemplate.name}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Détails du modèle d'email
+                        </p>
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>

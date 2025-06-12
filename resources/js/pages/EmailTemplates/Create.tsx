@@ -151,22 +151,24 @@ export default function EmailTemplatesCreate({ categories, subCategories }: Prop
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Nouveau modèle d'email" />
 
-            <div className="space-y-6 p-4">
-                {/* En-tête */}
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/email-templates">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour
+                        </Link>
+                    </Button>
+                </div>
+
+                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/email-templates">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Retour
-                            </Link>
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Nouveau modèle d'email</h1>
-                            <p className="text-muted-foreground">
-                                Créez un nouveau modèle d'email pour vos devis
-                            </p>
-                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight">Créer un modèle</h1>
+                        <p className="text-muted-foreground">
+                            Créez un nouveau modèle d'email pour vos devis
+                        </p>
                     </div>
                 </div>
 

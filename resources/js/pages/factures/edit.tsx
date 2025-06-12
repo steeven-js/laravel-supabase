@@ -163,15 +163,19 @@ export default function FactureEdit({ facture, clients }: Props) {
             <Head title={`Modifier ${facture.numero_facture}`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-                {/* En-tête */}
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/factures/${facture.id}`}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour
+                        </Link>
+                    </Button>
+                </div>
+
+                {/* En-tête avec indicateur de modifications */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href={`/factures/${facture.id}`}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Retour à la facture
-                            </Link>
-                        </Button>
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">Modifier la facture</h1>
                             <p className="text-muted-foreground">

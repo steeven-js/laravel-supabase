@@ -210,17 +210,21 @@ export default function FactureShow({ facture }: Props) {
             <Head title={`Facture ${facture.numero_facture}`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/factures">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour aux factures
+                        </Link>
+                    </Button>
+                </div>
+
                 {/* Header with actions */}
                 <div className="space-y-4">
                     {/* Navigation et titre */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href="/factures">
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                    Retour aux factures
-                                </Link>
-                            </Button>
                             <h1 className="text-xl font-semibold text-gray-900">
                                 Facture {facture.numero_facture}
                             </h1>
