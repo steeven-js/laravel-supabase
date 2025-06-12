@@ -9,7 +9,7 @@ import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-di
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Eye, Edit, Trash2, FileText, CheckCircle, XCircle, Clock, AlertCircle, Mail, MailCheck, MailX, RefreshCw, Search, Filter, Download, ArrowUpDown } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, FileText, CheckCircle, XCircle, Clock, AlertCircle, Mail, MailCheck, MailX, RefreshCw, Search, Filter, Download, ArrowUpDown, TrendingUp } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -147,12 +147,90 @@ export default function DevisIndex({ devis }: Props) {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [sortField, setSortField] = useState<keyof Devis>('date_devis');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    const [periodFilter, setPeriodFilter] = useState<'tous' | 'annee_courante' | 'mois_courant'>('mois_courant');
 
     const [deleteDialog, setDeleteDialog] = useState<{
         isOpen: boolean;
         devis: Devis | null;
     }>({ isOpen: false, devis: null });
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Obtenir l'année et le mois actuels
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() retourne 0-11
+
+    // Filtrer les devis selon la période sélectionnée
+    const filteredDevisByPeriod = useMemo(() => {
+        return devis.filter(item => {
+            const itemDate = new Date(item.date_devis);
+
+            switch (periodFilter) {
+                case 'tous':
+                    return true;
+                case 'annee_courante':
+                    return itemDate.getFullYear() === currentYear;
+                case 'mois_courant':
+                    return itemDate.getFullYear() === currentYear &&
+                           itemDate.getMonth() + 1 === currentMonth;
+                default:
+                    return true;
+            }
+        });
+    }, [devis, periodFilter, currentYear, currentMonth]);
+
+    // Calcul des métriques
+    const metrics = useMemo(() => {
+        const totalDevis = filteredDevisByPeriod.length;
+        const totalMontant = filteredDevisByPeriod.reduce((sum, item) => sum + item.montant_ttc, 0);
+
+        const accepteDevis = filteredDevisByPeriod.filter(item => item.statut === 'accepte');
+        const envoyeDevis = filteredDevisByPeriod.filter(item => item.statut === 'envoye');
+        const refuseDevis = filteredDevisByPeriod.filter(item => item.statut === 'refuse');
+        const expireDevis = filteredDevisByPeriod.filter(item => item.statut === 'expire');
+        const brouillonDevis = filteredDevisByPeriod.filter(item => item.statut === 'brouillon');
+
+        return {
+            total: {
+                count: totalDevis,
+                montant: totalMontant
+            },
+            accepte: {
+                count: accepteDevis.length,
+                montant: accepteDevis.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            envoye: {
+                count: envoyeDevis.length,
+                montant: envoyeDevis.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            refuse: {
+                count: refuseDevis.length,
+                montant: refuseDevis.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            expire: {
+                count: expireDevis.length,
+                montant: expireDevis.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            brouillon: {
+                count: brouillonDevis.length,
+                montant: brouillonDevis.reduce((sum, item) => sum + item.montant_ttc, 0)
+            }
+        };
+    }, [filteredDevisByPeriod]);
+
+    // Fonction pour obtenir le libellé de la période
+    const getPeriodLabel = () => {
+        switch (periodFilter) {
+            case 'tous':
+                return 'Toutes les périodes';
+            case 'annee_courante':
+                return `Année ${currentYear}`;
+            case 'mois_courant':
+                return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentDate);
+            default:
+                return '';
+        }
+    };
 
     // Filtrer et trier les devis
     const filteredAndSortedDevis = useMemo(() => {
@@ -311,6 +389,149 @@ export default function DevisIndex({ devis }: Props) {
                             </Link>
                         </Button>
                     </div>
+                </div>
+
+                {/* Barre de métriques pour le mois en cours */}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {/* Total */}
+                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
+                                    <p className="text-xs text-blue-500 dark:text-blue-300 mb-1">
+                                        {metrics.total.count} devis
+                                    </p>
+                                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-100">
+                                        {formatPrice(metrics.total.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+                                    <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Accepté */}
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-green-600 dark:text-green-400">Accepté</p>
+                                    <p className="text-xs text-green-500 dark:text-green-300 mb-1">
+                                        {metrics.accepte.count} devis
+                                    </p>
+                                    <p className="text-2xl font-bold text-green-700 dark:text-green-100">
+                                        {formatPrice(metrics.accepte.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-lg flex items-center justify-center">
+                                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Envoyé */}
+                    <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-orange-600 dark:text-orange-400">En attente</p>
+                                    <p className="text-xs text-orange-500 dark:text-orange-300 mb-1">
+                                        {metrics.envoye.count} devis
+                                    </p>
+                                    <p className="text-2xl font-bold text-orange-700 dark:text-orange-100">
+                                        {formatPrice(metrics.envoye.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-lg flex items-center justify-center">
+                                    <Clock className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Refusé */}
+                    <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-red-600 dark:text-red-400">Refusé</p>
+                                    <p className="text-xs text-red-500 dark:text-red-300 mb-1">
+                                        {metrics.refuse.count} devis
+                                    </p>
+                                    <p className="text-2xl font-bold text-red-700 dark:text-red-100">
+                                        {formatPrice(metrics.refuse.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-red-100 dark:bg-red-800 rounded-lg flex items-center justify-center">
+                                    <XCircle className="h-6 w-6 text-red-600 dark:text-red-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Expiré */}
+                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Expiré</p>
+                                    <p className="text-xs text-purple-500 dark:text-purple-300 mb-1">
+                                        {metrics.expire.count} devis
+                                    </p>
+                                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-100">
+                                        {formatPrice(metrics.expire.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+                                    <AlertCircle className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Brouillon */}
+                    <Card className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 border-gray-200 dark:border-gray-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Brouillon</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">
+                                        {metrics.brouillon.count} devis
+                                    </p>
+                                    <p className="text-2xl font-bold text-gray-700 dark:text-gray-100">
+                                        {formatPrice(metrics.brouillon.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <FileText className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Sélecteur de période */}
+                <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">Période :</span>
+                        <Select value={periodFilter} onValueChange={(value: 'tous' | 'annee_courante' | 'mois_courant') => setPeriodFilter(value)}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Sélectionner une période" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="tous">📈 Tous</SelectItem>
+                                <SelectItem value="annee_courante">📅 Année en cours</SelectItem>
+                                <SelectItem value="mois_courant">📊 Mois en cours</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Badge variant="outline" className="px-4 py-2 text-sm bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                        📊 Métriques pour {getPeriodLabel()}
+                    </Badge>
                 </div>
 
                 {/* Filtres et recherche */}

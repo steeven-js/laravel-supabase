@@ -245,10 +245,18 @@ class DevisPdfService
      */
     private function genererPdf(Devis $devis)
     {
+        // Charger les relations nécessaires
+        $devis->load(['lignes.service']);
+
+        // Récupérer les informations Madinia
+        $madinia = \App\Models\Madinia::getInstance();
+
         return Pdf::loadView('pdfs.devis', [
             'devis' => $devis,
             'client' => $devis->client,
             'entreprise' => $devis->client->entreprise,
+            'madinia' => $madinia,
+            'lignes' => $devis->lignes,
         ])
             ->setPaper('a4', 'portrait')
             ->setOptions([

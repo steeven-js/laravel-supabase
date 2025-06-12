@@ -299,6 +299,49 @@ class FactureController extends Controller
     }
 
     /**
+     * Changer le statut d'une facture
+     */
+    public function changerStatut(Request $request, Facture $facture)
+    {
+        try {
+            $validated = $request->validate([
+                'statut' => 'required|in:brouillon,envoyee,payee,en_retard,annulee',
+            ]);
+
+            $ancienStatut = $facture->statut;
+            $nouveauStatut = $validated['statut'];
+
+            // Vérifications spéciales selon le statut
+            if ($nouveauStatut === 'payee' && !in_array($ancienStatut, ['envoyee', 'en_retard'])) {
+                return redirect()->back()
+                    ->with('error', '❌ Une facture ne peut être marquée comme payée que si elle est envoyée ou en retard.');
+            }
+
+            $facture->statut = $nouveauStatut;
+
+            // Actions spéciales selon le nouveau statut
+            if ($nouveauStatut === 'payee' && $ancienStatut !== 'payee') {
+                $facture->date_paiement = now();
+            } elseif ($nouveauStatut !== 'payee') {
+                $facture->date_paiement = null;
+            }
+
+            $facture->save();
+
+            return redirect()->back()
+                ->with('success', '✅ Statut de la facture ' . $facture->numero_facture . ' modifié avec succès !');
+
+        } catch (ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier le statut sélectionné.');
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', '❌ Une erreur est survenue lors du changement de statut.');
+        }
+    }
+
+    /**
      * Marquer une facture comme payée
      */
     public function marquerPayee(Request $request, Facture $facture)
@@ -325,6 +368,18 @@ class FactureController extends Controller
             return back()
                 ->with('error', '❌ Une erreur est survenue lors de la mise à jour du statut de paiement.');
         }
+    }
+
+    /**
+     * Afficher le formulaire d'envoi d'email
+     */
+    public function envoyerEmailForm(Facture $facture)
+    {
+        $facture->load('client.entreprise');
+
+        return inertia('factures/envoyer-email', [
+            'facture' => $facture,
+        ]);
     }
 
     /**

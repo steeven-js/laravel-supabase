@@ -13,20 +13,19 @@
 
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             line-height: 1.4;
-            color: #333;
+            color: #374151;
             background: #fff;
         }
 
         .container {
             max-width: 100%;
-            padding: 20px;
+            padding: 80px;
         }
 
+        /* Header */
         .header {
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 20px;
             margin-bottom: 30px;
         }
 
@@ -41,350 +40,712 @@
             width: 50%;
         }
 
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 10px;
+        .logo-section {
+            margin-bottom: 15px;
         }
 
-        .document-type {
+        .logo-box {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #10b981;
+            border-radius: 6px;
+            vertical-align: middle;
+            margin-right: 10px;
+            position: relative;
+        }
+
+        .logo-box::after {
+            content: "📄";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+        }
+
+        .document-title {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .document-title h1 {
             font-size: 20px;
             font-weight: bold;
-            color: #1f2937;
-            text-align: right;
+            color: #10b981;
+            margin: 0;
         }
 
-        .document-number {
-            font-size: 16px;
+        .document-subtitle {
+            font-size: 10px;
             color: #6b7280;
+            margin: 0;
+        }
+
+        .header-right {
             text-align: right;
-            margin-top: 5px;
         }
 
-        .client-section {
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 5px;
-        }
-
-        .client-info {
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 5px;
-        }
-
-        .info-row {
-            margin-bottom: 5px;
-        }
-
-        .label {
-            font-weight: bold;
+        .status-badge {
             display: inline-block;
-            width: 120px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
-        .details-section {
-            margin-bottom: 30px;
+        .status-accepte { background: #dcfce7; color: #166534; }
+        .status-envoye { background: #dbeafe; color: #1e40af; }
+        .status-refuse { background: #fee2e2; color: #dc2626; }
+        .status-expire { background: #fed7aa; color: #ea580c; }
+        .status-brouillon { background: #f3f4f6; color: #374151; }
+
+        .devis-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #111827;
         }
 
-        .details-grid {
+        /* From/To sections */
+        .from-to-section {
             display: table;
             width: 100%;
+            margin-bottom: 25px;
         }
 
-        .details-left, .details-right {
+        .from-section, .to-section {
             display: table-cell;
             vertical-align: top;
             width: 50%;
             padding-right: 20px;
         }
 
-        .details-right {
+        .to-section {
             padding-right: 0;
             padding-left: 20px;
         }
 
-        .details-item {
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f8fafc;
-            border-radius: 3px;
+        .section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
         }
 
-        .content-section {
-            margin-bottom: 30px;
+        .company-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 3px;
         }
 
-        .description-box {
+        .contact-line {
+            margin-bottom: 2px;
+            color: #6b7280;
+            font-size: 10px;
+        }
+
+        .siret-line {
+            margin-top: 6px;
+            font-size: 9px;
+            color: #9ca3af;
+        }
+
+        /* Date information */
+        .date-info {
             background: #f9fafb;
-            padding: 20px;
-            border-radius: 5px;
-            border-left: 4px solid #2563eb;
-            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 25px;
         }
 
-        .amounts-section {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 30px;
+        .date-grid {
+            display: table;
+            width: 100%;
         }
 
-        .amounts-table {
+        .date-cell {
+            display: table-cell;
+            width: 33.33%;
+            text-align: center;
+        }
+
+        .date-label {
+            font-size: 9px;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+
+        .date-value {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Object section */
+        .object-section {
+            margin-bottom: 25px;
+        }
+
+        .object-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .object-content {
+            background: #eff6ff;
+            padding: 12px;
+            border-radius: 6px;
+            color: #374151;
+        }
+
+        /* Items table */
+        .items-section {
+            margin-bottom: 25px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .items-table thead {
+            background: #f9fafb;
+        }
+
+        .items-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 9px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .items-table th:nth-child(1) { width: 5%; text-align: center; }
+        .items-table th:nth-child(2) { width: 50%; }
+        .items-table th:nth-child(3) { width: 15%; text-align: center; }
+        .items-table th:nth-child(4) { width: 15%; text-align: right; }
+        .items-table th:nth-child(5) { width: 15%; text-align: right; }
+
+        .items-table td {
+            padding: 10px 12px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 10px;
+        }
+
+        .items-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        .service-description {
+            color: #6b7280;
+            font-size: 9px;
+        }
+
+        /* Totals section */
+        .totals-section {
+            margin-bottom: 25px;
+        }
+
+        .totals-container {
+            width: 60%;
+            margin-left: auto;
+        }
+
+        .totals-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .amounts-table td {
-            padding: 8px;
-            border-bottom: 1px solid #e5e7eb;
+        .totals-table td {
+            padding: 6px 0;
+            border-bottom: 1px solid #f3f4f6;
         }
 
-        .amounts-table .label-col {
+        .totals-table .label-col {
+            color: #6b7280;
             width: 70%;
-            font-weight: bold;
         }
 
-        .amounts-table .amount-col {
-            width: 30%;
+        .totals-table .amount-col {
             text-align: right;
-            font-size: 14px;
+            font-weight: 500;
+            width: 30%;
         }
 
-        .total-row {
-            background: #2563eb;
-            color: white;
+        .total-final {
+            border-top: 2px solid #e5e7eb;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
+            color: #111827;
+            padding-top: 8px !important;
         }
 
-        .total-row td {
-            border-bottom: none;
-            padding: 12px 8px;
-        }
-
-        .conditions-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .conditions-text {
-            background: #fffbeb;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #f59e0b;
-            font-size: 11px;
-            line-height: 1.5;
-        }
-
+        /* Notes section */
         .notes-section {
-            margin-top: 20px;
+            margin-bottom: 25px;
         }
 
-        .notes-text {
-            background: #f0f9ff;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #06b6d4;
+        .notes-title {
             font-size: 11px;
-            line-height: 1.5;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
         }
 
-        .footer {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            text-align: center;
+        .notes-content {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
             font-size: 10px;
             color: #6b7280;
+        }
+
+                 /* Banking and signature section */
+         .banking-signature-section {
+             margin-top: 40px;
+             margin-bottom: 30px;
+         }
+
+         .banking-signature-grid {
+             display: table;
+             width: 100%;
+         }
+
+         .banking-cell, .signature-cell {
+             display: table-cell;
+             width: 50%;
+             vertical-align: top;
+             padding: 0 10px;
+         }
+
+         /* Banking info box */
+         .banking-box {
+             border: 2px solid #10b981;
+             border-radius: 8px;
+             padding: 15px;
+             background: #f0f9ff;
+         }
+
+         .banking-title {
+             font-size: 12px;
+             font-weight: 600;
+             color: #10b981;
+             margin-bottom: 10px;
+             text-align: center;
+             border-bottom: 1px solid #10b981;
+             padding-bottom: 5px;
+         }
+
+         .banking-item {
+             margin-bottom: 6px;
+             font-size: 10px;
+             color: #374151;
+         }
+
+         .banking-label {
+             font-weight: 600;
+             color: #1f2937;
+             display: inline-block;
+             width: 80px;
+         }
+
+         /* Enhanced signature box */
+         .signature-box {
+             border: 2px solid #3b82f6;
+             border-radius: 8px;
+             padding: 20px;
+             background: #f8fafc;
+             text-align: center;
+         }
+
+         .signature-box-title {
+             font-size: 12px;
+             font-weight: 600;
+             color: #3b82f6;
+             margin-bottom: 15px;
+             border-bottom: 1px solid #3b82f6;
+             padding-bottom: 5px;
+         }
+
+         .signature-fields {
+             margin-bottom: 20px;
+         }
+
+         .signature-field {
+             margin-bottom: 15px;
+             text-align: left;
+         }
+
+         .signature-field-label {
+             font-size: 10px;
+             font-weight: 600;
+             color: #374151;
+             margin-bottom: 5px;
+         }
+
+         .signature-field-line {
+             border-bottom: 1px solid #d1d5db;
+             height: 20px;
+             background: #fff;
+             border-radius: 3px;
+         }
+
+         .signature-area {
+             border: 1px dashed #9ca3af;
+             height: 60px;
+             background: #fff;
+             border-radius: 5px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             color: #9ca3af;
+             font-size: 9px;
+             font-style: italic;
+         }
+
+        /* Footer */
+        .footer-section {
             border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
+            padding-top: 15px;
+            margin-top: 30px;
         }
 
-        .page-break {
-            page-break-after: always;
+        .footer-content {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 10px;
+            color: #6b7280;
         }
 
-        .text-right {
-            text-align: right;
+        .footer-legal {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
         }
 
-        .text-center {
+        .legal-grid {
+            display: table;
+            width: 100%;
+        }
+
+        .legal-cell {
+            display: table-cell;
+            width: 33.33%;
+            vertical-align: top;
             text-align: center;
         }
 
-        .mt-10 {
-            margin-top: 10px;
+        .legal-title {
+            font-size: 9px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
         }
 
-        .mt-20 {
-            margin-top: 20px;
+        .legal-content {
+            font-size: 8px;
+            color: #6b7280;
+            line-height: 1.3;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- En-tête -->
+        <!-- Header section with logo and title -->
         <div class="header">
             <div class="header-content">
                 <div class="header-left">
-                    <div class="company-name">{{ config('app.name', 'Mon Entreprise') }}</div>
-                    <div>123 Rue de l'Exemple</div>
-                    <div>75001 Paris, France</div>
-                    <div>Tel: 01 23 45 67 89</div>
-                    <div>Email: contact@monentreprise.fr</div>
+                    <div class="logo-section">
+                        <div class="logo-box"></div>
+                        <div class="document-title">
+                            <h1>DEVIS</h1>
+                            <p class="document-subtitle">Document commercial</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="header-right">
-                    <div class="document-type">DEVIS</div>
-                    <div class="document-number">N° {{ $devis->numero_devis }}</div>
-                    <div class="mt-10">
-                        <strong>Date :</strong> {{ $devis->date_devis->format('d/m/Y') }}<br>
-                        <strong>Validité :</strong> {{ $devis->date_validite->format('d/m/Y') }}
+                    <div class="status-badge status-{{ $devis->statut }}">
+                        @switch($devis->statut)
+                            @case('brouillon') Brouillon @break
+                            @case('envoye') Envoyé @break
+                            @case('accepte') Accepté @break
+                            @case('refuse') Refusé @break
+                            @case('expire') Expiré @break
+                            @default {{ ucfirst($devis->statut) }}
+                        @endswitch
                     </div>
+                    <div class="devis-number">{{ $devis->numero_devis }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Informations client -->
-        <div class="client-section">
-            <div class="section-title">INFORMATIONS CLIENT</div>
-            <div class="client-info">
+        <!-- From and To sections -->
+        <div class="from-to-section">
+            <!-- From section -->
+            <div class="from-section">
+                <div class="section-header">Devis de</div>
+                <div class="company-name">{{ $madinia->name ?? 'Madin.IA' }}</div>
+                @if($madinia && $madinia->adresse)
+                    <div class="contact-line">{{ $madinia->adresse }}</div>
+                @endif
+                @if($madinia && $madinia->pays)
+                    <div class="contact-line">{{ $madinia->pays }}</div>
+                @endif
+                @if($madinia && $madinia->telephone)
+                    <div class="contact-line">📞 {{ $madinia->telephone }}</div>
+                @endif
+                @if($madinia && $madinia->email)
+                    <div class="contact-line">✉ {{ $madinia->email }}</div>
+                @endif
+                @if($madinia && $madinia->siret)
+                    <div class="siret-line">SIRET: {{ $madinia->siret }}</div>
+                @endif
+            </div>
+
+            <!-- To section -->
+            <div class="to-section">
+                <div class="section-header">Devis pour</div>
+                <div class="company-name">{{ $client->prenom }} {{ $client->nom }}</div>
                 @if($entreprise)
-                    <div class="info-row">
-                        <span class="label">Entreprise :</span>
-                        {{ $entreprise->nom }}
-                        @if($entreprise->nom_commercial && $entreprise->nom_commercial !== $entreprise->nom)
-                            ({{ $entreprise->nom_commercial }})
-                        @endif
-                    </div>
+                    <div class="contact-line">{{ $entreprise->nom_commercial ?? $entreprise->nom }}</div>
                 @endif
-                <div class="info-row">
-                    <span class="label">Contact :</span>
-                    {{ $client->prenom }} {{ $client->nom }}
-                </div>
-                <div class="info-row">
-                    <span class="label">Email :</span>
-                    {{ $client->email }}
-                </div>
+                @if($client->adresse)
+                    <div class="contact-line">{{ $client->adresse }}</div>
+                @endif
+                @if($client->code_postal || $client->ville)
+                    <div class="contact-line">{{ $client->code_postal }} {{ $client->ville }}</div>
+                @endif
+                <div class="contact-line">✉ {{ $client->email }}</div>
                 @if($client->telephone)
-                    <div class="info-row">
-                        <span class="label">Téléphone :</span>
-                        {{ $client->telephone }}
-                    </div>
+                    <div class="contact-line">📞 {{ $client->telephone }}</div>
                 @endif
             </div>
         </div>
 
-        <!-- Détails du devis -->
-        <div class="details-section">
-            <div class="section-title">DÉTAILS DU DEVIS</div>
-            <div class="details-grid">
-                <div class="details-left">
-                    <div class="details-item">
-                        <div class="label">Objet :</div>
-                        <div>{{ $devis->objet }}</div>
-                    </div>
-                    <div class="details-item">
-                        <div class="label">Statut :</div>
-                        <div>
-                            @switch($devis->statut)
-                                @case('brouillon') Brouillon @break
-                                @case('envoye') Envoyé @break
-                                @case('accepte') Accepté @break
-                                @case('refuse') Refusé @break
-                                @case('expire') Expiré @break
-                                @default {{ ucfirst($devis->statut) }}
-                            @endswitch
-                        </div>
-                    </div>
+        <!-- Date information -->
+        <div class="date-info">
+            <div class="date-grid">
+                <div class="date-cell">
+                    <div class="date-label">Date de création</div>
+                    <div class="date-value">{{ $devis->date_devis->format('d/m/Y') }}</div>
                 </div>
-                <div class="details-right">
-                    <div class="details-item">
-                        <div class="label">Créé le :</div>
-                        <div>{{ $devis->created_at->format('d/m/Y à H:i') }}</div>
-                    </div>
-                    @if($devis->updated_at->ne($devis->created_at))
-                        <div class="details-item">
-                            <div class="label">Modifié le :</div>
-                            <div>{{ $devis->updated_at->format('d/m/Y à H:i') }}</div>
-                        </div>
-                    @endif
+                <div class="date-cell">
+                    <div class="date-label">Date d'échéance</div>
+                    <div class="date-value">{{ $devis->date_validite->format('d/m/Y') }}</div>
                 </div>
+                @if($devis->date_envoi_client)
+                <div class="date-cell">
+                    <div class="date-label">Date d'envoi</div>
+                    <div class="date-value">{{ $devis->date_envoi_client->format('d/m/Y') }}</div>
+                </div>
+                @endif
             </div>
         </div>
 
-        <!-- Description -->
-        @if($devis->description)
-            <div class="content-section">
-                <div class="section-title">DESCRIPTION</div>
-                <div class="description-box">
-                    {!! nl2br(e($devis->description)) !!}
-                </div>
-            </div>
-        @endif
+        <!-- Object -->
+        <div class="object-section">
+            <div class="object-title">Objet du devis</div>
+            <div class="object-content">{{ $devis->objet }}</div>
+        </div>
 
-        <!-- Montants -->
-        <div class="amounts-section">
-            <div class="section-title">RÉCAPITULATIF FINANCIER</div>
-            <table class="amounts-table">
-                <tr>
-                    <td class="label-col">Montant Hors Taxes (HT)</td>
-                    <td class="amount-col">{{ number_format($devis->montant_ht, 2, ',', ' ') }} €</td>
-                </tr>
-                <tr>
-                    <td class="label-col">Taux de TVA</td>
-                    <td class="amount-col">{{ number_format($devis->taux_tva, 2, ',', ' ') }} %</td>
-                </tr>
-                <tr>
-                    <td class="label-col">Montant TVA</td>
-                    <td class="amount-col">{{ number_format($devis->montant_ht * $devis->taux_tva / 100, 2, ',', ' ') }} €</td>
-                </tr>
-                <tr class="total-row">
-                    <td class="label-col">TOTAL TTC</td>
-                    <td class="amount-col">{{ number_format($devis->montant_ttc, 2, ',', ' ') }} €</td>
-                </tr>
+        <!-- Items table -->
+        <div class="items-section">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Qté</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($lignes as $index => $ligne)
+                        <tr>
+                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td>
+                                <div class="service-name">
+                                    {{ $ligne->service->nom ?? 'Service personnalisé' }}
+                                </div>
+                                <div class="service-description">
+                                    {{ $ligne->description_personnalisee ?? $ligne->service->description ?? 'Prestation de service' }}
+                                </div>
+                            </td>
+                            <td style="text-align: center;">{{ $ligne->quantite }}</td>
+                            <td style="text-align: right;">{{ number_format($ligne->prix_unitaire_ht, 2, ',', ' ') }} €</td>
+                            <td style="text-align: right; font-weight: 600;">{{ number_format($ligne->montant_ht, 2, ',', ' ') }} €</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td style="text-align: center;">1</td>
+                            <td>
+                                <div class="service-name">Prestation de service</div>
+                                <div class="service-description">{{ $devis->description ?? 'Service personnalisé' }}</div>
+                            </td>
+                            <td style="text-align: center;">1</td>
+                            <td style="text-align: right;">{{ number_format($devis->montant_ht, 2, ',', ' ') }} €</td>
+                            <td style="text-align: right; font-weight: 600;">{{ number_format($devis->montant_ht, 2, ',', ' ') }} €</td>
+                        </tr>
+                    @endforelse
+                </tbody>
             </table>
         </div>
 
-        <!-- Conditions -->
-        @if($devis->conditions)
-            <div class="conditions-section">
-                <div class="section-title">CONDITIONS PARTICULIÈRES</div>
-                <div class="conditions-text">
-                    {!! nl2br(e($devis->conditions)) !!}
-                </div>
+        <!-- Totals section -->
+        <div class="totals-section">
+            <div class="totals-container">
+                <table class="totals-table">
+                    <tr>
+                        <td class="label-col">Sous-total HT</td>
+                        <td class="amount-col">{{ number_format($devis->montant_ht, 2, ',', ' ') }} €</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">TVA ({{ number_format($devis->taux_tva, 1, ',', ' ') }}%)</td>
+                        <td class="amount-col">{{ number_format($devis->montant_ttc - $devis->montant_ht, 2, ',', ' ') }} €</td>
+                    </tr>
+                    <tr class="total-final">
+                        <td class="label-col">Total TTC</td>
+                        <td class="amount-col">{{ number_format($devis->montant_ttc, 2, ',', ' ') }} €</td>
+                    </tr>
+                </table>
             </div>
-        @endif
+        </div>
 
-        <!-- Notes -->
+        <!-- Notes section -->
         @if($devis->notes)
             <div class="notes-section">
-                <div class="section-title">NOTES</div>
-                <div class="notes-text">
+                <div class="notes-title">Notes</div>
+                <div class="notes-content">
                     {!! nl2br(e($devis->notes)) !!}
                 </div>
             </div>
         @endif
-    </div>
 
-    <!-- Pied de page -->
-    <div class="footer">
-        <div>
-            Ce devis est valable jusqu'au {{ $devis->date_validite->format('d/m/Y') }} •
-            Généré le {{ now()->format('d/m/Y à H:i') }}
-        </div>
-        <div class="mt-10">
-            {{ config('app.name') }} - Tous droits réservés
+                 <!-- Banking and signature section -->
+         <div class="banking-signature-section">
+             <div class="banking-signature-grid">
+                 <!-- Banking information -->
+                 <div class="banking-cell">
+                     <div class="banking-box">
+                         <div class="banking-title">COORDONNÉES BANCAIRES</div>
+                         @if($madinia && ($madinia->nom_banque || $madinia->nom_compte_bancaire || $madinia->numero_compte || $madinia->iban_bic_swift))
+                             @if($madinia->nom_compte_bancaire)
+                                 <div class="banking-item">
+                                     <span class="banking-label">Titulaire :</span>
+                                     {{ $madinia->nom_compte_bancaire }}
+                                 </div>
+                             @endif
+                             @if($madinia->nom_banque)
+                                 <div class="banking-item">
+                                     <span class="banking-label">Banque :</span>
+                                     {{ $madinia->nom_banque }}
+                                 </div>
+                             @endif
+                             @if($madinia->numero_compte)
+                                 <div class="banking-item">
+                                     <span class="banking-label">Compte :</span>
+                                     {{ $madinia->numero_compte }}
+                                 </div>
+                             @endif
+                             @if($madinia->iban_bic_swift)
+                                 <div class="banking-item">
+                                     <span class="banking-label">IBAN/BIC :</span>
+                                     {{ $madinia->iban_bic_swift }}
+                                 </div>
+                             @endif
+                         @else
+                             <div class="banking-item" style="text-align: center; color: #9ca3af; font-style: italic;">
+                                 Coordonnées bancaires non configurées
+                             </div>
+                         @endif
+                     </div>
+                 </div>
+
+                 <!-- Enhanced client signature -->
+                 <div class="signature-cell">
+                     <div class="signature-box">
+                         <div class="signature-box-title">ACCEPTATION DU DEVIS</div>
+
+                         <div class="signature-fields">
+                             <div class="signature-field">
+                                 <div class="signature-field-label">Nom et prénom :</div>
+                                 <div class="signature-field-line"></div>
+                             </div>
+
+                             <div class="signature-field">
+                                 <div class="signature-field-label">Date d'acceptation :</div>
+                                 <div class="signature-field-line"></div>
+                             </div>
+                         </div>
+
+                         <div class="signature-field">
+                             <div class="signature-field-label">Signature :</div>
+                             <div class="signature-area">
+                                 Signature manuscrite
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </div>
+
+        <!-- Footer with support and legal info -->
+        <div class="footer-section">
+            <div class="footer-content">
+                <p>Nous apprécions votre collaboration. Si vous avez besoin de nous ajouter la TVA ou des notes supplémentaires, faites-le nous savoir !</p>
+                <p>Vous avez une question ? {{ $madinia->email ?? 'support@madinia.com' }}</p>
+            </div>
+
+            <!-- Legal information -->
+            <div class="footer-legal">
+                <div class="legal-grid">
+                    <div class="legal-cell">
+                        <div class="legal-title">Informations légales</div>
+                        <div class="legal-content">
+                            @if($madinia && $madinia->siret)
+                                SIRET : {{ $madinia->siret }}<br>
+                            @endif
+                            @if($madinia && $madinia->numero_nda)
+                                N° DA : {{ $madinia->numero_nda }}
+                            @endif
+                        </div>
+                    </div>
+                    <div class="legal-cell">
+                        <div class="legal-title">Coordonnées bancaires</div>
+                        <div class="legal-content">
+                            @if($madinia && $madinia->nom_banque)
+                                {{ $madinia->nom_banque }}<br>
+                            @endif
+                            @if($madinia && $madinia->iban_bic_swift)
+                                IBAN/BIC : {{ $madinia->iban_bic_swift }}
+                            @endif
+                        </div>
+                    </div>
+                    <div class="legal-cell">
+                        <div class="legal-title">Contact</div>
+                        <div class="legal-content">
+                            {{ $madinia->name ?? 'Madin.IA' }}<br>
+                            @if($madinia && $madinia->site_web)
+                                {{ $madinia->site_web }}
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

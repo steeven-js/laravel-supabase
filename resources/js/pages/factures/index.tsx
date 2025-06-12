@@ -9,7 +9,7 @@ import { DeleteConfirmationDialog } from '@/components/ui/delete-confirmation-di
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Eye, Edit, Trash2, Receipt, CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Receipt, CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Search, Filter, ArrowUpDown, TrendingUp, CreditCard } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
@@ -111,12 +111,90 @@ export default function FacturesIndex({ factures }: Props) {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [sortField, setSortField] = useState<keyof Facture>('date_facture');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    const [periodFilter, setPeriodFilter] = useState<'tous' | 'annee_courante' | 'mois_courant'>('mois_courant');
 
     const [deleteDialog, setDeleteDialog] = useState<{
         isOpen: boolean;
         facture: Facture | null;
     }>({ isOpen: false, facture: null });
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Obtenir l'année et le mois actuels
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    // Filtrer les factures selon la période sélectionnée
+    const filteredFacturesByPeriod = useMemo(() => {
+        return factures.filter(item => {
+            const itemDate = new Date(item.date_facture);
+
+            switch (periodFilter) {
+                case 'tous':
+                    return true;
+                case 'annee_courante':
+                    return itemDate.getFullYear() === currentYear;
+                case 'mois_courant':
+                    return itemDate.getFullYear() === currentYear &&
+                           itemDate.getMonth() + 1 === currentMonth;
+                default:
+                    return true;
+            }
+        });
+    }, [factures, periodFilter, currentYear, currentMonth]);
+
+    // Calcul des métriques
+    const metrics = useMemo(() => {
+        const totalFactures = filteredFacturesByPeriod.length;
+        const totalMontant = filteredFacturesByPeriod.reduce((sum, item) => sum + item.montant_ttc, 0);
+
+        const payeeFactures = filteredFacturesByPeriod.filter(item => item.statut === 'payee');
+        const envoyeeFactures = filteredFacturesByPeriod.filter(item => item.statut === 'envoyee');
+        const retardFactures = filteredFacturesByPeriod.filter(item => item.statut === 'en_retard');
+        const annuleeFactures = filteredFacturesByPeriod.filter(item => item.statut === 'annulee');
+        const brouillonFactures = filteredFacturesByPeriod.filter(item => item.statut === 'brouillon');
+
+        return {
+            total: {
+                count: totalFactures,
+                montant: totalMontant
+            },
+            payee: {
+                count: payeeFactures.length,
+                montant: payeeFactures.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            envoyee: {
+                count: envoyeeFactures.length,
+                montant: envoyeeFactures.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            retard: {
+                count: retardFactures.length,
+                montant: retardFactures.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            annulee: {
+                count: annuleeFactures.length,
+                montant: annuleeFactures.reduce((sum, item) => sum + item.montant_ttc, 0)
+            },
+            brouillon: {
+                count: brouillonFactures.length,
+                montant: brouillonFactures.reduce((sum, item) => sum + item.montant_ttc, 0)
+            }
+        };
+    }, [filteredFacturesByPeriod]);
+
+    // Fonction pour obtenir le libellé de la période
+    const getPeriodLabel = () => {
+        switch (periodFilter) {
+            case 'tous':
+                return 'Toutes les périodes';
+            case 'annee_courante':
+                return `Année ${currentYear}`;
+            case 'mois_courant':
+                return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentDate);
+            default:
+                return '';
+        }
+    };
 
     // Filtrer et trier les factures
     const filteredAndSortedFactures = useMemo(() => {
@@ -276,6 +354,149 @@ export default function FacturesIndex({ factures }: Props) {
                             </Link>
                         </Button>
                     </div>
+                </div>
+
+                {/* Barre de métriques pour les factures */}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {/* Total */}
+                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
+                                    <p className="text-xs text-blue-500 dark:text-blue-300 mb-1">
+                                        {metrics.total.count} factures
+                                    </p>
+                                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-100">
+                                        {formatPrice(metrics.total.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+                                    <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Payées */}
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-green-600 dark:text-green-400">Payées</p>
+                                    <p className="text-xs text-green-500 dark:text-green-300 mb-1">
+                                        {metrics.payee.count} factures
+                                    </p>
+                                    <p className="text-2xl font-bold text-green-700 dark:text-green-100">
+                                        {formatPrice(metrics.payee.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-lg flex items-center justify-center">
+                                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* En attente */}
+                    <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-orange-600 dark:text-orange-400">En attente</p>
+                                    <p className="text-xs text-orange-500 dark:text-orange-300 mb-1">
+                                        {metrics.envoyee.count} factures
+                                    </p>
+                                    <p className="text-2xl font-bold text-orange-700 dark:text-orange-100">
+                                        {formatPrice(metrics.envoyee.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-lg flex items-center justify-center">
+                                    <Clock className="h-6 w-6 text-orange-600 dark:text-orange-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* En retard */}
+                    <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-red-600 dark:text-red-400">En retard</p>
+                                    <p className="text-xs text-red-500 dark:text-red-300 mb-1">
+                                        {metrics.retard.count} factures
+                                    </p>
+                                    <p className="text-2xl font-bold text-red-700 dark:text-red-100">
+                                        {formatPrice(metrics.retard.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-red-100 dark:bg-red-800 rounded-lg flex items-center justify-center">
+                                    <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Annulées */}
+                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Annulées</p>
+                                    <p className="text-xs text-purple-500 dark:text-purple-300 mb-1">
+                                        {metrics.annulee.count} factures
+                                    </p>
+                                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-100">
+                                        {formatPrice(metrics.annulee.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+                                    <XCircle className="h-6 w-6 text-purple-600 dark:text-purple-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Brouillons */}
+                    <Card className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 border-gray-200 dark:border-gray-800">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Brouillons</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-300 mb-1">
+                                        {metrics.brouillon.count} factures
+                                    </p>
+                                    <p className="text-2xl font-bold text-gray-700 dark:text-gray-100">
+                                        {formatPrice(metrics.brouillon.montant)}
+                                    </p>
+                                </div>
+                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <FileText className="h-6 w-6 text-gray-600 dark:text-gray-300" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Sélecteur de période */}
+                <div className="flex items-center justify-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">Période :</span>
+                        <Select value={periodFilter} onValueChange={(value: 'tous' | 'annee_courante' | 'mois_courant') => setPeriodFilter(value)}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Sélectionner une période" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="tous">📈 Tous</SelectItem>
+                                <SelectItem value="annee_courante">📅 Année en cours</SelectItem>
+                                <SelectItem value="mois_courant">💰 Mois en cours</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Badge variant="outline" className="px-4 py-2 text-sm bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                        💰 Métriques pour {getPeriodLabel()}
+                    </Badge>
                 </div>
 
                 {/* Statistiques */}

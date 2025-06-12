@@ -62,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Actions spéciales pour les devis
     Route::patch('devis/{devis}/accepter', [DevisController::class, 'accepter'])->name('devis.accepter');
     Route::patch('devis/{devis}/refuser', [DevisController::class, 'refuser'])->name('devis.refuser');
+    Route::patch('devis/{devis}/changer-statut', [DevisController::class, 'changerStatut'])->name('devis.changer-statut');
     Route::get('devis/{devis}/envoyer-email', [DevisController::class, 'afficherEnvoiEmail'])->name('devis.afficher-envoi-email');
     Route::post('devis/{devis}/envoyer-email', [DevisController::class, 'envoyerEmail'])->name('devis.envoyer-email');
 
@@ -78,6 +79,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('factures', FactureController::class)->parameters(['factures' => 'facture']);
 
     // Actions spéciales pour les factures
+    Route::get('factures/{facture}/envoyer-email', [FactureController::class, 'envoyerEmailForm'])->name('factures.envoyer-email-form');
+    Route::patch('factures/{facture}/changer-statut', [FactureController::class, 'changerStatut'])->name('factures.changer-statut');
     Route::patch('factures/{facture}/marquer-payee', [FactureController::class, 'marquerPayee'])->name('factures.marquer-payee');
     Route::post('factures/{facture}/envoyer-email', [FactureController::class, 'envoyerEmail'])->name('factures.envoyer-email');
     Route::patch('factures/{facture}/envoyer', [FactureController::class, 'envoyer'])->name('factures.envoyer');

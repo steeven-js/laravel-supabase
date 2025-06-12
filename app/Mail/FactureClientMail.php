@@ -73,11 +73,19 @@ class FactureClientMail extends Mailable implements ShouldQueue
      */
     public function attachments(): array
     {
-        // TODO: Ajouter la facture PDF en pièce jointe
-        return [
-            // Attachment::fromPath('/path/to/facture.pdf')
-            //     ->as("Facture_{$this->facture->numero_facture}.pdf")
-            //     ->withMime('application/pdf'),
-        ];
+        $attachments = [];
+
+        // Ajouter la facture PDF en pièce jointe si elle existe
+        if ($this->facture->pdf_file) {
+            $cheminPdf = storage_path("app/pdfs/factures/{$this->facture->pdf_file}");
+
+            if (file_exists($cheminPdf)) {
+                $attachments[] = Attachment::fromPath($cheminPdf)
+                    ->as("Facture_{$this->facture->numero_facture}.pdf")
+                    ->withMime('application/pdf');
+            }
+        }
+
+        return $attachments;
     }
 }

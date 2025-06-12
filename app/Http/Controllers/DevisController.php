@@ -67,10 +67,21 @@ class DevisController extends Controller
     public function create()
     {
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
+        $services = \App\Models\Service::actif()->orderBy('nom')->get();
+        $madinia = \App\Models\Madinia::getInstance();
 
         return Inertia::render('devis/create', [
             'clients' => $clients,
-            'numero_devis' => Devis::genererNumeroDevis()
+            'services' => $services,
+            'numero_devis' => Devis::genererNumeroDevis(),
+            'madinia' => $madinia ? [
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'adresse' => $madinia->adresse,
+                'pays' => $madinia->pays,
+                'siret' => $madinia->siret,
+            ] : null,
         ]);
     }
 
@@ -86,17 +97,36 @@ class DevisController extends Controller
                 'date_validite' => 'required|date|after:date_devis',
                 'objet' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'montant_ht' => 'required|numeric|min:0',
-                'taux_tva' => 'required|numeric|min:0|max:100',
                 'conditions' => 'nullable|string',
                 'notes' => 'nullable|string',
+                'lignes' => 'required|array|min:1',
+                'lignes.*.service_id' => 'nullable|exists:services,id',
+                'lignes.*.quantite' => 'required|numeric|min:0',
+                'lignes.*.prix_unitaire_ht' => 'required|numeric|min:0',
+                'lignes.*.taux_tva' => 'required|numeric|min:0|max:100',
+                'lignes.*.description_personnalisee' => 'nullable|string',
+                'lignes.*.ordre' => 'required|integer|min:1',
             ]);
 
             // Générer automatiquement le numéro de devis
             $validated['numero_devis'] = Devis::genererNumeroDevis();
 
-            $devis = new Devis($validated);
-            $devis->statut_envoi = 'non_envoye'; // Statut par défaut
+            // Créer le devis
+            $devis = new Devis();
+            $devis->fill($validated);
+            $devis->statut = 'brouillon';
+            $devis->statut_envoi = 'non_envoye';
+            $devis->save();
+
+            // Créer les lignes de devis
+            foreach ($validated['lignes'] as $ligneData) {
+                $ligne = new \App\Models\LigneDevis();
+                $ligne->devis_id = $devis->id;
+                $ligne->fill($ligneData);
+                $ligne->save(); // Les montants seront calculés automatiquement via le boot()
+            }
+
+            // Recalculer les montants du devis
             $devis->calculerMontants();
             $devis->save();
 
@@ -139,7 +169,10 @@ class DevisController extends Controller
      */
     public function show(Devis $devis)
     {
-        $devis->load(['client.entreprise', 'facture']);
+        $devis->load(['client.entreprise', 'facture', 'lignes.service']);
+
+        // Récupérer les informations Madinia
+        $madinia = \App\Models\Madinia::getInstance();
 
         // Construire manuellement les données pour éviter les problèmes de sérialisation
         $devisFormatted = [
@@ -163,6 +196,26 @@ class DevisController extends Controller
             'updated_at' => $devis->updated_at->toISOString(),
             'peut_etre_transforme_en_facture' => $devis->peutEtreTransformeEnFacture(),
             'peut_etre_envoye' => $devis->peutEtreEnvoye(),
+            'lignes' => $devis->lignes->map(function ($ligne) {
+                return [
+                    'id' => $ligne->id,
+                    'service_id' => $ligne->service_id,
+                    'quantite' => $ligne->quantite,
+                    'prix_unitaire_ht' => $ligne->prix_unitaire_ht,
+                    'taux_tva' => $ligne->taux_tva,
+                    'montant_ht' => $ligne->montant_ht,
+                    'montant_tva' => $ligne->montant_tva,
+                    'montant_ttc' => $ligne->montant_ttc,
+                    'ordre' => $ligne->ordre,
+                    'description_personnalisee' => $ligne->description_personnalisee,
+                    'service' => $ligne->service ? [
+                        'id' => $ligne->service->id,
+                        'nom' => $ligne->service->nom,
+                        'description' => $ligne->service->description,
+                        'code' => $ligne->service->code,
+                    ] : null
+                ];
+            }),
             'facture' => $devis->facture ? [
                 'id' => $devis->facture->id,
                 'numero_facture' => $devis->facture->numero_facture,
@@ -174,16 +227,34 @@ class DevisController extends Controller
                 'prenom' => $devis->client->prenom,
                 'email' => $devis->client->email,
                 'telephone' => $devis->client->telephone,
+                'adresse' => $devis->client->adresse,
+                'ville' => $devis->client->ville,
+                'code_postal' => $devis->client->code_postal,
                 'entreprise' => $devis->client->entreprise ? [
                     'id' => $devis->client->entreprise->id,
                     'nom' => $devis->client->entreprise->nom,
                     'nom_commercial' => $devis->client->entreprise->nom_commercial,
+                    'adresse' => $devis->client->entreprise->adresse,
+                    'ville' => $devis->client->entreprise->ville,
+                    'code_postal' => $devis->client->entreprise->code_postal,
                 ] : null
             ] : null
         ];
 
         return Inertia::render('devis/show', [
-            'devis' => $devisFormatted
+            'devis' => $devisFormatted,
+            'madinia' => [
+                'id' => $madinia->id,
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'site_web' => $madinia->site_web,
+                'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'pays' => $madinia->pays,
+                'adresse' => $madinia->adresse,
+                'description' => $madinia->description,
+            ]
         ]);
     }
 
@@ -192,8 +263,10 @@ class DevisController extends Controller
      */
     public function edit(Devis $devis)
     {
-        $devis->load(['client.entreprise']);
+        $devis->load(['client.entreprise', 'lignes.service']);
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
+        $services = \App\Models\Service::actif()->orderBy('nom')->get();
+        $madinia = \App\Models\Madinia::getInstance();
 
         // Construire manuellement les données pour éviter les problèmes de sérialisation
         $devisFormatted = [
@@ -211,22 +284,60 @@ class DevisController extends Controller
             'description' => $devis->description,
             'conditions' => $devis->conditions,
             'archive' => $devis->archive,
+            'lignes' => $devis->lignes->map(function ($ligne) {
+                return [
+                    'id' => $ligne->id,
+                    'service_id' => $ligne->service_id,
+                    'quantite' => $ligne->quantite,
+                    'prix_unitaire_ht' => $ligne->prix_unitaire_ht,
+                    'taux_tva' => $ligne->taux_tva,
+                    'montant_ht' => $ligne->montant_ht,
+                    'montant_tva' => $ligne->montant_tva,
+                    'montant_ttc' => $ligne->montant_ttc,
+                    'ordre' => $ligne->ordre,
+                    'description_personnalisee' => $ligne->description_personnalisee,
+                    'service' => $ligne->service ? [
+                        'id' => $ligne->service->id,
+                        'nom' => $ligne->service->nom,
+                        'code' => $ligne->service->code,
+                        'description' => $ligne->service->description,
+                        'prix_ht' => $ligne->service->prix_ht,
+                        'qte_defaut' => $ligne->service->qte_defaut,
+                    ] : null
+                ];
+            }),
             'client' => $devis->client ? [
                 'id' => $devis->client->id,
                 'nom' => $devis->client->nom,
                 'prenom' => $devis->client->prenom,
                 'email' => $devis->client->email,
+                'telephone' => $devis->client->telephone,
+                'adresse' => $devis->client->adresse,
+                'ville' => $devis->client->ville,
+                'code_postal' => $devis->client->code_postal,
                 'entreprise' => $devis->client->entreprise ? [
                     'id' => $devis->client->entreprise->id,
                     'nom' => $devis->client->entreprise->nom,
                     'nom_commercial' => $devis->client->entreprise->nom_commercial,
+                    'adresse' => $devis->client->entreprise->adresse,
+                    'ville' => $devis->client->entreprise->ville,
+                    'code_postal' => $devis->client->entreprise->code_postal,
                 ] : null
             ] : null
         ];
 
         return Inertia::render('devis/edit', [
             'devis' => $devisFormatted,
-            'clients' => $clients
+            'clients' => $clients,
+            'services' => $services,
+            'madinia' => $madinia ? [
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'adresse' => $madinia->adresse,
+                'pays' => $madinia->pays,
+                'siret' => $madinia->siret,
+            ] : null,
         ]);
     }
 
@@ -244,22 +355,50 @@ class DevisController extends Controller
                 'statut' => 'required|in:brouillon,envoye,accepte,refuse,expire',
                 'objet' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'montant_ht' => 'required|numeric|min:0',
-                'taux_tva' => 'required|numeric|min:0|max:100',
                 'conditions' => 'nullable|string',
                 'notes' => 'nullable|string',
                 'archive' => 'boolean',
+                'lignes' => 'required|array|min:1',
+                'lignes.*.id' => 'nullable|exists:lignes_devis,id',
+                'lignes.*.service_id' => 'nullable|exists:services,id',
+                'lignes.*.quantite' => 'required|numeric|min:0',
+                'lignes.*.prix_unitaire_ht' => 'required|numeric|min:0',
+                'lignes.*.taux_tva' => 'required|numeric|min:0|max:100',
+                'lignes.*.description_personnalisee' => 'nullable|string',
+                'lignes.*.ordre' => 'required|integer|min:1',
             ]);
 
-            // Convertir explicitement les montants en float pour éviter les problèmes de type
-            if (isset($validated['montant_ht'])) {
-                $validated['montant_ht'] = (float) $validated['montant_ht'];
-            }
-            if (isset($validated['taux_tva'])) {
-                $validated['taux_tva'] = (float) $validated['taux_tva'];
+            // Mettre à jour le devis
+            $devis->fill($validated);
+            $devis->save();
+
+            // Gérer les lignes de devis
+            $lignesExistantes = $devis->lignes->keyBy('id');
+            $lignesTraitees = collect();
+
+            foreach ($validated['lignes'] as $ligneData) {
+                if (isset($ligneData['id']) && $lignesExistantes->has($ligneData['id'])) {
+                    // Mettre à jour ligne existante
+                    $ligne = $lignesExistantes->get($ligneData['id']);
+                    $ligne->fill($ligneData);
+                    $ligne->save();
+                    $lignesTraitees->push($ligneData['id']);
+                } else {
+                    // Créer nouvelle ligne
+                    $ligne = new \App\Models\LigneDevis();
+                    $ligne->devis_id = $devis->id;
+                    $ligne->fill($ligneData);
+                    $ligne->save();
+                }
             }
 
-            $devis->fill($validated);
+            // Supprimer les lignes qui ne sont plus présentes
+            $lignesASupprimer = $lignesExistantes->keys()->diff($lignesTraitees);
+            if ($lignesASupprimer->isNotEmpty()) {
+                \App\Models\LigneDevis::whereIn('id', $lignesASupprimer)->delete();
+            }
+
+            // Recalculer les montants du devis
             $devis->calculerMontants();
             $devis->save();
 
@@ -361,6 +500,50 @@ class DevisController extends Controller
         } catch (Exception $e) {
             return back()
                 ->with('error', '❌ Une erreur est survenue lors du refus du devis.');
+        }
+    }
+
+    /**
+     * Modifier le statut d'un devis
+     */
+    public function changerStatut(Request $request, Devis $devis)
+    {
+        $request->validate([
+            'statut' => 'required|in:brouillon,envoye,accepte,refuse,expire'
+        ]);
+
+        try {
+            $ancienStatut = $devis->statut;
+            $nouveauStatut = $request->statut;
+
+            // Actions spécifiques selon le statut
+            switch ($nouveauStatut) {
+                case 'accepte':
+                    $devis->accepter();
+                    break;
+                case 'refuse':
+                    $devis->refuser();
+                    break;
+                default:
+                    $devis->statut = $nouveauStatut;
+                    $devis->save();
+                    break;
+            }
+
+            $messages = [
+                'brouillon' => '📝 Devis ' . $devis->numero_devis . ' remis en brouillon.',
+                'envoye' => '📧 Devis ' . $devis->numero_devis . ' marqué comme envoyé.',
+                'accepte' => '✅ Devis ' . $devis->numero_devis . ' accepté avec succès !',
+                'refuse' => '⛔ Devis ' . $devis->numero_devis . ' refusé.',
+                'expire' => '⏰ Devis ' . $devis->numero_devis . ' marqué comme expiré.'
+            ];
+
+            return redirect()->back()
+                ->with('success', $messages[$nouveauStatut] ?? 'Statut mis à jour.');
+
+        } catch (Exception $e) {
+            return back()
+                ->with('error', '❌ Une erreur est survenue lors de la modification du statut.');
         }
     }
 
