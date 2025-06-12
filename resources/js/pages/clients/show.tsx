@@ -35,9 +35,15 @@ import {
     Send,
     History,
     Plus,
-    Loader2
+    Loader2,
+    Target,
+    Percent,
+    DollarSign,
+    Users,
+    Edit3,
+    Trash2
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 interface Client {
@@ -76,6 +82,23 @@ interface Client {
             name: string;
         };
     }>;
+    opportunities?: Array<{
+        id: number;
+        nom: string;
+        description: string;
+        etape: string;
+        probabilite: number;
+        montant: number;
+        date_cloture_prevue: string;
+        date_cloture_reelle?: string;
+        notes?: string;
+        user: {
+            id: number;
+            name: string;
+        };
+        created_at: string;
+        updated_at: string;
+    }>;
     created_at: string;
 }
 
@@ -105,13 +128,39 @@ const breadcrumbs = (client: Client): BreadcrumbItem[] => [
 ];
 
 export default function ClientsShow({ client, auth }: Props) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'quotes' | 'stats' | 'emails'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'quotes' | 'stats' | 'emails' | 'opportunities'>('overview');
     const [isComposingEmail, setIsComposingEmail] = useState(false);
     const [emailForm, setEmailForm] = useState({
         objet: '',
         contenu: ''
     });
     const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+    // États pour les opportunités
+    const [isCreatingOpportunity, setIsCreatingOpportunity] = useState(false);
+    const [editingOpportunity, setEditingOpportunity] = useState<number | null>(null);
+    const [opportunityForm, setOpportunityForm] = useState({
+        nom: '',
+        description: '',
+        etape: 'prospection',
+        probabilite: 50,
+        montant: '',
+        date_cloture_prevue: '',
+        notes: ''
+    });
+    const [isSavingOpportunity, setIsSavingOpportunity] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    // Options pour les étapes d'opportunité
+    const etapesOptions = [
+        { value: 'prospection', label: 'Prospection', color: 'blue' },
+        { value: 'qualification', label: 'Qualification', color: 'indigo' },
+        { value: 'proposition', label: 'Proposition', color: 'purple' },
+        { value: 'negociation', label: 'Négociation', color: 'yellow' },
+        { value: 'fermeture', label: 'Fermeture', color: 'orange' },
+        { value: 'gagnee', label: 'Gagnée', color: 'green' },
+        { value: 'perdue', label: 'Perdue', color: 'red' },
+    ];
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -205,7 +254,8 @@ export default function ClientsShow({ client, auth }: Props) {
         { id: 'overview', label: 'Vue d\'ensemble', icon: User },
         { id: 'quotes', label: 'Devis', icon: FileText },
         { id: 'stats', label: 'Statistiques', icon: BarChart3 },
-        { id: 'emails', label: 'Emails', icon: Mail }
+        { id: 'emails', label: 'Emails', icon: Mail },
+        { id: 'opportunities', label: 'Opportunités', icon: Target }
     ] as const;
 
     const handleSendEmail = async () => {
@@ -249,6 +299,153 @@ export default function ClientsShow({ client, auth }: Props) {
     };
 
     const userEmails = client.emails?.filter(email => email.user?.id === auth.user.id) || [];
+
+    const handleSaveOpportunity = async () => {
+        if (!opportunityForm.nom.trim()) {
+            toast.error('Le nom de l\'opportunité est requis');
+            return;
+        }
+
+        setIsSavingOpportunity(true);
+
+        try {
+            const url = editingOpportunity
+                ? `/opportunities/${editingOpportunity}`
+                : `/clients/${client.id}/opportunities`;
+
+            const method = editingOpportunity ? 'patch' : 'post';
+
+            await router[method](url, {
+                ...opportunityForm,
+                probabilite: parseInt(opportunityForm.probabilite.toString()),
+                montant: opportunityForm.montant ? parseFloat(opportunityForm.montant) : null,
+            }, {
+                onSuccess: () => {
+                    toast.success(editingOpportunity ? 'Opportunité mise à jour !' : 'Opportunité créée !');
+                    resetOpportunityForm();
+                },
+                onError: (errors) => {
+                    console.error('Erreur:', errors);
+                    toast.error('Erreur lors de la sauvegarde');
+                },
+                onFinish: () => {
+                    setIsSavingOpportunity(false);
+                }
+            });
+        } catch (error) {
+            console.error('Erreur:', error);
+            toast.error('Erreur lors de la sauvegarde');
+            setIsSavingOpportunity(false);
+        }
+    };
+
+    const resetOpportunityForm = () => {
+        setOpportunityForm({
+            nom: '',
+            description: '',
+            etape: 'prospection',
+            probabilite: 50,
+            montant: '',
+            date_cloture_prevue: '',
+            notes: ''
+        });
+        setIsCreatingOpportunity(false);
+        setEditingOpportunity(null);
+    };
+
+    const handleEditOpportunity = (opportunity: any) => {
+        setOpportunityForm({
+            nom: opportunity.nom,
+            description: opportunity.description || '',
+            etape: opportunity.etape,
+            probabilite: opportunity.probabilite,
+            montant: opportunity.montant ? opportunity.montant.toString() : '',
+            date_cloture_prevue: opportunity.date_cloture_prevue || '',
+            notes: opportunity.notes || ''
+        });
+        setEditingOpportunity(opportunity.id);
+        setIsCreatingOpportunity(true);
+    };
+
+    const handleDeleteOpportunity = async (opportunityId: number) => {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette opportunité ?')) {
+            return;
+        }
+
+        try {
+            await router.delete(`/opportunities/${opportunityId}`, {
+                onSuccess: () => {
+                    toast.success('Opportunité supprimée !');
+                },
+                onError: () => {
+                    toast.error('Erreur lors de la suppression');
+                }
+            });
+        } catch (error) {
+            console.error('Erreur:', error);
+            toast.error('Erreur lors de la suppression');
+        }
+    };
+
+    const getEtapeColor = (etape: string) => {
+        const option = etapesOptions.find(opt => opt.value === etape);
+        return option?.color || 'gray';
+    };
+
+    const getProbabiliteColor = (probabilite: number) => {
+        if (probabilite <= 33) return 'red';
+        if (probabilite <= 66) return 'orange';
+        return 'green';
+    };
+
+    const getProbabiliteColorClass = (probabilite: number) => {
+        if (probabilite <= 33) return 'bg-red-500';
+        if (probabilite <= 66) return 'bg-orange-500';
+        return 'bg-green-500';
+    };
+
+        const handleJaugeClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const width = rect.width;
+        const percentage = Math.round((x / width) * 100);
+        const clampedPercentage = Math.min(100, Math.max(0, percentage));
+
+        setOpportunityForm(prev => ({ ...prev, probabilite: clampedPercentage }));
+    };
+
+    const handleJaugeDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (isDragging || event.buttons === 1) {
+            handleJaugeClick(event);
+        }
+    };
+
+    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+        setIsDragging(true);
+        handleJaugeClick(event);
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+    };
+
+    // Ajouter l'événement global pour relâcher la souris
+    useEffect(() => {
+        const handleGlobalMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        if (isDragging) {
+            document.addEventListener('mouseup', handleGlobalMouseUp);
+            return () => {
+                document.removeEventListener('mouseup', handleGlobalMouseUp);
+            };
+        }
+    }, [isDragging]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(client)}>
@@ -974,6 +1171,316 @@ export default function ClientsShow({ client, auth }: Props) {
                                         <Button onClick={() => setIsComposingEmail(true)}>
                                             <Plus className="mr-2 h-4 w-4" />
                                             Composer un email
+                                        </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === 'opportunities' && (
+                    <div className="space-y-6">
+                        {/* Créer une nouvelle opportunité */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Target className="h-5 w-5" />
+                                        {editingOpportunity ? 'Modifier l\'opportunité' : 'Nouvelle opportunité'}
+                                    </CardTitle>
+                                    {!isCreatingOpportunity && (
+                                        <Button onClick={() => setIsCreatingOpportunity(true)}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Créer
+                                        </Button>
+                                    )}
+                                </div>
+                            </CardHeader>
+                            {isCreatingOpportunity && (
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="opportunity-nom">Nom *</Label>
+                                            <Input
+                                                id="opportunity-nom"
+                                                value={opportunityForm.nom}
+                                                onChange={(e) => setOpportunityForm(prev => ({ ...prev, nom: e.target.value }))}
+                                                placeholder="Nom de l'opportunité..."
+                                                disabled={isSavingOpportunity}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="opportunity-etape">Étape *</Label>
+                                            <select
+                                                id="opportunity-etape"
+                                                value={opportunityForm.etape}
+                                                onChange={(e) => setOpportunityForm(prev => ({ ...prev, etape: e.target.value }))}
+                                                className="w-full px-3 py-2 border border-input rounded-md"
+                                                disabled={isSavingOpportunity}
+                                            >
+                                                {etapesOptions.map(option => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="opportunity-probabilite">Probabilité (%)</Label>
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Input
+                                                        id="opportunity-probabilite"
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        value={opportunityForm.probabilite}
+                                                        onChange={(e) => setOpportunityForm(prev => ({ ...prev, probabilite: parseInt(e.target.value) || 0 }))}
+                                                        disabled={isSavingOpportunity}
+                                                        className="w-20"
+                                                    />
+                                                    <Percent className="h-4 w-4 text-muted-foreground" />
+                                                </div>
+                                                                                                                                                <div className="w-full relative">
+                                                                                                        <div
+                                                        className="w-full bg-gray-200 rounded-full h-4 cursor-pointer select-none relative"
+                                                        onMouseDown={handleMouseDown}
+                                                        onMouseMove={handleJaugeDrag}
+                                                        onMouseUp={handleMouseUp}
+                                                        onMouseLeave={handleMouseLeave}
+                                                    >
+                                                        <div
+                                                            className={`h-4 rounded-full transition-all duration-150 ${getProbabiliteColorClass(opportunityForm.probabilite)}`}
+                                                            style={{ width: `${opportunityForm.probabilite}%` }}
+                                                        ></div>
+                                                        {/* Curseur interactif */}
+                                                        <div
+                                                            className="absolute top-1/2 w-5 h-5 transform -translate-y-1/2 -translate-x-1/2 transition-all duration-150 cursor-grab active:cursor-grabbing"
+                                                            style={{ left: `${opportunityForm.probabilite}%` }}
+                                                        >
+                                                            <div className={`w-5 h-5 rounded-full border-3 border-white shadow-lg hover:scale-110 transition-transform ${getProbabiliteColorClass(opportunityForm.probabilite)}`}></div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-muted-foreground mt-3">
+                                                        <span>0%</span>
+                                                        <span className={`font-medium ${
+                                                            opportunityForm.probabilite <= 33 ? 'text-red-600' :
+                                                            opportunityForm.probabilite <= 66 ? 'text-orange-600' :
+                                                            'text-green-600'
+                                                        }`}>
+                                                            {opportunityForm.probabilite <= 33 ? 'Faible' :
+                                                             opportunityForm.probabilite <= 66 ? 'Moyenne' :
+                                                             'Élevée'}
+                                                        </span>
+                                                        <span>100%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="opportunity-montant">Montant estimé (€)</Label>
+                                            <Input
+                                                id="opportunity-montant"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={opportunityForm.montant}
+                                                onChange={(e) => setOpportunityForm(prev => ({ ...prev, montant: e.target.value }))}
+                                                placeholder="0.00"
+                                                disabled={isSavingOpportunity}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="opportunity-date">Date de clôture prévue</Label>
+                                        <Input
+                                            id="opportunity-date"
+                                            type="date"
+                                            value={opportunityForm.date_cloture_prevue}
+                                            onChange={(e) => setOpportunityForm(prev => ({ ...prev, date_cloture_prevue: e.target.value }))}
+                                            disabled={isSavingOpportunity}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="opportunity-description">Description</Label>
+                                        <Textarea
+                                            id="opportunity-description"
+                                            value={opportunityForm.description}
+                                            onChange={(e) => setOpportunityForm(prev => ({ ...prev, description: e.target.value }))}
+                                            placeholder="Description de l'opportunité..."
+                                            rows={3}
+                                            disabled={isSavingOpportunity}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="opportunity-notes">Notes</Label>
+                                        <Textarea
+                                            id="opportunity-notes"
+                                            value={opportunityForm.notes}
+                                            onChange={(e) => setOpportunityForm(prev => ({ ...prev, notes: e.target.value }))}
+                                            placeholder="Notes internes..."
+                                            rows={2}
+                                            disabled={isSavingOpportunity}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            onClick={handleSaveOpportunity}
+                                            disabled={isSavingOpportunity}
+                                        >
+                                            {isSavingOpportunity ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Sauvegarde...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                                    {editingOpportunity ? 'Mettre à jour' : 'Créer'}
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={resetOpportunityForm}
+                                            disabled={isSavingOpportunity}
+                                        >
+                                            Annuler
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            )}
+                        </Card>
+
+                        {/* Liste des opportunités */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Target className="h-5 w-5" />
+                                    Opportunités de {client.prenom} {client.nom}
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    Suivi des opportunités commerciales ({client.opportunities?.length || 0})
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                {client.opportunities && client.opportunities.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {client.opportunities.map((opportunity) => (
+                                            <div key={opportunity.id} className="border rounded-lg p-4 space-y-3">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <h4 className="font-medium text-lg">{opportunity.nom}</h4>
+                                                            <Badge
+                                                                className={`text-xs`}
+                                                                style={{
+                                                                    backgroundColor: `var(--${getEtapeColor(opportunity.etape)}-100)`,
+                                                                    color: `var(--${getEtapeColor(opportunity.etape)}-800)`,
+                                                                    border: `1px solid var(--${getEtapeColor(opportunity.etape)}-200)`
+                                                                }}
+                                                            >
+                                                                {etapesOptions.find(opt => opt.value === opportunity.etape)?.label}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                                                            <div className="flex items-center gap-3 min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Percent className="h-4 w-4 flex-shrink-0" />
+                                                                    <span className="text-sm font-medium">{opportunity.probabilite}%</span>
+                                                                </div>
+                                                                                                                                <div className="flex-1 min-w-[80px] relative">
+                                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                        <div
+                                                                            className={`h-2 rounded-full transition-all duration-300 ${getProbabiliteColorClass(opportunity.probabilite)}`}
+                                                                            style={{ width: `${opportunity.probabilite}%` }}
+                                                                        ></div>
+                                                                    </div>
+                                                                    {/* Curseur */}
+                                                                    <div
+                                                                        className="absolute top-0 w-3 h-3 -mt-0.5 transform -translate-x-1.5 transition-all duration-300"
+                                                                        style={{ left: `${opportunity.probabilite}%` }}
+                                                                    >
+                                                                        <div className={`w-3 h-3 rounded-full border-2 border-white shadow-md ${getProbabiliteColorClass(opportunity.probabilite)}`}></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {opportunity.montant && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Euro className="h-4 w-4" />
+                                                                    <span>{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(opportunity.montant)}</span>
+                                                                </div>
+                                                            )}
+                                                            {opportunity.date_cloture_prevue && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Calendar className="h-4 w-4" />
+                                                                    <span>Clôture prévue : {formatDateShort(opportunity.date_cloture_prevue)}</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex items-center gap-1">
+                                                                <Users className="h-4 w-4" />
+                                                                <span>{opportunity.user.name}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleEditOpportunity(opportunity)}
+                                                        >
+                                                            <Edit3 className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteOpportunity(opportunity.id)}
+                                                            className="text-destructive hover:text-destructive"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                                {opportunity.description && (
+                                                    <div className="text-sm bg-muted/30 rounded p-3">
+                                                        <p className="whitespace-pre-wrap">{opportunity.description}</p>
+                                                    </div>
+                                                )}
+
+                                                {opportunity.notes && (
+                                                    <div className="text-sm text-muted-foreground">
+                                                        <strong>Notes :</strong> {opportunity.notes}
+                                                    </div>
+                                                )}
+
+                                                <div className="text-xs text-muted-foreground border-t pt-2">
+                                                    Créée le {formatDate(opportunity.created_at)}
+                                                    {opportunity.updated_at !== opportunity.created_at && (
+                                                        <> • Modifiée le {formatDate(opportunity.updated_at)}</>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <Target className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                                        <h3 className="mt-4 text-lg font-medium">Aucune opportunité</h3>
+                                        <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                                            Aucune opportunité n'a été créée pour ce client. Commencez par identifier et créer vos premières opportunités commerciales.
+                                        </p>
+                                        <Button onClick={() => setIsCreatingOpportunity(true)}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Créer une opportunité
                                         </Button>
                                     </div>
                                 )}

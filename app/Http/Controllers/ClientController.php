@@ -98,6 +98,9 @@ class ClientController extends Controller
             'devis',
             'emails' => function($query) {
                 $query->with('user')->orderBy('date_envoi', 'desc');
+            },
+            'opportunities' => function($query) {
+                $query->with('user')->orderBy('created_at', 'desc');
             }
         ]);
 

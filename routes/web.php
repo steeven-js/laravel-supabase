@@ -34,6 +34,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('clients', ClientController::class);
     Route::post('clients/{client}/send-email', [ClientController::class, 'sendEmail'])->name('clients.send-email');
 
+    // Routes pour les opportunités
+    Route::post('clients/{client}/opportunities', [App\Http\Controllers\OpportunityController::class, 'store'])->name('opportunities.store');
+    Route::patch('opportunities/{opportunity}', [App\Http\Controllers\OpportunityController::class, 'update'])->name('opportunities.update');
+    Route::delete('opportunities/{opportunity}', [App\Http\Controllers\OpportunityController::class, 'destroy'])->name('opportunities.destroy');
+
     // Routes pour les entreprises
     Route::resource('entreprises', EntrepriseController::class);
 

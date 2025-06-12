@@ -68,6 +68,14 @@ class Client extends Model
     }
 
     /**
+     * Relation avec les opportunités.
+     */
+    public function opportunities(): HasMany
+    {
+        return $this->hasMany(Opportunity::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Retourne le nom complet du client.
      */
     public function getNomCompletAttribute(): string
