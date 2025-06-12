@@ -1,15 +1,19 @@
 <x-mail::message>
 # Votre devis {{ $devis->numero_devis }}
 
-Bonjour {{ $client->prenom }} {{ $client->nom }},
-
 @if($messagePersonnalise)
 {!! nl2br(e($messagePersonnalise)) !!}
 
 ---
-@endif
+@else
+Bonjour {{ $client->prenom }} {{ $client->nom }},
 
 Nous avons le plaisir de vous faire parvenir votre devis pour le projet : **{{ $devis->objet }}**.
+@endif
+
+@if($messagePersonnalise)
+Nous avons le plaisir de vous faire parvenir votre devis pour le projet : **{{ $devis->objet }}**.
+@endif
 
 ## Détails du devis
 

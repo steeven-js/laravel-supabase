@@ -397,11 +397,71 @@ Cordialement,
 {{contact_email}}",
                 'description' => 'Confirmation sobre et professionnelle',
                 'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
+            ],
+            [
+                'name' => 'Envoi Devis Standard',
+                'category' => 'envoi_initial',
+                'sub_category' => 'standard_professionnel',
+                'subject' => 'Votre devis {numero_devis} - {objet_devis}',
+                'body' => 'Bonjour {prenom_client},
+
+J\'espère que vous allez bien.
+
+Veuillez trouver ci-joint votre devis {numero_devis} concernant {objet_devis} d\'un montant de {montant_ttc}.
+
+Ce devis est valable 30 jours à compter de la date d\'émission.
+
+N\'hésitez pas à me contacter si vous avez des questions ou si vous souhaitez discuter des détails.
+
+Cordialement,
+L\'équipe Madinia',
+                'description' => 'Modèle standard pour l\'envoi de devis',
+                'variables' => ['prenom_client', 'numero_devis', 'objet_devis', 'montant_ttc'],
+                'is_active' => true
+            ],
+            [
+                'name' => 'Envoi Devis Professionnel',
+                'category' => 'envoi_initial',
+                'sub_category' => 'detaille_etapes',
+                'subject' => 'Proposition commerciale {numero_devis}',
+                'body' => 'Madame, Monsieur {nom_client},
+
+Nous avons le plaisir de vous adresser notre proposition commerciale {numero_devis} pour {objet_devis}.
+
+Le montant total s\'élève à {montant_ttc} TTC.
+
+Cette proposition est valable 30 jours et nous restons à votre disposition pour tout complément d\'information.
+
+Dans l\'attente de votre retour favorable, nous vous prions d\'agréer nos salutations distinguées.
+
+Madinia',
+                'description' => 'Modèle professionnel pour l\'envoi de devis',
+                'variables' => ['nom_client', 'numero_devis', 'objet_devis', 'montant_ttc'],
+                'is_active' => true
+            ],
+            [
+                'name' => 'Envoi Devis Simple',
+                'category' => 'envoi_initial',
+                'sub_category' => 'concis_direct',
+                'subject' => 'Votre devis {numero_devis}',
+                'body' => 'Bonjour {prenom_client},
+
+Ci-joint votre devis {numero_devis} pour {objet_devis}.
+
+Montant : {montant_ttc}
+
+Cordialement',
+                'description' => 'Modèle simple pour l\'envoi de devis',
+                'variables' => ['prenom_client', 'numero_devis', 'objet_devis', 'montant_ttc'],
+                'is_active' => true
             ]
         ];
 
         foreach ($templates as $template) {
-            EmailTemplate::create($template);
+            EmailTemplate::updateOrCreate(
+                ['name' => $template['name'], 'category' => $template['category']],
+                $template
+            );
         }
     }
 }

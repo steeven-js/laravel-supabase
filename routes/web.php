@@ -16,7 +16,7 @@ use App\Http\Controllers\Settings\ProfileController;
 
 // Page d'accueil
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
+    return Inertia::render('welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
