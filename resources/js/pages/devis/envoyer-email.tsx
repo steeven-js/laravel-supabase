@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,7 +25,10 @@ import {
     CheckCircle2,
     Sparkles,
     Copy,
-    Info
+    Info,
+    File,
+    Edit,
+    RotateCcw
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -52,8 +54,23 @@ interface Devis {
     statut_envoi: string;
 }
 
+interface ModeleEmail {
+    id: number;
+    name: string;
+    subject: string;
+    body: string;
+    category: string;
+    sub_category: string;
+}
+
 interface Props {
     devis: Devis;
+    modeles_email: ModeleEmail[];
+    madinia?: {
+        name: string;
+        telephone: string;
+        email: string;
+    } | null;
 }
 
 const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
@@ -75,13 +92,22 @@ const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
     },
 ];
 
-export default function EnvoyerEmail({ devis }: Props) {
+export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
     const [etapeActuelle, setEtapeActuelle] = useState(1);
     const totalEtapes = 3;
+    const [modeleSelectionne, setModeleSelectionne] = useState<ModeleEmail | null>(null);
+    const [modeEdition, setModeEdition] = useState<'nouveau' | 'modele' | 'personnalise'>('nouveau');
+    const [typeEnvoi, setTypeEnvoi] = useState<'initial' | 'rappel' | 'relance'>('initial');
+
+    // Déterminer si c'est un envoi initial ou pas
+    const isEnvoiInitial = devis.statut_envoi === 'non_envoye';
+
+    const messageParDefaut = `Bonjour ${devis.client.prenom},\n\nVeuillez trouver ci-joint votre devis ${devis.numero_devis} pour ${devis.objet}.\n\nN'hésitez pas à me contacter si vous avez des questions.\n\nCordialement`;
 
     const { data, setData, post, processing, errors } = useForm({
-        message_client: `Bonjour ${devis.client.prenom},\n\nVeuillez trouver ci-joint votre devis ${devis.numero_devis} pour ${devis.objet}.\n\nN'hésitez pas à me contacter si vous avez des questions.\n\nCordialement`,
+        message_client: messageParDefaut,
         envoyer_copie_admin: true as boolean,
+        template_id: null as number | null,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -103,6 +129,79 @@ export default function EnvoyerEmail({ devis }: Props) {
 
     const handleCheckboxChange = (checked: boolean | 'indeterminate') => {
         setData('envoyer_copie_admin', Boolean(checked));
+    };
+
+    const remplacerVariables = (texte: string) => {
+        const entrepriseNom = devis.client.entreprise?.nom_commercial || devis.client.entreprise?.nom || '';
+        const contactNom = madinia?.name || 'L\'équipe Madinia';
+        const contactTelephone = madinia?.telephone || '+590 123 456 789';
+        const contactEmail = madinia?.email || 'contact@madinia.com';
+
+        return texte
+            // Variables avec doubles accolades (format principal)
+            .replace(/\{\{nom_client\}\}/g, `${devis.client.prenom} ${devis.client.nom}`)
+            .replace(/\{\{prenom_client\}\}/g, devis.client.prenom)
+            .replace(/\{\{numero_devis\}\}/g, devis.numero_devis)
+            .replace(/\{\{objet_devis\}\}/g, devis.objet)
+            .replace(/\{\{montant_ttc\}\}/g, formatPrice(devis.montant_ttc))
+            .replace(/\{\{client_nom\}\}/g, `${devis.client.prenom} ${devis.client.nom}`)
+            .replace(/\{\{devis_numero\}\}/g, devis.numero_devis)
+            .replace(/\{\{devis_montant\}\}/g, formatPrice(devis.montant_ttc))
+            .replace(/\{\{entreprise_nom\}\}/g, entrepriseNom)
+            .replace(/\{\{contact_nom\}\}/g, contactNom)
+            .replace(/\{\{contact_telephone\}\}/g, contactTelephone)
+            .replace(/\{\{contact_email\}\}/g, contactEmail)
+            .replace(/\{\{devis_validite\}\}/g, '30 jours')
+            // Variables avec simples accolades (compatibilité)
+            .replace(/\{nom_client\}/g, `${devis.client.prenom} ${devis.client.nom}`)
+            .replace(/\{prenom_client\}/g, devis.client.prenom)
+            .replace(/\{numero_devis\}/g, devis.numero_devis)
+            .replace(/\{objet_devis\}/g, devis.objet)
+            .replace(/\{montant_ttc\}/g, formatPrice(devis.montant_ttc))
+            .replace(/\{client_nom\}/g, `${devis.client.prenom} ${devis.client.nom}`)
+            .replace(/\{devis_numero\}/g, devis.numero_devis)
+            .replace(/\{devis_montant\}/g, formatPrice(devis.montant_ttc))
+            .replace(/\{entreprise_nom\}/g, entrepriseNom)
+            .replace(/\{contact_nom\}/g, contactNom)
+            .replace(/\{contact_telephone\}/g, contactTelephone)
+            .replace(/\{contact_email\}/g, contactEmail)
+            .replace(/\{devis_validite\}/g, '30 jours');
+    };
+
+    const selectionnerModele = (modele: ModeleEmail) => {
+        setModeleSelectionne(modele);
+        setModeEdition('modele');
+        // Remplacer les variables dans le corps du modèle
+        const corpsPersonnalise = remplacerVariables(modele.body);
+
+        setData(prev => ({
+            ...prev,
+            message_client: corpsPersonnalise,
+            template_id: modele.id
+        }));
+        toast.success(`Modèle "${modele.name}" appliqué`);
+    };
+
+    const commencerNouveauMessage = () => {
+        setModeleSelectionne(null);
+        setModeEdition('nouveau');
+        setData(prev => ({
+            ...prev,
+            message_client: '',
+            template_id: null
+        }));
+        toast.success('Nouveau message vide créé');
+    };
+
+    const restaurerMessageDefaut = () => {
+        setModeleSelectionne(null);
+        setModeEdition('personnalise');
+        setData(prev => ({
+            ...prev,
+            message_client: messageParDefaut,
+            template_id: null
+        }));
+        toast.success('Message par défaut restauré');
     };
 
     const etapesSuivante = () => {
@@ -174,11 +273,99 @@ export default function EnvoyerEmail({ devis }: Props) {
         }
     ];
 
+    const genererApercuEmailComplet = () => {
+        const sujetEmail = `Votre devis ${devis.numero_devis} - ${devis.objet}`;
+        let corpsEmail = '';
+
+        if (data.message_client && data.message_client.trim()) {
+            corpsEmail = data.message_client + '\n\n---\n\n';
+        } else {
+            corpsEmail = `Bonjour ${devis.client.prenom} ${devis.client.nom},\n\n`;
+        }
+
+        corpsEmail += `Nous avons le plaisir de vous faire parvenir votre devis pour le projet : ${devis.objet}.\n\n`;
+        corpsEmail += `DÉTAILS DU DEVIS\n\n`;
+        corpsEmail += `• Numéro de devis : ${devis.numero_devis}\n`;
+        corpsEmail += `• Objet : ${devis.objet}\n`;
+        corpsEmail += `• Montant HT : ${formatPrice(devis.montant_ht)}\n`;
+        corpsEmail += `• TVA (${devis.taux_tva}%) : ${formatPrice(devis.montant_ttc - devis.montant_ht)}\n`;
+        corpsEmail += `• Montant TTC : ${formatPrice(devis.montant_ttc)}\n\n`;
+        corpsEmail += `Le devis est disponible :\n`;
+        corpsEmail += `• En pièce jointe de cet email au format PDF\n`;
+        corpsEmail += `• En ligne via le lien dans l'email\n\n`;
+        corpsEmail += `Pour accepter ce devis ou pour toute question, n'hésitez pas à nous contacter.\n\n`;
+        corpsEmail += `Cordialement,\n`;
+        corpsEmail += madinia?.name || 'Madinia';
+
+        return { sujet: sujetEmail, corps: corpsEmail };
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs(devis)}>
             <Head title={`Envoyer ${devis.numero_devis} par email`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* Bouton de retour et navigation en haut */}
+                <div className="flex items-center justify-between gap-4">
+                    <Button variant="outline" size="sm" asChild className="shrink-0">
+                        <Link href={`/devis/${devis.id}`}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour au devis
+                        </Link>
+                    </Button>
+
+                    {/* Navigation en haut - affichée dès l'étape 2 */}
+                    {etapeActuelle > 1 && (
+                        <div className="flex items-center gap-3">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={etapePrecedente}
+                                disabled={etapeActuelle === 1}
+                            >
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Précédent
+                            </Button>
+
+                            <span className="text-sm text-muted-foreground">
+                                Étape {etapeActuelle} sur {totalEtapes}
+                            </span>
+
+                            {etapeActuelle < totalEtapes ? (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={etapesSuivante}
+                                >
+                                    Suivant
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="button"
+                                    onClick={handleEnvoyerEmail}
+                                    disabled={processing}
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700"
+                                >
+                                    {processing ? (
+                                        <>
+                                            <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                                            Envoi...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send className="mr-2 h-4 w-4" />
+                                            Envoyer
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 {/* En-tête modernisé */}
                 <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-green-500/5 rounded-lg" />
@@ -186,12 +373,6 @@ export default function EnvoyerEmail({ devis }: Props) {
                         <CardContent className="p-6">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-start gap-4">
-                                    <Button variant="outline" size="sm" asChild className="shrink-0">
-                                        <Link href={`/devis/${devis.id}`}>
-                                            <ArrowLeft className="mr-2 h-4 w-4" />
-                                            Retour au devis
-                                        </Link>
-                                    </Button>
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-3 flex-wrap">
                                             <h1 className="text-3xl font-bold tracking-tight">
@@ -421,20 +602,240 @@ export default function EnvoyerEmail({ devis }: Props) {
                                     Personnalisation du message
                                 </CardTitle>
                                 <p className="text-muted-foreground">
-                                    Rédigez un message personnalisé qui accompagnera votre devis
+                                    Choisissez un modèle d'email ou rédigez un message personnalisé
                                 </p>
                             </CardHeader>
                             <CardContent className="space-y-6">
+                                {/* Choix du type d'envoi */}
+                                <Card className="border-0 bg-gradient-to-br from-orange-50/50 to-yellow-50/50 dark:from-orange-950/20 dark:to-yellow-950/20">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-base flex items-center gap-2">
+                                            <Mail className="w-4 h-4 text-orange-600" />
+                                            Type d'envoi
+                                        </CardTitle>
+                                        <p className="text-sm text-muted-foreground">
+                                            {isEnvoiInitial ?
+                                                "Ce devis n'a jamais été envoyé" :
+                                                "Ce devis a déjà été envoyé - choisissez le type de suivi"
+                                            }
+                                        </p>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-3">
+                                            {/* Envoi initial */}
+                                            <div
+                                                className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
+                                                    typeEnvoi === 'initial'
+                                                        ? 'border-primary bg-primary/5'
+                                                        : 'border-border hover:border-primary/50'
+                                                }`}
+                                                onClick={() => setTypeEnvoi('initial')}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
+                                                        typeEnvoi === 'initial'
+                                                            ? 'border-primary bg-primary'
+                                                            : 'border-muted-foreground'
+                                                    }`}>
+                                                        {typeEnvoi === 'initial' && (
+                                                            <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-medium text-sm">
+                                                            {isEnvoiInitial ? "Envoi initial" : "Nouvel envoi initial"}
+                                                        </h4>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {isEnvoiInitial ?
+                                                                "Premier envoi de ce devis" :
+                                                                "Renvoyer comme si c'était la première fois (en cas de problème)"
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Rappel - seulement si déjà envoyé */}
+                                            {!isEnvoiInitial && (
+                                                <div
+                                                    className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
+                                                        typeEnvoi === 'rappel'
+                                                            ? 'border-primary bg-primary/5'
+                                                            : 'border-border hover:border-primary/50'
+                                                    }`}
+                                                    onClick={() => setTypeEnvoi('rappel')}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
+                                                            typeEnvoi === 'rappel'
+                                                                ? 'border-primary bg-primary'
+                                                                : 'border-muted-foreground'
+                                                        }`}>
+                                                            {typeEnvoi === 'rappel' && (
+                                                                <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-medium text-sm">Rappel</h4>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Relancer poliment le client pour une réponse
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Relance - seulement si déjà envoyé */}
+                                            {!isEnvoiInitial && (
+                                                <div
+                                                    className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
+                                                        typeEnvoi === 'relance'
+                                                            ? 'border-primary bg-primary/5'
+                                                            : 'border-border hover:border-primary/50'
+                                                    }`}
+                                                    onClick={() => setTypeEnvoi('relance')}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
+                                                            typeEnvoi === 'relance'
+                                                                ? 'border-primary bg-primary'
+                                                                : 'border-muted-foreground'
+                                                        }`}>
+                                                            {typeEnvoi === 'relance' && (
+                                                                <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-medium text-sm">Relance</h4>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Relance plus insistante, par exemple avant expiration
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Sélection du mode */}
+                                <Card className="border-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-base flex items-center gap-2">
+                                            <File className="w-4 h-4 text-indigo-600" />
+                                            Options de message
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="flex flex-wrap gap-3">
+                                            <Button
+                                                variant={modeEdition === 'nouveau' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={commencerNouveauMessage}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                                Nouveau message
+                                            </Button>
+                                            <Button
+                                                variant={modeEdition === 'personnalise' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={restaurerMessageDefaut}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <RotateCcw className="w-4 h-4" />
+                                                Message par défaut
+                                            </Button>
+                                        </div>
+
+                                        {modeles_email.length > 0 && (
+                                            <div className="mt-4">
+                                                <Label className="text-sm font-medium mb-3 block">
+                                                    Ou choisir un modèle prédéfini :
+                                                </Label>
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+                                                    {modeles_email
+                                                        .filter(modele => {
+                                                            // Filtrer selon le type d'envoi sélectionné
+                                                            if (typeEnvoi === 'initial') return modele.category === 'envoi_initial';
+                                                            if (typeEnvoi === 'rappel') return modele.category === 'rappel';
+                                                            if (typeEnvoi === 'relance') return modele.category === 'relance';
+                                                            return false;
+                                                        })
+                                                        .map((modele) => (
+                                                            <div
+                                                                key={modele.id}
+                                                                className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
+                                                                    modeleSelectionne?.id === modele.id
+                                                                        ? 'border-primary bg-primary/5'
+                                                                        : 'border-border hover:border-primary/50'
+                                                                }`}
+                                                                onClick={() => selectionnerModele(modele)}
+                                                            >
+                                                                <div className="flex items-start gap-3">
+                                                                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
+                                                                        modeleSelectionne?.id === modele.id
+                                                                            ? 'border-primary bg-primary'
+                                                                            : 'border-muted-foreground'
+                                                                    }`}>
+                                                                        {modeleSelectionne?.id === modele.id && (
+                                                                            <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center justify-between mb-1">
+                                                                            <h4 className="font-medium text-sm">{modele.name}</h4>
+                                                                            {modeleSelectionne?.id === modele.id && (
+                                                                                <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-xs text-muted-foreground mb-2">
+                                                                            <strong>Sujet:</strong> {remplacerVariables(modele.subject)}
+                                                                        </p>
+                                                                        <div className="bg-muted/30 p-2 rounded text-xs max-h-16 overflow-hidden">
+                                                                            {remplacerVariables(modele.body).substring(0, 120)}
+                                                                            {remplacerVariables(modele.body).length > 120 && '...'}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+
+                                                    {/* Message si aucun modèle pour ce type */}
+                                                    {modeles_email.filter(modele => {
+                                                        if (typeEnvoi === 'initial') return modele.category === 'envoi_initial';
+                                                        if (typeEnvoi === 'rappel') return modele.category === 'rappel';
+                                                        if (typeEnvoi === 'relance') return modele.category === 'relance';
+                                                        return false;
+                                                    }).length === 0 && (
+                                                        <div className="col-span-full text-center py-4 text-muted-foreground text-sm">
+                                                            Aucun modèle disponible pour ce type d'envoi
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Zone de saisie du message */}
                                 <div className="space-y-3">
-                                    <Label htmlFor="message_client" className="text-base font-medium">
-                                        Message personnalisé
-                                    </Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="message_client" className="text-base font-medium">
+                                            Message personnalisé
+                                        </Label>
+                                        {modeEdition === 'modele' && modeleSelectionne && (
+                                            <Badge variant="outline" className="text-xs">
+                                                Basé sur : {modeleSelectionne.name}
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <Textarea
                                         id="message_client"
                                         value={data.message_client}
                                         onChange={(e) => setData('message_client', e.target.value)}
-                                        placeholder="Votre message personnalisé..."
-                                        className="min-h-[150px] text-sm"
+                                        placeholder={modeEdition === 'nouveau' ? "Saisissez votre message..." : "Votre message personnalisé..."}
+                                        className="min-h-[200px] text-sm"
                                     />
                                     {errors.message_client && (
                                         <div className="flex items-center gap-2 text-sm text-destructive">
@@ -443,7 +844,8 @@ export default function EnvoyerEmail({ devis }: Props) {
                                         </div>
                                     )}
                                     <p className="text-xs text-muted-foreground">
-                                        Ce message apparaîtra dans le corps de l'email envoyé au client
+                                        Ce message apparaîtra dans le corps de l'email envoyé au client.
+                                        {modeEdition === 'modele' && ' Vous pouvez modifier le modèle sélectionné selon vos besoins.'}
                                     </p>
                                 </div>
 
@@ -587,6 +989,65 @@ export default function EnvoyerEmail({ devis }: Props) {
                                     </CardContent>
                                 </Card>
 
+                                {/* Aperçu complet de l'email */}
+                                <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-base flex items-center gap-2">
+                                            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                                                <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            Aperçu complet de l'email
+                                        </CardTitle>
+                                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                                            Voici exactement ce que recevra le client
+                                        </p>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="bg-white dark:bg-gray-900 rounded-lg border p-4 space-y-4">
+                                            {(() => {
+                                                const apercuEmail = genererApercuEmailComplet();
+                                                return (
+                                                    <>
+                                                        {/* En-têtes de l'email */}
+                                                        <div className="space-y-2 pb-4 border-b">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                                                <div>
+                                                                    <span className="text-muted-foreground font-medium">À :</span>
+                                                                    <span className="ml-2">{devis.client.email}</span>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-muted-foreground font-medium">De :</span>
+                                                                    <span className="ml-2">{madinia?.email || 'contact@madinia.com'}</span>
+                                                                </div>
+                                                                <div className="md:col-span-2">
+                                                                    <span className="text-muted-foreground font-medium">Objet :</span>
+                                                                    <span className="ml-2 font-medium">{apercuEmail.sujet}</span>
+                                                                </div>
+                                                                <div className="md:col-span-2">
+                                                                    <span className="text-muted-foreground font-medium">Pièce jointe :</span>
+                                                                    <Badge variant="outline" className="ml-2">
+                                                                        📎 Devis_{devis.numero_devis}.pdf
+                                                                    </Badge>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Corps de l'email */}
+                                                        <div>
+                                                            <div className="text-sm font-medium mb-2 text-blue-900 dark:text-blue-100">
+                                                                Corps de l'email :
+                                                            </div>
+                                                            <div className="bg-muted/30 p-4 rounded text-sm whitespace-pre-wrap max-h-64 overflow-y-auto border-l-4 border-blue-300">
+                                                                {apercuEmail.corps}
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
                                 {/* Avertissement important */}
                                 <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
                                     <CardContent className="p-4">
@@ -610,7 +1071,7 @@ export default function EnvoyerEmail({ devis }: Props) {
                         </Card>
                     )}
 
-                    {/* Navigation entre les étapes */}
+                    {/* Navigation entre les étapes - En bas */}
                     <Card>
                         <CardContent className="p-4">
                             <div className="flex justify-between items-center">
@@ -667,3 +1128,4 @@ export default function EnvoyerEmail({ devis }: Props) {
         </AppLayout>
     );
 }
+

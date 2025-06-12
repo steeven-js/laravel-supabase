@@ -559,6 +559,26 @@ class DevisController extends Controller
 
         $devis->load(['client.entreprise']);
 
+        // Récupérer les informations Madinia pour les variables de contact
+        $madinia = \App\Models\Madinia::getInstance();
+
+        // Récupérer les modèles d'email pour les devis (toutes catégories)
+        $modelesEmail = \App\Models\EmailTemplate::whereIn('category', ['envoi_initial', 'rappel', 'relance'])
+            ->where('is_active', true)
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($template) {
+                return [
+                    'id' => $template->id,
+                    'name' => $template->name,
+                    'subject' => $template->subject,
+                    'body' => $template->body,
+                    'category' => $template->category,
+                    'sub_category' => $template->sub_category,
+                ];
+            });
+
         // Préparer les données pour la page d'envoi
         $devisData = [
             'id' => $devis->id,
@@ -582,7 +602,13 @@ class DevisController extends Controller
         ];
 
         return Inertia::render('devis/envoyer-email', [
-            'devis' => $devisData
+            'devis' => $devisData,
+            'modeles_email' => $modelesEmail,
+            'madinia' => $madinia ? [
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+            ] : null
         ]);
     }
 
@@ -609,12 +635,14 @@ class DevisController extends Controller
         $validated = $request->validate([
             'message_client' => 'nullable|string',
             'envoyer_copie_admin' => 'boolean',
+            'template_id' => 'nullable|exists:email_templates,id',
         ]);
 
         Log::info('Données validées pour envoi email', [
             'devis_id' => $devis->id,
             'message_client_length' => strlen($validated['message_client'] ?? ''),
             'envoyer_copie_admin' => $validated['envoyer_copie_admin'] ?? false,
+            'template_id' => $validated['template_id'] ?? null,
         ]);
 
         try {
@@ -628,7 +656,7 @@ class DevisController extends Controller
             ]);
 
             // Envoyer email au client avec PDF en pièce jointe
-            $this->envoyerEmailClientDevis($devis, $validated['message_client'] ?? null);
+            $this->envoyerEmailClientDevis($devis, $validated['message_client'] ?? null, $validated['template_id'] ?? null);
 
             // Mettre à jour le statut
             $devis->marquerEnvoye();
@@ -870,13 +898,14 @@ class DevisController extends Controller
     /**
      * Envoyer un email de notification au client lors de la création d'un devis
      */
-    private function envoyerEmailClientDevis(Devis $devis, ?string $messagePersonnalise)
+    private function envoyerEmailClientDevis(Devis $devis, ?string $messagePersonnalise, ?int $templateId = null)
     {
         Log::info('=== DÉBUT ENVOI EMAIL CLIENT DEVIS ===', [
             'devis_id' => $devis->id,
             'devis_numero' => $devis->numero_devis,
             'client_email' => $devis->client->email,
             'message_personnalise_length' => strlen($messagePersonnalise ?? ''),
+            'template_id' => $templateId,
         ]);
 
         // Vérifier la configuration mail
@@ -922,7 +951,8 @@ class DevisController extends Controller
             $mailInstance = new \App\Mail\DevisClientMail(
                 $devis,
                 $devis->client,
-                $messagePersonnalise
+                $messagePersonnalise,
+                $templateId
             );
 
             Log::info('DevisClientMail créé avec succès', [

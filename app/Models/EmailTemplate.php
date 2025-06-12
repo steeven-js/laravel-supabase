@@ -102,8 +102,11 @@ class EmailTemplate extends Model
         $body = $this->body;
 
         foreach ($data as $key => $value) {
-            $subject = str_replace("{{$key}}", $value, $subject);
-            $body = str_replace("{{$key}}", $value, $body);
+            // Gérer les deux formats : {variable} et {{variable}}
+            $subject = str_replace("{{{$key}}}", $value, $subject); // Doubles accolades
+            $subject = str_replace("{{$key}}", $value, $subject);   // Simples accolades
+            $body = str_replace("{{{$key}}}", $value, $body);       // Doubles accolades
+            $body = str_replace("{{$key}}", $value, $body);         // Simples accolades
         }
 
         return [

@@ -197,7 +197,7 @@ class Facture extends Model
     /**
      * Marquer comme payée.
      */
-    public function marquerPayee(string $modePaiement = null, string $reference = null): bool
+    public function marquerPayee(?string $modePaiement = null, ?string $reference = null): bool
     {
         $this->statut = 'payee';
         $this->date_paiement = now()->toDateString();
