@@ -4,13 +4,15 @@ namespace Database\Seeders;
 
 use App\Models\Devis;
 use App\Models\Client;
+use App\Models\Service;
+use App\Models\LigneDevis;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
 use Carbon\Carbon;
 
 class DevisSeeder extends Seeder
 {
-    private $numeroCounter = 1;
+    private $numeroCounters = [];
 
     /**
      * Run the database seeds.
@@ -19,66 +21,28 @@ class DevisSeeder extends Seeder
     {
         $faker = Faker::create('fr_FR');
 
-        // Récupérer les clients actifs
+        // Récupérer les clients et services actifs
         $clients = Client::where('actif', true)->get();
+        $services = Service::where('actif', true)->get();
 
         if ($clients->count() === 0) {
             $this->command->warn('Aucun client actif trouvé. Créez des clients d\'abord.');
             return;
         }
 
-        // Types de prestations réalistes
-        $prestations = [
-            [
-                'objet' => 'Développement site web vitrine',
-                'description' => 'Création d\'un site web vitrine responsive avec pages d\'accueil, services, à propos et contact. Intégration CMS pour la gestion autonome du contenu.',
-                'montant_base' => [2500, 5000]
-            ],
-            [
-                'objet' => 'Application mobile iOS/Android',
-                'description' => 'Développement d\'une application mobile native pour iOS et Android avec fonctionnalités de base, interface utilisateur moderne et synchronisation cloud.',
-                'montant_base' => [8000, 15000]
-            ],
-            [
-                'objet' => 'Refonte identité visuelle',
-                'description' => 'Création d\'un nouveau logo, charte graphique complète, déclinaisons supports print et digital.',
-                'montant_base' => [1500, 3500]
-            ],
-            [
-                'objet' => 'Formation équipe marketing digital',
-                'description' => 'Formation complète de 3 jours sur les outils de marketing digital : SEO, SEA, réseaux sociaux, analytics.',
-                'montant_base' => [3000, 6000]
-            ],
-            [
-                'objet' => 'Audit cybersécurité',
-                'description' => 'Audit complet de la sécurité informatique, test d\'intrusion, rapport détaillé et recommandations.',
-                'montant_base' => [4000, 8000]
-            ],
-            [
-                'objet' => 'E-commerce sur mesure',
-                'description' => 'Développement d\'une boutique en ligne avec gestion des stocks, paiement sécurisé, interface d\'administration.',
-                'montant_base' => [6000, 12000]
-            ],
-            [
-                'objet' => 'Consultation stratégique',
-                'description' => 'Accompagnement stratégique pour la transformation digitale, analyse des besoins, roadmap et plan d\'action.',
-                'montant_base' => [2000, 5000]
-            ],
-        ];
+        if ($services->count() === 0) {
+            $this->command->warn('Aucun service actif trouvé. Créez des services d\'abord.');
+            return;
+        }
 
-        $statuts = ['brouillon', 'envoye', 'accepte', 'refuse', 'expire'];
-
-        // Créer 60 devis variés (augmentation pour plus de brouillons)
+        // Créer 60 devis variés
         for ($i = 0; $i < 60; $i++) {
-            $prestation = $faker->randomElement($prestations);
             $client = $clients->random();
 
-            // Calculer les dates - plus de variabilité pour avoir plus de brouillons récents
+            // Calculer les dates
             if ($i < 45) {
-                // 75% des devis sont récents (derniers 2 mois) - favorise les brouillons
                 $dateDevis = $faker->dateTimeBetween('-2 months', 'now');
             } else {
-                // 25% des devis sont plus anciens (6 mois)
                 $dateDevis = $faker->dateTimeBetween('-6 months', '-2 months');
             }
 
@@ -87,22 +51,21 @@ class DevisSeeder extends Seeder
             // Déterminer le statut en fonction de la date
             $statut = $this->determinerStatut($faker, $dateValidite, $i);
 
-            // Calculer les montants
-            $montantHT = $faker->randomFloat(2, $prestation['montant_base'][0], $prestation['montant_base'][1]);
-            $tauxTVA = $faker->randomElement([20.0, 10.0, 5.5]); // Taux TVA français
-            $montantTVA = ($montantHT * $tauxTVA) / 100;
-            $montantTTC = $montantHT + $montantTVA;
-
-            // Déterminer le statut d'envoi de façon logique
+            // Déterminer le statut d'envoi
             $statutEnvoi = match($statut) {
-                'brouillon' => 'non_envoye', // Les brouillons ne sont jamais envoyés
-                'accepte' => 'envoye', // Les devis acceptés ont forcément été envoyés
-                'envoye' => $faker->randomElement(['envoye', 'non_envoye']), // Les envoyés peuvent avoir différents statuts d'envoi
-                'refuse' => $faker->randomElement(['envoye', 'echec_envoi']), // Les refusés ont été envoyés ou ont échoué
-                'expire' => $faker->randomElement(['envoye', 'non_envoye', 'echec_envoi']), // Les expirés peuvent avoir tous les statuts
+                'brouillon' => 'non_envoye',
+                'accepte' => 'envoye',
+                'envoye' => $faker->randomElement(['envoye', 'non_envoye']),
+                'refuse' => $faker->randomElement(['envoye', 'echec_envoi']),
+                'expire' => $faker->randomElement(['envoye', 'non_envoye', 'echec_envoi']),
                 default => 'non_envoye'
             };
 
+            // Sélectionner les services pour ce devis (1 à 4 services)
+            $servicesDevis = $services->random($faker->numberBetween(1, 4));
+            $premierService = $servicesDevis->first();
+
+            // Créer le devis
             $devis = Devis::create([
                 'numero_devis' => $this->genererNumeroDevis($dateDevis),
                 'client_id' => $client->id,
@@ -110,12 +73,12 @@ class DevisSeeder extends Seeder
                 'date_validite' => $dateValidite,
                 'statut' => $statut,
                 'statut_envoi' => $statutEnvoi,
-                'objet' => $prestation['objet'],
-                'description' => $prestation['description'],
-                'montant_ht' => $montantHT,
-                'taux_tva' => $tauxTVA,
-                'montant_tva' => $montantTVA,
-                'montant_ttc' => $montantTTC,
+                'objet' => $this->genererObjet($servicesDevis),
+                'description' => $this->genererDescription($servicesDevis),
+                'montant_ht' => 0, // Sera calculé à partir des lignes
+                'taux_tva' => 20.0, // Valeur par défaut, sera recalculée
+                'montant_tva' => 0,
+                'montant_ttc' => 0,
                 'conditions' => $this->genererConditions($faker),
                 'notes' => $faker->optional(0.4)->sentence(),
                 'date_acceptation' => $statut === 'accepte' ?
@@ -124,61 +87,166 @@ class DevisSeeder extends Seeder
                     $faker->dateTimeBetween($dateDevis, min($dateValidite, now())) : null,
                 'date_envoi_admin' => $statutEnvoi === 'envoye' ?
                     $faker->dateTimeBetween($dateDevis, min($dateValidite, now())) : null,
-                'archive' => $faker->boolean(3), // 3% archivés (réduit)
+                'archive' => $faker->boolean(3),
             ]);
+
+            // Créer les lignes de services pour ce devis
+            $ordre = 1;
+            foreach ($servicesDevis as $service) {
+                $quantite = $this->determinerQuantite($faker, $service);
+                $prixUnitaire = $this->ajusterPrixService($faker, $service->prix_ht);
+                $tauxTva = $faker->randomElement([20.0, 10.0, 5.5]);
+
+                LigneDevis::create([
+                    'devis_id' => $devis->id,
+                    'service_id' => $service->id,
+                    'quantite' => $quantite,
+                    'prix_unitaire_ht' => $prixUnitaire,
+                    'taux_tva' => $tauxTva,
+                    'ordre' => $ordre++,
+                    'description_personnalisee' => $faker->optional(0.3)->text(100),
+                ]);
+            }
+
+            // Recalculer les montants totaux du devis
+            $devis->calculerMontants();
+            $devis->save();
         }
 
-        // Créer quelques devis spécifiques pour les démonstrations
-        $this->creerDevisDemo($clients, $faker);
+        // Créer quelques devis de démonstration
+        $this->creerDevisDemo($clients, $services, $faker);
     }
 
     /**
-     * Détermine le statut du devis en fonction des dates et de l'index
-     * Majorité de brouillons pour simulation réaliste d'une activité commerciale
+     * Détermine le statut du devis
      */
     private function determinerStatut($faker, $dateValidite, $index): string
     {
         $now = Carbon::now();
 
-        // Pour les 45 premiers devis (75%), on favorise massivement les brouillons
         if ($index < 45) {
             return $faker->randomElement([
-                'brouillon', 'brouillon', 'brouillon', 'brouillon', 'brouillon', // 50% brouillons
-                'brouillon', 'brouillon', 'brouillon', 'brouillon', 'brouillon', // 50% brouillons (total 83%)
-                'envoye', 'envoye', // 17% envoyés - en attente de réponse
+                'brouillon', 'brouillon', 'brouillon', 'brouillon', 'brouillon',
+                'brouillon', 'brouillon', 'brouillon', 'brouillon', 'brouillon',
+                'envoye', 'envoye',
             ]);
         }
 
-        // Pour les devis plus anciens (25%), distribution plus variée
         if ($dateValidite < $now) {
-            // Devis expirés - principalement des brouillons non finalisés + quelques expirés
             return $faker->randomElement([
-                'brouillon', 'brouillon', 'brouillon', 'brouillon', // 40% brouillons non finalisés
-                'expire', 'expire', 'expire', // 30% expirés
-                'accepte', // 10% acceptés (dans les temps)
-                'refuse', 'refuse', // 20% refusés
+                'brouillon', 'brouillon', 'brouillon', 'brouillon',
+                'expire', 'expire', 'expire',
+                'accepte',
+                'refuse', 'refuse',
             ]);
         }
 
-        // Devis récents mais dans les anciens (minorité)
         return $faker->randomElement([
-            'brouillon', 'brouillon', 'brouillon', // 60% brouillons
-            'envoye', // 20% envoyés
-            'accepte', // 10% acceptés
-            'refuse', // 10% refusés
+            'brouillon', 'brouillon', 'brouillon',
+            'envoye',
+            'accepte',
+            'refuse',
         ]);
     }
 
     /**
-     * Génère un numéro de devis basé sur la date avec compteur global
+     * Génère un objet de devis basé sur les services
+     */
+    private function genererObjet($services): string
+    {
+        if ($services->count() === 1) {
+            return $services->first()->nom;
+        }
+
+        $nomsServices = $services->pluck('nom')->take(2)->toArray();
+        $objet = implode(' + ', $nomsServices);
+
+        if ($services->count() > 2) {
+            $objet .= ' + autres prestations';
+        }
+
+        return $objet;
+    }
+
+    /**
+     * Génère une description basée sur les services
+     */
+    private function genererDescription($services): string
+    {
+        $descriptions = $services->pluck('description')->toArray();
+
+        if (count($descriptions) === 1) {
+            return $descriptions[0];
+        }
+
+        return "Prestation comprenant :\n" . implode("\n", array_map(function($desc, $index) {
+            return "• " . $desc;
+        }, $descriptions, array_keys($descriptions)));
+    }
+
+    /**
+     * Détermine la quantité selon le type de service
+     */
+    private function determinerQuantite($faker, $service): int
+    {
+        // Utiliser la quantité par défaut du service avec variation
+        $baseQte = $service->qte_defaut;
+
+        // Pour certains services, ajouter de la variabilité
+        if (in_array($service->code, ['CONSEIL-TECH', 'FORM-USERS', 'MAINT-MENSUELLE', 'HEBERGEMENT-PREMIUM'])) {
+            return $faker->numberBetween(max(1, $baseQte - 2), $baseQte + 5);
+        }
+
+        return $faker->numberBetween(max(1, $baseQte - 1), $baseQte + 1);
+    }
+
+    /**
+     * Ajuste le prix du service avec une variation réaliste
+     */
+    private function ajusterPrixService($faker, $prixBase): float
+    {
+        // Variation de ±15% sur le prix de base
+        $variation = $faker->randomFloat(2, -15, 15);
+        $nouveauPrix = $prixBase * (1 + $variation / 100);
+
+        return max(0, $nouveauPrix);
+    }
+
+    /**
+     * Génère un numéro de devis basé sur la date
      */
     private function genererNumeroDevis($date): string
     {
         $annee = $date->format('Y');
         $mois = $date->format('m');
 
-        $numero = sprintf('DEV-%s-%s-%03d', $annee, $mois, $this->numeroCounter);
-        $this->numeroCounter++;
+        // Créer un numéro unique basé sur le timestamp et un compteur aléatoire
+        $timestamp = time();
+        $random = mt_rand(100, 999);
+        $tentatives = 0;
+
+        do {
+            // Utiliser une approche plus simple avec un compteur basé sur l'heure
+            $numero = sprintf('DEV-%s-%s-%03d', $annee, $mois, ($timestamp + $random + $tentatives) % 1000);
+
+            // Vérifier que le numéro n'existe pas déjà
+            $exists = \App\Models\Devis::where('numero_devis', $numero)->exists();
+
+            if ($exists) {
+                $tentatives++;
+                // Si on a trop de tentatives, changer complètement l'approche
+                if ($tentatives > 50) {
+                    $numero = sprintf('DEV-%s-%s-%s%03d', $annee, $mois, substr(uniqid(), -2), $tentatives);
+                    $exists = \App\Models\Devis::where('numero_devis', $numero)->exists();
+                }
+            }
+
+            // Sécurité pour éviter une boucle infinie
+            if ($tentatives > 100) {
+                throw new \Exception("Impossible de générer un numéro de devis unique après 100 tentatives pour {$annee}-{$mois}");
+            }
+
+        } while ($exists);
 
         return $numero;
     }
@@ -200,64 +268,97 @@ class DevisSeeder extends Seeder
     }
 
     /**
-     * Crée des devis de démonstration avec des données spécifiques
+     * Crée des devis de démonstration
      */
-    private function creerDevisDemo($clients, $faker): void
+    private function creerDevisDemo($clients, $services, $faker): void
     {
-        // Devis récent accepté (pour transformation en facture) avec un numéro unique
+        // Devis accepté pour démonstration
         $clientDemo = $clients->random();
-        Devis::create([
-            'numero_devis' => 'DEV-DEMO-' . time(), // Numéro unique avec timestamp
+        $serviceApp = $services->where('code', 'DEV-APP-WEB')->first();
+        $serviceApi = $services->where('code', 'DEV-API-REST')->first();
+
+        $devis = Devis::create([
+            'numero_devis' => $this->genererNumeroDevis(now()->subDays(5)),
             'client_id' => $clientDemo->id,
             'date_devis' => now()->subDays(5),
             'date_validite' => now()->addDays(25),
             'statut' => 'accepte',
             'statut_envoi' => 'envoye',
-            'objet' => 'Développement site e-commerce',
-            'description' => 'Développement complet d\'un site e-commerce avec paiement sécurisé, gestion des stocks et interface d\'administration. Formation incluse.',
-            'montant_ht' => 8500.00,
+            'objet' => 'Application web + API',
+            'description' => 'Développement complet d\'une application web avec API REST.',
+            'montant_ht' => 0,
             'taux_tva' => 20.0,
-            'montant_tva' => 1700.00,
-            'montant_ttc' => 10200.00,
-            'conditions' => 'Devis valable 30 jours. Acompte de 40% à la commande, 40% à mi-parcours, solde à la livraison.',
-            'notes' => 'Client prioritaire - Livraison souhaitée avant fin de mois',
+            'montant_tva' => 0,
+            'montant_ttc' => 0,
+            'conditions' => 'Devis valable 30 jours. Paiement en 3 fois.',
+            'notes' => 'Client prioritaire',
             'date_acceptation' => now()->subDays(2),
             'date_envoi_client' => now()->subDays(4),
             'date_envoi_admin' => now()->subDays(4),
             'archive' => false,
         ]);
 
-        // Ajouter quelques brouillons récents très réalistes
+        // Ajouter les lignes
+        if ($serviceApp) {
+            LigneDevis::create([
+                'devis_id' => $devis->id,
+                'service_id' => $serviceApp->id,
+                'quantite' => 1,
+                'prix_unitaire_ht' => $serviceApp->prix_ht,
+                'taux_tva' => 20.0,
+                'ordre' => 1,
+            ]);
+        }
+
+        if ($serviceApi) {
+            LigneDevis::create([
+                'devis_id' => $devis->id,
+                'service_id' => $serviceApi->id,
+                'quantite' => 1,
+                'prix_unitaire_ht' => $serviceApi->prix_ht,
+                'taux_tva' => 20.0,
+                'ordre' => 2,
+            ]);
+        }
+
+        $devis->calculerMontants();
+        $devis->save();
+
+        // Créer quelques brouillons récents
         for ($i = 0; $i < 8; $i++) {
             $client = $clients->random();
-            $prestationsSimples = [
-                'Site vitrine PME',
-                'Logo et charte graphique',
-                'Formation WordPress',
-                'Maintenance site web',
-                'Audit SEO',
-                'Création newsletter',
-                'Photoshoot produits',
-                'Rédaction contenu web'
-            ];
+            $service = $services->random();
 
-            Devis::create([
+            $devis = Devis::create([
                 'numero_devis' => $this->genererNumeroDevis(now()->subDays(rand(1, 15))),
                 'client_id' => $client->id,
                 'date_devis' => now()->subDays(rand(1, 15)),
                 'date_validite' => now()->addDays(rand(15, 30)),
                 'statut' => 'brouillon',
                 'statut_envoi' => 'non_envoye',
-                'objet' => $prestationsSimples[$i],
-                'description' => 'Prestation en cours de finalisation. Détails à préciser avec le client.',
-                'montant_ht' => $faker->randomFloat(2, 800, 4000),
+                'objet' => $service->nom,
+                'description' => $service->description,
+                'montant_ht' => 0,
                 'taux_tva' => 20.0,
-                'montant_tva' => 0, // Sera calculé automatiquement
-                'montant_ttc' => 0, // Sera calculé automatiquement
+                'montant_tva' => 0,
+                'montant_ttc' => 0,
                 'conditions' => 'Conditions en cours de définition.',
                 'notes' => $faker->optional(0.7)->sentence(),
                 'archive' => false,
             ]);
+
+            // Ajouter une ligne de service
+            LigneDevis::create([
+                'devis_id' => $devis->id,
+                'service_id' => $service->id,
+                'quantite' => $service->qte_defaut,
+                'prix_unitaire_ht' => $service->prix_ht,
+                'taux_tva' => 20.0,
+                'ordre' => 1,
+            ]);
+
+            $devis->calculerMontants();
+            $devis->save();
         }
     }
 }

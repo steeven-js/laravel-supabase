@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
 
         // Créer les données de test en ordre de dépendance
         $this->call([
+            ServiceSeeder::class,        // Services d'abord
             EntrepriseSeeder::class,
             ClientSeeder::class,
             DevisSeeder::class,
@@ -59,6 +60,7 @@ class DatabaseSeeder extends Seeder
     {
         $stats = [
             'Utilisateurs' => User::count(),
+            'Services' => \App\Models\Service::count(),
             'Entreprises' => \App\Models\Entreprise::count(),
             'Clients' => \App\Models\Client::count(),
             'Devis' => \App\Models\Devis::count(),
@@ -123,10 +125,13 @@ class DatabaseSeeder extends Seeder
 
             try {
                 // Utiliser truncate pour plus d'efficacité (plus rapide que delete)
+                DB::table('lignes_factures')->truncate();
+                DB::table('lignes_devis')->truncate();
                 DB::table('factures')->truncate();
                 DB::table('devis')->truncate();
                 DB::table('clients')->truncate();
                 DB::table('entreprises')->truncate();
+                DB::table('services')->truncate();
 
                 // Garder seulement l'utilisateur principal (utiliser delete pour la condition WHERE)
                 \App\Models\User::where('email', '!=', 'jacques.steeven@gmail.com')->delete();
@@ -137,6 +142,7 @@ class DatabaseSeeder extends Seeder
                 // Recréer les données
                 $seeder = new self();
                 $seeder->call([
+                    ServiceSeeder::class,
                     EntrepriseSeeder::class,
                     ClientSeeder::class,
                     DevisSeeder::class,
@@ -165,10 +171,13 @@ class DatabaseSeeder extends Seeder
 
             try {
                 // Utiliser truncate pour plus d'efficacité
+                DB::table('lignes_factures')->truncate();
+                DB::table('lignes_devis')->truncate();
                 DB::table('factures')->truncate();
                 DB::table('devis')->truncate();
                 DB::table('clients')->truncate();
                 DB::table('entreprises')->truncate();
+                DB::table('services')->truncate();
                 DB::table('users')->truncate();
 
                 // Réactiver les contraintes de clés étrangères (PostgreSQL)

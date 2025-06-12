@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('pays')->default('France');
             $table->boolean('actif')->default(true);
             $table->text('notes')->nullable();
+            $table->foreignId('entreprise_id')->nullable()->constrained('entreprises')->onDelete('set null');
             $table->timestamps();
         });
     }

@@ -25,8 +25,6 @@ return new class extends Migration
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
             $table->string('site_web')->nullable();
-            $table->integer('nombre_employes')->nullable();
-            $table->decimal('chiffre_affaires', 15, 2)->nullable();
             $table->boolean('active')->default(true);
             $table->text('notes')->nullable();
             $table->timestamps();

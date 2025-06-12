@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\DevisController;
 use App\Http\Controllers\FactureController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MonitoringController;
@@ -23,6 +24,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les entreprises
     Route::resource('entreprises', EntrepriseController::class);
+
+    // Routes pour les services
+    Route::prefix('services')->name('services.')->group(function () {
+        Route::get('/', [ServiceController::class, 'index'])->name('index');
+        Route::get('/create', [ServiceController::class, 'create'])->name('create');
+        Route::post('/', [ServiceController::class, 'store'])->name('store');
+        Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
+        Route::get('/{service}/edit', [ServiceController::class, 'edit'])->name('edit');
+        Route::patch('/{service}', [ServiceController::class, 'update'])->name('update');
+        Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('destroy');
+
+        // Actions spéciales pour les services
+        Route::patch('/{service}/toggle', [ServiceController::class, 'toggle'])->name('toggle');
+        Route::post('/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('duplicate');
+
+        // Nouvelles routes pour améliorer la navigation
+        Route::get('/catalogue', [ServiceController::class, 'catalogue'])->name('catalogue');
+        Route::get('/actifs', [ServiceController::class, 'actifs'])->name('actifs');
+        Route::get('/statistiques', [ServiceController::class, 'statistiques'])->name('statistiques');
+    });
 
     // Routes pour les devis
     Route::resource('devis', DevisController::class)->parameters(['devis' => 'devis']);

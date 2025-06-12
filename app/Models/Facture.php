@@ -69,6 +69,14 @@ class Facture extends Model
     }
 
     /**
+     * Relation avec les lignes de cette facture.
+     */
+    public function lignes()
+    {
+        return $this->hasMany(LigneFacture::class)->ordered();
+    }
+
+    /**
      * Scope pour les factures non archivées.
      */
     public function scopeActives($query)
@@ -111,12 +119,20 @@ class Facture extends Model
     }
 
     /**
-     * Calculer automatiquement les montants.
+     * Calculer automatiquement les montants à partir des lignes.
      */
     public function calculerMontants(): void
     {
-        $this->montant_tva = ($this->montant_ht * $this->taux_tva) / 100;
-        $this->montant_ttc = $this->montant_ht + $this->montant_tva;
+        $this->load('lignes');
+
+        $this->montant_ht = $this->lignes->sum('montant_ht');
+        $this->montant_tva = $this->lignes->sum('montant_tva');
+        $this->montant_ttc = $this->lignes->sum('montant_ttc');
+
+        // Calculer le taux de TVA moyen pondéré si il y a des lignes
+        if ($this->montant_ht > 0) {
+            $this->taux_tva = ($this->montant_tva / $this->montant_ht) * 100;
+        }
     }
 
     /**
@@ -153,12 +169,25 @@ class Facture extends Model
             'statut' => 'brouillon',
             'objet' => $devis->objet,
             'description' => $devis->description,
-            'montant_ht' => $devis->montant_ht,
-            'taux_tva' => $devis->taux_tva,
             'conditions_paiement' => $devis->conditions,
             'notes' => $devis->notes,
         ]);
 
+        $facture->save();
+
+        // Copier les lignes du devis vers la facture
+        foreach ($devis->lignes as $ligneDevis) {
+            $facture->lignes()->create([
+                'service_id' => $ligneDevis->service_id,
+                'quantite' => $ligneDevis->quantite,
+                'prix_unitaire_ht' => $ligneDevis->prix_unitaire_ht,
+                'taux_tva' => $ligneDevis->taux_tva,
+                'ordre' => $ligneDevis->ordre,
+                'description_personnalisee' => $ligneDevis->description_personnalisee,
+            ]);
+        }
+
+        // Recalculer les montants totaux
         $facture->calculerMontants();
         $facture->save();
 

@@ -18,6 +18,13 @@ return new class extends Migration
             $table->date('date_devis');
             $table->date('date_validite');
             $table->enum('statut', ['brouillon', 'envoye', 'accepte', 'refuse', 'expire'])->default('brouillon');
+            $table->enum('statut_envoi', ['non_envoye', 'envoye', 'echec_envoi'])
+                  ->default('non_envoye')
+                  ->comment('Statut d\'envoi du devis au client');
+            $table->datetime('date_envoi_client')->nullable();
+            $table->datetime('date_envoi_admin')->nullable();
+            $table->string('pdf_file')->nullable();
+            $table->string('pdf_url')->nullable()->comment('URL publique Supabase du PDF');
             $table->string('objet');
             $table->text('description')->nullable();
             $table->decimal('montant_ht', 10, 2)->default(0);

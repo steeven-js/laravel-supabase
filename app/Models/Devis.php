@@ -66,6 +66,14 @@ class Devis extends Model
     }
 
     /**
+     * Relation avec les lignes de ce devis.
+     */
+    public function lignes()
+    {
+        return $this->hasMany(LigneDevis::class)->ordered();
+    }
+
+    /**
      * Scope pour les devis non archivés.
      */
     public function scopeActifs($query)
@@ -107,12 +115,20 @@ class Devis extends Model
     }
 
     /**
-     * Calculer automatiquement les montants.
+     * Calculer automatiquement les montants à partir des lignes.
      */
     public function calculerMontants(): void
     {
-        $this->montant_tva = ($this->montant_ht * $this->taux_tva) / 100;
-        $this->montant_ttc = $this->montant_ht + $this->montant_tva;
+        $this->load('lignes');
+
+        $this->montant_ht = $this->lignes->sum('montant_ht');
+        $this->montant_tva = $this->lignes->sum('montant_tva');
+        $this->montant_ttc = $this->lignes->sum('montant_ttc');
+
+        // Calculer le taux de TVA moyen pondéré si il y a des lignes
+        if ($this->montant_ht > 0) {
+            $this->taux_tva = ($this->montant_tva / $this->montant_ht) * 100;
+        }
     }
 
     /**
