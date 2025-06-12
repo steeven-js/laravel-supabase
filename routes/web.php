@@ -1,18 +1,18 @@
 <?php
 
-use App\Http\Controllers\ClientController;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DevisController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\FactureController;
+use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntrepriseController;
-use App\Http\Controllers\FactureController;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\Settings\MadiniaController;
 use App\Http\Controllers\Settings\ProfileController;
-use App\Http\Controllers\ServiceController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Page d'accueil
 Route::get('/', function () {
@@ -22,15 +22,13 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
 // Routes protégées par authentification
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Routes pour les clients
     Route::resource('clients', ClientController::class);
@@ -168,5 +166,5 @@ if (app()->environment('local')) {
 // });
 
 // Inclusion des autres fichiers de routes
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

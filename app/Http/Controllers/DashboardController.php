@@ -48,7 +48,7 @@ class DashboardController extends Controller
             ->select('id', 'statut', 'montant_ttc', 'created_at')
             ->get();
 
-        return Inertia::render('dashboard', [
+        return Inertia::render('Dashboard', [
             'stats' => $stats,
             'devis_data' => $devis_data,
             'factures_data' => $factures_data,
