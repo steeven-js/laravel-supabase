@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHistorique;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class Facture extends Model
 {
+    use HasHistorique;
+
     /**
      * Les attributs qui peuvent être assignés en masse.
      */
@@ -191,6 +193,20 @@ class Facture extends Model
         $facture->calculerMontants();
         $facture->save();
 
+        // Enregistrer la transformation dans l'historique du devis
+        $devis->enregistrerHistorique(
+            'transformation',
+            "Transformation en facture",
+            "Le devis #{$devis->numero_devis} a été transformé en facture #{$facture->numero_facture}",
+            null,
+            null,
+            [
+                'facture_id' => $facture->id,
+                'numero_facture' => $facture->numero_facture,
+                'date_transformation' => now()->format('Y-m-d H:i:s')
+            ]
+        );
+
         return $facture;
     }
 
@@ -199,12 +215,38 @@ class Facture extends Model
      */
     public function marquerPayee(?string $modePaiement = null, ?string $reference = null): bool
     {
+        $ancienStatut = $this->statut;
         $this->statut = 'payee';
         $this->date_paiement = now()->toDateString();
         $this->mode_paiement = $modePaiement;
         $this->reference_paiement = $reference;
 
-        return $this->save();
+        $result = $this->save();
+
+        if ($result) {
+            $this->enregistrerHistorique(
+                'changement_statut',
+                "Facture marquée comme payée",
+                "La facture #{$this->numero_facture} a été marquée comme payée",
+                [
+                    'statut' => $ancienStatut,
+                    'date_paiement' => null,
+                    'mode_paiement' => null,
+                    'reference_paiement' => null
+                ],
+                [
+                    'statut' => 'payee',
+                    'date_paiement' => $this->date_paiement,
+                    'mode_paiement' => $modePaiement,
+                    'reference_paiement' => $reference
+                ],
+                [
+                    'montant_paye' => $this->montant_ttc
+                ]
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -212,11 +254,70 @@ class Facture extends Model
      */
     public function marquerEnvoyee(): bool
     {
+        $ancienStatut = $this->statut;
+        $ancienStatutEnvoi = $this->statut_envoi;
+
         $this->statut = 'envoyee';
         $this->statut_envoi = 'envoyee';
         $this->date_envoi_client = now();
 
-        return $this->save();
+        $result = $this->save();
+
+        if ($result) {
+            $changes = [
+                'statut' => 'envoyee',
+                'statut_envoi' => 'envoyee',
+                'date_envoi_client' => $this->date_envoi_client->format('Y-m-d H:i:s')
+            ];
+
+            $original = [
+                'statut' => $ancienStatut,
+                'statut_envoi' => $ancienStatutEnvoi,
+                'date_envoi_client' => null
+            ];
+
+            $this->enregistrerHistorique(
+                'envoi_email',
+                "Facture envoyée au client",
+                "La facture #{$this->numero_facture} a été envoyée avec succès au client {$this->client->nom_complet}",
+                $original,
+                $changes,
+                [
+                    'email_destinataire' => $this->client->email,
+                    'type_envoi' => 'client'
+                ]
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Marquer la facture comme échec d'envoi.
+     */
+    public function marquerEchecEnvoi(): bool
+    {
+        $ancienStatutEnvoi = $this->statut_envoi;
+        $this->statut_envoi = 'echec_envoi';
+
+        $result = $this->save();
+
+        if ($result) {
+            $this->enregistrerHistorique(
+                'envoi_email',
+                "Échec d'envoi de la facture",
+                "L'envoi de la facture #{$this->numero_facture} au client {$this->client->nom_complet} a échoué",
+                ['statut_envoi' => $ancienStatutEnvoi],
+                ['statut_envoi' => 'echec_envoi'],
+                [
+                    'email_destinataire' => $this->client->email,
+                    'type_envoi' => 'client',
+                    'resultat' => 'echec'
+                ]
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -254,15 +355,6 @@ class Facture extends Model
     {
         return in_array($this->statut, ['brouillon', 'envoyee']) &&
                in_array($this->statut_envoi, ['non_envoyee', 'echec_envoi']);
-    }
-
-    /**
-     * Marquer la facture comme échec d'envoi.
-     */
-    public function marquerEchecEnvoi(): bool
-    {
-        $this->statut_envoi = 'echec_envoi';
-        return $this->save();
     }
 
     /**

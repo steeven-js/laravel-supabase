@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHistorique;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class Devis extends Model
 {
+    use HasHistorique;
+
     /**
      * Les attributs qui peuvent être assignés en masse.
      */
@@ -156,9 +158,23 @@ class Devis extends Model
      */
     public function accepter(): bool
     {
+        $ancienStatut = $this->statut;
         $this->statut = 'accepte';
         $this->date_acceptation = now();
-        return $this->save();
+
+        $result = $this->save();
+
+        if ($result) {
+            $this->enregistrerHistorique(
+                'changement_statut',
+                "Devis accepté",
+                "Le devis #{$this->numero_devis} a été accepté",
+                ['statut' => $ancienStatut],
+                ['statut' => 'accepte', 'date_acceptation' => $this->date_acceptation->format('Y-m-d H:i:s')]
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -166,8 +182,22 @@ class Devis extends Model
      */
     public function refuser(): bool
     {
+        $ancienStatut = $this->statut;
         $this->statut = 'refuse';
-        return $this->save();
+
+        $result = $this->save();
+
+        if ($result) {
+            $this->enregistrerHistorique(
+                'changement_statut',
+                "Devis refusé",
+                "Le devis #{$this->numero_devis} a été refusé",
+                ['statut' => $ancienStatut],
+                ['statut' => 'refuse']
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -176,8 +206,22 @@ class Devis extends Model
     public function marquerExpire(): bool
     {
         if ($this->est_expire && $this->statut !== 'accepte') {
+            $ancienStatut = $this->statut;
             $this->statut = 'expire';
-            return $this->save();
+
+            $result = $this->save();
+
+            if ($result) {
+                $this->enregistrerHistorique(
+                    'changement_statut',
+                    "Devis expiré",
+                    "Le devis #{$this->numero_devis} a expiré automatiquement",
+                    ['statut' => $ancienStatut],
+                    ['statut' => 'expire']
+                );
+            }
+
+            return $result;
         }
         return false;
     }
@@ -215,6 +259,9 @@ class Devis extends Model
      */
     public function marquerEnvoye(): bool
     {
+        $ancienStatut = $this->statut;
+        $ancienStatutEnvoi = $this->statut_envoi;
+
         // Si le devis est en brouillon, il passe automatiquement en "envoyé"
         if ($this->statut === 'brouillon') {
             $this->statut = 'envoye';
@@ -222,7 +269,39 @@ class Devis extends Model
 
         $this->statut_envoi = 'envoye';
         $this->date_envoi_client = now();
-        return $this->save();
+
+        $result = $this->save();
+
+        if ($result) {
+            $changes = [
+                'statut_envoi' => 'envoye',
+                'date_envoi_client' => $this->date_envoi_client->format('Y-m-d H:i:s')
+            ];
+
+            $original = [
+                'statut_envoi' => $ancienStatutEnvoi,
+                'date_envoi_client' => null
+            ];
+
+            if ($ancienStatut !== $this->statut) {
+                $changes['statut'] = $this->statut;
+                $original['statut'] = $ancienStatut;
+            }
+
+            $this->enregistrerHistorique(
+                'envoi_email',
+                "Devis envoyé au client",
+                "Le devis #{$this->numero_devis} a été envoyé avec succès au client {$this->client->nom_complet}",
+                $original,
+                $changes,
+                [
+                    'email_destinataire' => $this->client->email,
+                    'type_envoi' => 'client'
+                ]
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -230,8 +309,27 @@ class Devis extends Model
      */
     public function marquerEchecEnvoi(): bool
     {
+        $ancienStatutEnvoi = $this->statut_envoi;
         $this->statut_envoi = 'echec_envoi';
-        return $this->save();
+
+        $result = $this->save();
+
+        if ($result) {
+            $this->enregistrerHistorique(
+                'envoi_email',
+                "Échec d'envoi du devis",
+                "L'envoi du devis #{$this->numero_devis} au client {$this->client->nom_complet} a échoué",
+                ['statut_envoi' => $ancienStatutEnvoi],
+                ['statut_envoi' => 'echec_envoi'],
+                [
+                    'email_destinataire' => $this->client->email,
+                    'type_envoi' => 'client',
+                    'resultat' => 'echec'
+                ]
+            );
+        }
+
+        return $result;
     }
 
     /**

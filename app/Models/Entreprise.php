@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHistorique;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Entreprise extends Model
 {
+    use HasHistorique;
+
     /**
      * Les attributs qui peuvent être assignés en masse.
      */

@@ -90,34 +90,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('factures/{facture}/telecharger-pdf', [FactureController::class, 'telechargerPdf'])->name('factures.telecharger-pdf');
     Route::post('factures/{facture}/regenerer-pdf', [FactureController::class, 'regenererPdf'])->name('factures.regenerer-pdf');
 
-    // Routes temporaires pour les tests (supprimer après validation)
-    if (config('app.env') === 'local') {
-        Route::get('/test-toast', function () {
-            session()->flash('toast', [
-                'type' => 'success',
-                'message' => 'Test réussi !',
-                'description' => 'Cette notification prouve que le système toast fonctionne correctement.'
-            ]);
-
-            return redirect()->route('dashboard');
-        })->name('test.toast');
-
-        Route::get('/test-toast-error', function () {
-            session()->flash('toast', [
-                'type' => 'error',
-                'message' => 'Test d\'erreur',
-                'description' => 'Ceci est un test de notification d\'erreur.'
-            ]);
-
-            return redirect()->route('dashboard');
-        })->name('test.toast.error');
-
-        // Test simple sans toast - pour vérifier qu'aucun toast ne s'affiche
-        Route::get('/test-no-toast', function () {
-            return redirect()->route('dashboard');
-        })->name('test.no-toast');
-    }
-
     // Routes pour le profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -155,6 +127,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('api/email-templates')->name('api.email-templates.')->group(function () {
         Route::get('/by-category', [App\Http\Controllers\EmailTemplateController::class, 'getByCategory'])->name('by-category');
         Route::get('/default', [App\Http\Controllers\EmailTemplateController::class, 'getDefault'])->name('default');
+    });
+
+    // Routes pour l'historique des entités
+    Route::prefix('historique')->name('historique.')->group(function () {
+        Route::get('/', [App\Http\Controllers\HistoriqueController::class, 'index'])->name('index');
+        Route::get('/statistiques', [App\Http\Controllers\HistoriqueController::class, 'statistiques'])->name('statistiques');
+
+        // Historique spécifique par entité
+        Route::get('/client/{client}', [App\Http\Controllers\HistoriqueController::class, 'client'])->name('client');
+        Route::get('/entreprise/{entreprise}', [App\Http\Controllers\HistoriqueController::class, 'entreprise'])->name('entreprise');
+        Route::get('/devis/{devis}', [App\Http\Controllers\HistoriqueController::class, 'devis'])->name('devis');
+        Route::get('/facture/{facture}', [App\Http\Controllers\HistoriqueController::class, 'facture'])->name('facture');
+    });
+
+    // API pour l'historique (pour les widgets et composants React)
+    Route::prefix('api/historique')->name('api.historique.')->group(function () {
+        Route::get('/{type}/{id}', [App\Http\Controllers\HistoriqueController::class, 'apiHistoriqueEntite'])->name('entite');
     });
 });
 
