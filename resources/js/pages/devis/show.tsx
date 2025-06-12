@@ -327,17 +327,21 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
             <Head title={devis.numero_devis} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-                {/* Header with actions */}
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/devis">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour aux devis
+                        </Link>
+                    </Button>
+                </div>
+
+                {/* Header avec actions */}
                 <div className="space-y-4">
                     {/* Navigation et titre */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href="/devis">
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
-                                    Retour aux devis
-                                </Link>
-                            </Button>
                             <h1 className="text-xl font-semibold text-gray-900">
                                 Devis {devis.numero_devis}
                             </h1>
@@ -769,7 +773,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                 </Card>
 
                 {/* Historique des actions */}
-                <Card className="w-full max-w-5xl mx-auto">
+                    <Card className="w-full max-w-5xl mx-auto">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Clock className="h-5 w-5" />
@@ -785,7 +789,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                             {getActionIcon(action.action)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between">
                                                 <h4 className="font-medium text-gray-900">{action.titre}</h4>
                                                 <span className="text-sm text-gray-500">{formatActionDate(action.created_at)}</span>
                                             </div>
@@ -816,17 +820,17 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                                             </div>
                                                         )}
                                                         {action.donnees_apres && (
-                                                            <div>
+                                <div>
                                                                 <span className="font-medium text-green-600">Après :</span>
                                                                 <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
                                                                     {JSON.stringify(action.donnees_apres, null, 2)}
                                                                 </pre>
                                                             </div>
                                                         )}
-                                                    </div>
+                                </div>
                                                 </details>
-                                            )}
-                                        </div>
+                                    )}
+                                </div>
                                     </div>
                                 ))}
                             </div>
@@ -836,8 +840,8 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                 <p>Aucune action enregistrée pour ce devis</p>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
             </div>
         </AppLayout>
     );

@@ -296,15 +296,19 @@ export default function DevisEdit({ devis, clients, services, madinia }: Props) 
             <Head title={`Modifier ${devis.numero_devis}`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-                {/* Header */}
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/devis/${devis.id}`}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour
+                        </Link>
+                    </Button>
+                </div>
+
+                {/* En-tête avec indicateur de modifications */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href={`/devis/${devis.id}`}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Retour au devis
-                            </Link>
-                        </Button>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                                 <Edit3 className="h-5 w-5 text-white" />

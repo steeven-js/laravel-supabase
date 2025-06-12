@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les clients
     Route::resource('clients', ClientController::class);
+    Route::post('clients/{client}/send-email', [ClientController::class, 'sendEmail'])->name('clients.send-email');
 
     // Routes pour les entreprises
     Route::resource('entreprises', EntrepriseController::class);

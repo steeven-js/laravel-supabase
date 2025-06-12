@@ -324,7 +324,12 @@ export default function ClientsIndex({ clients }: Props) {
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium">
-                                                {client.prenom} {client.nom}
+                                                <Link
+                                                    href={`/clients/${client.id}`}
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                >
+                                                    {client.prenom} {client.nom}
+                                                </Link>
                                             </TableCell>
                                             <TableCell>{client.email}</TableCell>
                                             <TableCell>{client.telephone || '-'}</TableCell>

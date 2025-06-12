@@ -214,15 +214,19 @@ export default function DevisCreate({ clients, services, numero_devis, madinia }
             <Head title="Créer un devis" />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/devis">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour
+                        </Link>
+                    </Button>
+                </div>
+
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/devis">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Retour aux devis
-                            </Link>
-                        </Button>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
                                 <FileText className="h-5 w-5 text-white" />
@@ -401,13 +405,13 @@ export default function DevisCreate({ clients, services, numero_devis, madinia }
 
                             <div>
                                 <Label htmlFor="objet">Objet du devis *</Label>
-                                                                                    <Input
-                                                        id="objet"
-                                                        value={data.objet || ''}
-                                                        onChange={(e) => setData('objet', e.target.value)}
-                                                        placeholder="Objet du devis..."
-                                                        className="mt-1"
-                                                    />
+                                <Input
+                                    id="objet"
+                                    value={data.objet || ''}
+                                    onChange={(e) => setData('objet', e.target.value)}
+                                    placeholder="Objet du devis..."
+                                    className="mt-1"
+                                />
                                 {errors.objet && (
                                     <p className="text-sm text-red-500 mt-1">{errors.objet}</p>
                                 )}
@@ -569,36 +573,36 @@ export default function DevisCreate({ clients, services, numero_devis, madinia }
                         <CardContent className="space-y-4">
                             <div>
                                 <Label htmlFor="description">Description</Label>
-                                                                                <Textarea
-                                                    id="description"
-                                                    value={data.description || ''}
-                                                    onChange={(e) => setData('description', e.target.value)}
-                                                    placeholder="Description détaillée du devis..."
-                                                    className="mt-1 min-h-[100px]"
-                                                />
+                                <Textarea
+                                    id="description"
+                                    value={data.description || ''}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder="Description détaillée du devis..."
+                                    className="mt-1 min-h-[100px]"
+                                />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="conditions">Conditions</Label>
-                                                                                            <Textarea
-                                                            id="conditions"
-                                                            value={data.conditions || ''}
-                                                            onChange={(e) => setData('conditions', e.target.value)}
-                                                            placeholder="Conditions particulières..."
-                                                            className="mt-1"
-                                                        />
+                                    <Textarea
+                                        id="conditions"
+                                        value={data.conditions || ''}
+                                        onChange={(e) => setData('conditions', e.target.value)}
+                                        placeholder="Conditions particulières..."
+                                        className="mt-1"
+                                    />
                                 </div>
 
                                 <div>
                                     <Label htmlFor="notes">Notes internes</Label>
-                                                                                            <Textarea
-                                                            id="notes"
-                                                            value={data.notes || ''}
-                                                            onChange={(e) => setData('notes', e.target.value)}
-                                                            placeholder="Notes internes..."
-                                                            className="mt-1"
-                                                        />
+                                    <Textarea
+                                        id="notes"
+                                        value={data.notes || ''}
+                                        onChange={(e) => setData('notes', e.target.value)}
+                                        placeholder="Notes internes..."
+                                        className="mt-1"
+                                    />
                                 </div>
                             </div>
                         </CardContent>
@@ -606,14 +610,6 @@ export default function DevisCreate({ clients, services, numero_devis, madinia }
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => window.history.back()}
-                            className="flex-1 sm:flex-none"
-                        >
-                            Annuler
-                        </Button>
                         <Button
                             type="submit"
                             disabled={processing || lignes.length === 0}

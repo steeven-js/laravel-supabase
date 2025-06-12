@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Edit,
@@ -28,7 +31,11 @@ import {
     CheckCircle,
     XCircle,
     Clock,
-    FileX
+    FileX,
+    Send,
+    History,
+    Plus,
+    Loader2
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -58,11 +65,28 @@ interface Client {
         date_devis: string;
         montant_ttc: number;
     }>;
+    emails?: Array<{
+        id: number;
+        objet: string;
+        contenu: string;
+        date_envoi: string;
+        statut: 'envoye' | 'echec';
+        utilisateur: {
+            id: number;
+            name: string;
+        };
+    }>;
     created_at: string;
 }
 
 interface Props {
     client: Client;
+    auth: {
+        user: {
+            id: number;
+            name: string;
+        };
+    };
 }
 
 const breadcrumbs = (client: Client): BreadcrumbItem[] => [
@@ -80,8 +104,14 @@ const breadcrumbs = (client: Client): BreadcrumbItem[] => [
     },
 ];
 
-export default function ClientsShow({ client }: Props) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'quotes' | 'stats'>('overview');
+export default function ClientsShow({ client, auth }: Props) {
+    const [activeTab, setActiveTab] = useState<'overview' | 'quotes' | 'stats' | 'emails'>('overview');
+    const [isComposingEmail, setIsComposingEmail] = useState(false);
+    const [emailForm, setEmailForm] = useState({
+        objet: '',
+        contenu: ''
+    });
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -174,8 +204,51 @@ export default function ClientsShow({ client }: Props) {
     const tabs = [
         { id: 'overview', label: 'Vue d\'ensemble', icon: User },
         { id: 'quotes', label: 'Devis', icon: FileText },
-        { id: 'stats', label: 'Statistiques', icon: BarChart3 }
+        { id: 'stats', label: 'Statistiques', icon: BarChart3 },
+        { id: 'emails', label: 'Emails', icon: Mail }
     ] as const;
+
+    const handleSendEmail = async () => {
+        if (!emailForm.objet.trim() || !emailForm.contenu.trim()) {
+            toast.error('Veuillez remplir tous les champs');
+            return;
+        }
+
+        setIsSendingEmail(true);
+
+        try {
+            await router.post(`/clients/${client.id}/send-email`, emailForm, {
+                onSuccess: () => {
+                    toast.success('Email envoyé avec succès !');
+                    setEmailForm({ objet: '', contenu: '' });
+                    setIsComposingEmail(false);
+                },
+                onError: (errors) => {
+                    console.error('Erreur lors de l\'envoi:', errors);
+                    toast.error('Erreur lors de l\'envoi de l\'email');
+                },
+                onFinish: () => {
+                    setIsSendingEmail(false);
+                }
+            });
+        } catch (error) {
+            console.error('Erreur:', error);
+            toast.error('Erreur lors de l\'envoi de l\'email');
+            setIsSendingEmail(false);
+        }
+    };
+
+    const formatEmailDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const userEmails = client.emails?.filter(email => email.utilisateur.id === auth.user.id) || [];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(client)}>
@@ -763,6 +836,147 @@ export default function ClientsShow({ client }: Props) {
                                         </div>
                                     </div>
                                 </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === 'emails' && (
+                    <div className="space-y-6">
+                        {/* Composer un nouvel email */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Send className="h-5 w-5" />
+                                        Nouvel email pour {client.prenom} {client.nom}
+                                    </CardTitle>
+                                    {!isComposingEmail && (
+                                        <Button onClick={() => setIsComposingEmail(true)}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Composer
+                                        </Button>
+                                    )}
+                                </div>
+                            </CardHeader>
+                            {isComposingEmail && (
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                        <span><strong>À :</strong> {client.email}</span>
+                                        <span><strong>De :</strong> {auth.user.name}</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email-subject">Objet</Label>
+                                        <Input
+                                            id="email-subject"
+                                            value={emailForm.objet}
+                                            onChange={(e) => setEmailForm(prev => ({ ...prev, objet: e.target.value }))}
+                                            placeholder="Objet de l'email..."
+                                            disabled={isSendingEmail}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email-content">Message</Label>
+                                        <Textarea
+                                            id="email-content"
+                                            value={emailForm.contenu}
+                                            onChange={(e) => setEmailForm(prev => ({ ...prev, contenu: e.target.value }))}
+                                            placeholder="Tapez votre message ici..."
+                                            rows={8}
+                                            disabled={isSendingEmail}
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            onClick={handleSendEmail}
+                                            disabled={isSendingEmail}
+                                        >
+                                            {isSendingEmail ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Envoi en cours...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="mr-2 h-4 w-4" />
+                                                    Envoyer
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                setIsComposingEmail(false);
+                                                setEmailForm({ objet: '', contenu: '' });
+                                            }}
+                                            disabled={isSendingEmail}
+                                        >
+                                            Annuler
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            )}
+                        </Card>
+
+                        {/* Historique des emails */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <History className="h-5 w-5" />
+                                    Historique de mes emails
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    Emails que vous avez envoyés à ce client ({userEmails.length})
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                {userEmails.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {userEmails.map((email) => (
+                                            <div key={email.id} className="border rounded-lg p-4 space-y-3">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="space-y-1">
+                                                        <h4 className="font-medium">{email.objet}</h4>
+                                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                            <span>Envoyé le {formatEmailDate(email.date_envoi)}</span>
+                                                            <Badge
+                                                                variant={email.statut === 'envoye' ? 'default' : 'destructive'}
+                                                                className="text-xs"
+                                                            >
+                                                                {email.statut === 'envoye' ? (
+                                                                    <>
+                                                                        <CheckCircle className="mr-1 h-3 w-3" />
+                                                                        Envoyé
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <XCircle className="mr-1 h-3 w-3" />
+                                                                        Échec
+                                                                    </>
+                                                                )}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-sm text-muted-foreground bg-muted/30 rounded p-3">
+                                                    <p className="whitespace-pre-wrap">{email.contenu}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <Mail className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                                        <h3 className="mt-4 text-lg font-medium">Aucun email envoyé</h3>
+                                        <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                                            Vous n'avez pas encore envoyé d'email à ce client. Commencez par composer votre premier message.
+                                        </p>
+                                        <Button onClick={() => setIsComposingEmail(true)}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Composer un email
+                                        </Button>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

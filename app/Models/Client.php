@@ -60,6 +60,14 @@ class Client extends Model
     }
 
     /**
+     * Relation avec les emails envoyés.
+     */
+    public function emails(): HasMany
+    {
+        return $this->hasMany(ClientEmail::class)->orderBy('date_envoi', 'desc');
+    }
+
+    /**
      * Retourne le nom complet du client.
      */
     public function getNomCompletAttribute(): string
