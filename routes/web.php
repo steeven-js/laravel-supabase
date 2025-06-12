@@ -49,16 +49,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('tickets/{ticket}/assigner', [App\Http\Controllers\TicketController::class, 'assigner'])->name('tickets.assigner');
     Route::get('api/users', [App\Http\Controllers\TicketController::class, 'getUsers'])->name('api.users');
 
-    // Routes API pour le real-time
-    Route::get('api/realtime/config', [App\Http\Controllers\Api\RealtimeController::class, 'config'])->name('api.realtime.config');
-    Route::post('api/realtime/test', [App\Http\Controllers\Api\RealtimeController::class, 'test'])->name('api.realtime.test');
-    Route::get('api/realtime/stream', [App\Http\Controllers\Api\RealtimeController::class, 'stream'])->name('api.realtime.stream');
-
-    // Route de diagnostic SSE
-    Route::get('debug/sse', function () {
-        return view('debug.sse');
-    })->name('debug.sse');
-
     // Routes pour les todos
     Route::post('clients/{client}/todos', [App\Http\Controllers\TodoController::class, 'store'])->name('todos.store');
     Route::put('clients/{client}/todos/{todo}', [App\Http\Controllers\TodoController::class, 'update'])->name('todos.update');
@@ -205,10 +195,7 @@ if (app()->environment('local')) {
     })->middleware(['auth', 'verified']);
 }
 
-// Routes API pour Supabase (si nécessaire plus tard)
-// Route::prefix('api')->group(function () {
-//     // Ajouter des routes API pour la synchronisation avec Supabase si nécessaire
-// });
+
 
 // Inclusion des autres fichiers de routes
 require __DIR__ . '/settings.php';

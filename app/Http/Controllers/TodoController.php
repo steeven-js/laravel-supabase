@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Todo;
 use App\Models\Client;
-use App\Services\SupabaseRealtimeService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -12,12 +11,6 @@ use Inertia\Inertia;
 
 class TodoController extends Controller
 {
-    protected SupabaseRealtimeService $realtimeService;
-
-    public function __construct(SupabaseRealtimeService $realtimeService)
-    {
-        $this->realtimeService = $realtimeService;
-    }
     /**
      * Créer une nouvelle tâche
      */
@@ -39,9 +32,6 @@ class TodoController extends Controller
             'user_id' => Auth::id(),
             'ordre' => $nextOrder,
         ]);
-
-        // Publier l'événement real-time
-        $this->realtimeService->publishTodoCreated($todo->toArray(), Auth::id());
 
         return redirect()->back()->with('success', 'Tâche créée avec succès !');
     }
@@ -66,9 +56,6 @@ class TodoController extends Controller
 
         $todo->update($validated);
 
-        // Publier l'événement real-time
-        $this->realtimeService->publishTodoUpdated($todo->fresh()->toArray(), Auth::id());
-
         return redirect()->back()->with('success', 'Tâche mise à jour avec succès !');
     }
 
@@ -81,9 +68,6 @@ class TodoController extends Controller
         if ($todo->client_id !== $client->id || $todo->user_id !== Auth::id()) {
             abort(403, 'Non autorisé');
         }
-
-        // Publier l'événement real-time avant suppression
-        $this->realtimeService->publishTodoDeleted($todo->id, $client->id, Auth::id());
 
         $todo->delete();
 
@@ -100,11 +84,7 @@ class TodoController extends Controller
             abort(403, 'Non autorisé');
         }
 
-        $newStatus = !$todo->termine;
-        $todo->update(['termine' => $newStatus]);
-
-        // Publier l'événement real-time
-        $this->realtimeService->publishTodoToggled($todo->id, $newStatus, $client->id, Auth::id());
+        $todo->update(['termine' => !$todo->termine]);
 
         return redirect()->back()->with('success', 'Statut de la tâche mis à jour !');
     }
@@ -128,9 +108,6 @@ class TodoController extends Controller
                 $todo->update(['ordre' => $todoData['ordre']]);
             }
         }
-
-        // Publier l'événement real-time pour la réorganisation
-        $this->realtimeService->publishTodoReorder($client->id, $validated['todos'], Auth::id());
 
         return redirect()->back()->with('success', 'Ordre des tâches mis à jour !');
     }

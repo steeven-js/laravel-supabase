@@ -52,8 +52,7 @@ import {
     RotateCcw,
     ListTodo,
     GripVertical,
-    X,
-    Activity
+    X
 } from 'lucide-react';
 import {
     DndContext,
@@ -76,7 +75,6 @@ import {
 } from '@dnd-kit/utilities';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useServerSentEvents } from '@/hooks/useServerSentEvents';
 
 interface Client {
     id: number;
@@ -830,45 +828,6 @@ export default function ClientsShow({ client, auth }: Props) {
     const [deletingTodo, setDeletingTodo] = useState<number | null>(null);
     const [todos, setTodos] = useState(client.todos || []);
 
-    // Real-time avec Server-Sent Events
-    const { isConnected, testConnection } = useServerSentEvents({
-        clientId: client.id,
-        userId: auth.user.id,
-        onTodoReorder: (reorderedTodos: any[]) => {
-            // Mettre à jour l'ordre local sans recharger la page
-            const newTodos = [...todos];
-            reorderedTodos.forEach((reorderedTodo: any) => {
-                const index = newTodos.findIndex(t => t.id === reorderedTodo.id);
-                if (index !== -1) {
-                    newTodos[index] = { ...newTodos[index], ordre: reorderedTodo.ordre };
-                }
-            });
-            newTodos.sort((a, b) => a.ordre - b.ordre);
-            setTodos(newTodos);
-            toast.success('Ordre mis à jour en temps réel !');
-        },
-        onTodoCreated: (newTodo: any) => {
-            // Ajouter la nouvelle tâche
-            setTodos(prev => [...prev, newTodo].sort((a, b) => a.ordre - b.ordre));
-            toast.success('Nouvelle tâche ajoutée !');
-        },
-        onTodoUpdated: (updatedTodo: any) => {
-            // Mettre à jour la tâche
-            setTodos(prev => prev.map(t => t.id === updatedTodo.id ? updatedTodo : t));
-            toast.success('Tâche mise à jour !');
-        },
-        onTodoDeleted: (todoId: number) => {
-            // Supprimer la tâche
-            setTodos(prev => prev.filter(t => t.id !== todoId));
-            toast.success('Tâche supprimée !');
-        },
-        onTodoToggled: (todoId: number, termine: boolean) => {
-            // Basculer le statut
-            setTodos(prev => prev.map(t => t.id === todoId ? { ...t, termine } : t));
-            toast.success(termine ? 'Tâche terminée !' : 'Tâche réouverte !');
-        }
-    });
-
     // Drag & Drop pour les todos
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -1346,9 +1305,6 @@ export default function ClientsShow({ client, auth }: Props) {
                                         <CardTitle className="flex items-center gap-2">
                                             <ListTodo className="h-5 w-5" />
                                             Tâches à faire ({todos.filter(t => !t.termine).length})
-                                            {/* Indicateur de connexion real-time */}
-                                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
-                                                 title={isConnected ? 'Connecté en temps réel' : 'Déconnecté'} />
                                         </CardTitle>
                                         <Button
                                             size="sm"
@@ -1556,25 +1512,6 @@ export default function ClientsShow({ client, auth }: Props) {
                                     <Button variant="outline" className="w-full justify-start">
                                         <Mail className="mr-2 h-4 w-4" />
                                         Envoyer un email
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full justify-start"
-                                        onClick={testConnection}
-                                    >
-                                        <div className={`mr-2 h-4 w-4 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-                                        Test Real-time
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={async () => {
-                                            const success = await testConnection();
-                                            toast.success(success ? 'Test SSE réussi !' : 'Test SSE échoué !');
-                                        }}
-                                    >
-                                        <Activity className="h-4 w-4 mr-2" />
-                                        Test SSE
                                     </Button>
                                 </CardContent>
                             </Card>
