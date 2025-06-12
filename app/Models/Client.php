@@ -76,6 +76,22 @@ class Client extends Model
     }
 
     /**
+     * Relation avec les tickets.
+     */
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Relation avec les todos.
+     */
+    public function todos(): HasMany
+    {
+        return $this->hasMany(Todo::class)->orderBy('ordre');
+    }
+
+    /**
      * Retourne le nom complet du client.
      */
     public function getNomCompletAttribute(): string

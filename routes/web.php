@@ -39,6 +39,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('opportunities/{opportunity}', [App\Http\Controllers\OpportunityController::class, 'update'])->name('opportunities.update');
     Route::delete('opportunities/{opportunity}', [App\Http\Controllers\OpportunityController::class, 'destroy'])->name('opportunities.destroy');
 
+    // Routes pour les tickets
+    Route::post('clients/{client}/tickets', [App\Http\Controllers\TicketController::class, 'store'])->name('tickets.store');
+    Route::patch('tickets/{ticket}', [App\Http\Controllers\TicketController::class, 'update'])->name('tickets.update');
+    Route::delete('tickets/{ticket}', [App\Http\Controllers\TicketController::class, 'destroy'])->name('tickets.destroy');
+    Route::patch('tickets/{ticket}/resoudre', [App\Http\Controllers\TicketController::class, 'resoudre'])->name('tickets.resoudre');
+    Route::patch('tickets/{ticket}/fermer', [App\Http\Controllers\TicketController::class, 'fermer'])->name('tickets.fermer');
+    Route::patch('tickets/{ticket}/reouvrir', [App\Http\Controllers\TicketController::class, 'reouvrir'])->name('tickets.reouvrir');
+    Route::patch('tickets/{ticket}/assigner', [App\Http\Controllers\TicketController::class, 'assigner'])->name('tickets.assigner');
+    Route::get('api/users', [App\Http\Controllers\TicketController::class, 'getUsers'])->name('api.users');
+
+    // Routes API pour le real-time
+    Route::get('api/realtime/config', [App\Http\Controllers\Api\RealtimeController::class, 'config'])->name('api.realtime.config');
+    Route::post('api/realtime/test', [App\Http\Controllers\Api\RealtimeController::class, 'test'])->name('api.realtime.test');
+    Route::get('api/realtime/stream', [App\Http\Controllers\Api\RealtimeController::class, 'stream'])->name('api.realtime.stream');
+
+    // Route de diagnostic SSE
+    Route::get('debug/sse', function () {
+        return view('debug.sse');
+    })->name('debug.sse');
+
+    // Routes pour les todos
+    Route::post('clients/{client}/todos', [App\Http\Controllers\TodoController::class, 'store'])->name('todos.store');
+    Route::put('clients/{client}/todos/{todo}', [App\Http\Controllers\TodoController::class, 'update'])->name('todos.update');
+    Route::delete('clients/{client}/todos/{todo}', [App\Http\Controllers\TodoController::class, 'destroy'])->name('todos.destroy');
+    Route::patch('clients/{client}/todos/{todo}/toggle', [App\Http\Controllers\TodoController::class, 'toggle'])->name('todos.toggle');
+    Route::patch('clients/{client}/todos/reorder', [App\Http\Controllers\TodoController::class, 'reorder'])->name('todos.reorder');
+
     // Routes pour les entreprises
     Route::resource('entreprises', EntrepriseController::class);
 

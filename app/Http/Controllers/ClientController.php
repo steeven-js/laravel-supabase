@@ -101,6 +101,12 @@ class ClientController extends Controller
             },
             'opportunities' => function($query) {
                 $query->with('user')->orderBy('created_at', 'desc');
+            },
+            'tickets' => function($query) {
+                $query->with(['user', 'creator'])->orderBy('created_at', 'desc');
+            },
+            'todos' => function($query) {
+                $query->with('user')->orderBy('ordre');
             }
         ]);
 
