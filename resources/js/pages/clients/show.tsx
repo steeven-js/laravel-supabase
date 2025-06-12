@@ -71,7 +71,7 @@ interface Client {
         contenu: string;
         date_envoi: string;
         statut: 'envoye' | 'echec';
-        utilisateur: {
+        user: {
             id: number;
             name: string;
         };
@@ -248,7 +248,7 @@ export default function ClientsShow({ client, auth }: Props) {
         });
     };
 
-    const userEmails = client.emails?.filter(email => email.utilisateur.id === auth.user.id) || [];
+    const userEmails = client.emails?.filter(email => email.user?.id === auth.user.id) || [];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(client)}>

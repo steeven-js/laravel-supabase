@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\ClientEmail;
 use App\Models\Entreprise;
+use App\Mail\ClientEmailMailable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Exception;
 
@@ -100,7 +102,13 @@ class ClientController extends Controller
         ]);
 
         return Inertia::render('clients/show', [
-            'client' => $client
+            'client' => $client,
+            'auth' => [
+                'user' => [
+                    'id' => Auth::id(),
+                    'name' => Auth::user()->name,
+                ]
+            ]
         ]);
     }
 
@@ -125,18 +133,39 @@ class ClientController extends Controller
                 'date_envoi' => now(),
             ]);
 
-            try {
-                // Ici vous pouvez ajouter l'envoi réel de l'email avec Mail::send
-                // Pour l'instant, nous simulons un envoi réussi
+                        try {
+                // Envoi réel de l'email avec Mailable
+                Log::info('=== DÉBUT ENVOI EMAIL CLIENT ===', [
+                    'client_id' => $client->id,
+                    'client_email' => $client->email,
+                    'user_id' => Auth::id(),
+                    'objet' => $validated['objet']
+                ]);
 
-                // Mail::send([], [], function ($message) use ($client, $validated) {
-                //     $message->to($client->email, $client->nom_complet)
-                //             ->subject($validated['objet'])
-                //             ->html($validated['contenu']);
-                // });
+                Mail::to($client->email)->send(
+                    new ClientEmailMailable(
+                        $client,
+                        Auth::user(),
+                        $validated['objet'],
+                        $validated['contenu']
+                    )
+                );
+
+                Log::info('Email client envoyé avec succès', [
+                    'client_email' => $client->email,
+                    'objet' => $validated['objet']
+                ]);
 
             } catch (Exception $e) {
                 // Marquer l'email comme échoué si l'envoi réel échoue
+                Log::error('=== ERREUR ENVOI EMAIL CLIENT ===', [
+                    'client_email' => $client->email,
+                    'error_message' => $e->getMessage(),
+                    'error_code' => $e->getCode(),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                ]);
+
                 $clientEmail->update(['statut' => 'echec']);
                 throw $e;
             }
