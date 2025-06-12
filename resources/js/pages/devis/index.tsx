@@ -680,17 +680,12 @@ export default function DevisIndex({ devis }: Props) {
                                             </TableCell>
                                             <TableCell>
                                                 {item.statut_envoi === 'non_envoye' ? (
-                                                    <div className="space-y-1">
-                                                        <Badge className={`${getStatusEnvoiStyles(item.statut_envoi)} border-0 text-xs block w-fit`}>
-                                                            <span className="flex items-center gap-1">
-                                                                {getStatusEnvoiIcon(item.statut_envoi)}
-                                                                Non
-                                                            </span>
-                                                        </Badge>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            envoyé
-                                                        </div>
-                                                    </div>
+                                                    <Badge className={`${getStatusEnvoiStyles(item.statut_envoi)} border-0 text-xs whitespace-nowrap`}>
+                                                        <span className="flex items-center gap-1">
+                                                            {getStatusEnvoiIcon(item.statut_envoi)}
+                                                            Non envoyé
+                                                        </span>
+                                                    </Badge>
                                                 ) : (
                                                     <Badge className={`${getStatusEnvoiStyles(item.statut_envoi)} border-0 text-xs`}>
                                                         <span className="flex items-center gap-1">

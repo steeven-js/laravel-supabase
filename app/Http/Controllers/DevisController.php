@@ -151,7 +151,6 @@ class DevisController extends Controller
 
             return redirect()->route('devis.show', $devis)
                 ->with('success', '✅ Devis ' . $devis->numero_devis . ' créé avec succès !');
-
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
@@ -170,6 +169,31 @@ class DevisController extends Controller
     public function show(Devis $devis)
     {
         $devis->load(['client.entreprise', 'facture', 'lignes.service']);
+
+        // Récupérer l'historique des actions avec les utilisateurs
+        $historique = $devis->historique()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($action) {
+                return [
+                    'id' => $action->id,
+                    'action' => $action->action,
+                    'titre' => $action->titre,
+                    'description' => $action->description,
+                    'donnees_avant' => $action->donnees_avant,
+                    'donnees_apres' => $action->donnees_apres,
+                    'donnees_supplementaires' => $action->donnees_supplementaires,
+                    'created_at' => $action->created_at->toISOString(),
+                    'user' => $action->user ? [
+                        'id' => $action->user->id,
+                        'name' => $action->user->name,
+                        'email' => $action->user->email,
+                    ] : null,
+                    'user_nom' => $action->user_nom,
+                    'user_email' => $action->user_email,
+                ];
+            });
 
         // Récupérer les informations Madinia
         $madinia = \App\Models\Madinia::getInstance();
@@ -243,6 +267,7 @@ class DevisController extends Controller
 
         return Inertia::render('devis/show', [
             'devis' => $devisFormatted,
+            'historique' => $historique,
             'madinia' => [
                 'id' => $madinia->id,
                 'name' => $madinia->name,
@@ -423,7 +448,6 @@ class DevisController extends Controller
 
             return redirect()->route('devis.index')
                 ->with('success', '🎉 Devis ' . $devis->numero_devis . ' mis à jour avec succès !');
-
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
@@ -462,7 +486,6 @@ class DevisController extends Controller
 
             return redirect()->route('devis.index')
                 ->with('warning', '⚠️ Devis ' . $numero_devis . ' supprimé avec succès.');
-
         } catch (Exception $e) {
             return back()
                 ->with('error', '❌ Impossible de supprimer le devis. Il pourrait être lié à d\'autres données.');
@@ -479,7 +502,6 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('success', '✅ Devis ' . $devis->numero_devis . ' accepté avec succès !');
-
         } catch (Exception $e) {
             return back()
                 ->with('error', '❌ Une erreur est survenue lors de l\'acceptation du devis.');
@@ -496,7 +518,6 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('success', '⛔ Devis ' . $devis->numero_devis . ' refusé.');
-
         } catch (Exception $e) {
             return back()
                 ->with('error', '❌ Une erreur est survenue lors du refus du devis.');
@@ -540,7 +561,6 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('success', $messages[$nouveauStatut] ?? 'Statut mis à jour.');
-
         } catch (Exception $e) {
             return back()
                 ->with('error', '❌ Une erreur est survenue lors de la modification du statut.');
@@ -987,7 +1007,6 @@ class DevisController extends Controller
                 'devis_numero' => $devis->numero_devis,
                 'client_email' => $devis->client->email
             ]);
-
         } catch (\Exception $e) {
             Log::error('=== ERREUR ENVOI EMAIL CLIENT DEVIS ===', [
                 'devis_numero' => $devis->numero_devis,
@@ -1060,7 +1079,6 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('error', '❌ PDF non trouvé pour ce devis.');
-
         } catch (Exception $e) {
             Log::error('Erreur affichage PDF devis', [
                 'devis_numero' => $devis->numero_devis,
@@ -1095,7 +1113,6 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('error', '❌ PDF non trouvé pour ce devis.');
-
         } catch (Exception $e) {
             Log::error('Erreur téléchargement PDF devis', [
                 'devis_numero' => $devis->numero_devis,
@@ -1124,7 +1141,6 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('success', '✅ PDF du devis ' . $devis->numero_devis . ' régénéré avec succès !');
-
         } catch (Exception $e) {
             Log::error('Erreur régénération PDF devis', [
                 'devis_numero' => $devis->numero_devis,
