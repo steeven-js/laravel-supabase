@@ -1,0 +1,207 @@
+{
+    "collection": "users",
+    "count": 6,
+    "data": [
+        {
+            "id": "1Zb4KeTPZRNFbsaJBHP0m0aevtD3",
+            "isVerified": true,
+            "city": "Toulouse",
+            "roleLevel": 2,
+            "country": "France",
+            "createdAt": {
+                "seconds": 1742827483,
+                "nanoseconds": 935000000
+            },
+            "isPublic": false,
+            "lastConnection": {
+                "seconds": 1742842762,
+                "nanoseconds": 584000000
+            },
+            "address": "Toulouse",
+            "phoneNumber": "+33744804390",
+            "role": "admin",
+            "company": "Madin.IA",
+            "updatedAt": {
+                "seconds": 1745455387,
+                "nanoseconds": 840000000
+            },
+            "about": "TEST",
+            "email": "a.loza@madin-ia.com",
+            "uid": "1Zb4KeTPZRNFbsaJBHP0m0aevtD3",
+            "displayName": "Amandine Loza",
+            "permissions": [
+                "manage_users",
+                "manage_content",
+                "view_analytics"
+            ],
+            "zipCode": "31000",
+            "customPermissions": [],
+            "status": "active",
+            "state": "Toulouse",
+            "avatarUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/avatars%2F1Zb4KeTPZRNFbsaJBHP0m0aevtD3%2Favatar.png?alt=media&token=c0965190-02fc-4ab0-8162-6560537e25b8"
+        },
+        {
+            "id": "4contbOlw9eDigamr9gV49wybtS2",
+            "isPublic": false,
+            "phoneNumber": "+33647438084",
+            "address": "",
+            "country": "France",
+            "roleLevel": 2,
+            "isVerified": true,
+            "email": "d.brault@madin-ia.com",
+            "state": "Martinique",
+            "createdAt": {
+                "seconds": 1742827135,
+                "nanoseconds": 550000000
+            },
+            "status": "active",
+            "displayName": "Brault dimitri",
+            "city": "",
+            "about": "",
+            "permissions": [
+                "manage_users",
+                "manage_content",
+                "view_analytics"
+            ],
+            "uid": "4contbOlw9eDigamr9gV49wybtS2",
+            "lastName": "Brault",
+            "zipCode": "",
+            "role": "admin",
+            "updatedAt": {
+                "seconds": 1746077025,
+                "nanoseconds": 917000000
+            },
+            "lastConnection": {
+                "seconds": 1742827452,
+                "nanoseconds": 482000000
+            },
+            "firstName": "dimitri",
+            "customPermissions": []
+        },
+        {
+            "id": "MTQYh79VqxO3PWl2HJY84U5SyNQ2",
+            "uid": "MTQYh79VqxO3PWl2HJY84U5SyNQ2",
+            "zipCode": "97233",
+            "updatedAt": {
+                "seconds": 1742848469,
+                "nanoseconds": 773000000
+            },
+            "status": "active",
+            "displayName": "Jacques-Henry Bernardin Joseph",
+            "state": "Martinique",
+            "isVerified": true,
+            "role": "admin",
+            "createdAt": {
+                "seconds": 1742827511,
+                "nanoseconds": 596000000
+            },
+            "isPublic": false,
+            "permissions": [
+                "manage_users",
+                "manage_content",
+                "view_analytics"
+            ],
+            "roleLevel": 2,
+            "city": "Schoelcher",
+            "avatarUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/avatars%2FMTQYh79VqxO3PWl2HJY84U5SyNQ2%2Favatar.png?alt=media&token=b967065d-5826-468f-b11b-f34353c50688",
+            "about": "Im the fuckin boss bro",
+            "email": "jacques-h.joseph@outlook.com",
+            "phoneNumber": "+33787539362",
+            "lastConnection": {
+                "seconds": 1742827715,
+                "nanoseconds": 991000000
+            },
+            "country": "Martinique",
+            "address": "1 Chemin du Sud, Petit Paradis"
+        },
+        {
+            "id": "sONcdNjvlOgyMdJ8LyRJCFgCt4e2",
+            "phoneNumber": "+596696303030",
+            "isPublic": true,
+            "displayName": "Steeven Jacques",
+            "city": "Fort de France",
+            "about": "Je suis le super admin en faite!!!\n",
+            "coverUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/covers%2FsONcdNjvlOgyMdJ8LyRJCFgCt4e2%2Fcover.webp?alt=media&token=62b50934-7fb0-4c2c-a47b-8d0811e2119a",
+            "createdAt": {
+                "seconds": 1740335505,
+                "nanoseconds": 192000000
+            },
+            "lastName": "Steeven",
+            "lastSignInTime": "Tue, 18 Mar 2025 12:47:09 GMT",
+            "zipCode": "97200",
+            "roleLevel": 1,
+            "email": "s.jacques@madin-ia.com",
+            "updatedAt": {
+                "seconds": 1743479729,
+                "nanoseconds": 408000000
+            },
+            "state": "Martinique",
+            "isVerified": true,
+            "permissions": [
+                "view_content"
+            ],
+            "address": "Fort de France",
+            "status": "active",
+            "firstName": "Jacques",
+            "role": "super_admin",
+            "avatarUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/avatars%2FsONcdNjvlOgyMdJ8LyRJCFgCt4e2%2Favatar.png?alt=media&token=476066d4-61a6-4639-b2c2-487b1572e167",
+            "lastConnection": {
+                "seconds": 1742853239,
+                "nanoseconds": 794000000
+            },
+            "country": "Martinique",
+            "loginCount": 4
+        },
+        {
+            "id": "tusmpsuy3cUK6nRsZoW5QcxMFdP2",
+            "status": "active",
+            "updatedAt": 1743712675477,
+            "createdAt": {
+                "seconds": 1743712459,
+                "nanoseconds": 519000000
+            },
+            "phoneNumber": "+596696852237",
+            "permissions": [
+                "manage_users",
+                "manage_content",
+                "view_analytics"
+            ],
+            "role": "admin",
+            "displayName": "FADILA BENJEBARA",
+            "uid": "tusmpsuy3cUK6nRsZoW5QcxMFdP2",
+            "roleLevel": 2,
+            "email": "business@madin-ia.com",
+            "customPermissions": []
+        },
+        {
+            "id": "uXRPrixFxMfqRE5TEFc8pghPdL23",
+            "uid": "uXRPrixFxMfqRE5TEFc8pghPdL23",
+            "zipCode": "97200",
+            "state": "France",
+            "customPermissions": [],
+            "status": "active",
+            "displayName": "Administrateur Développeur",
+            "city": "Fort de France",
+            "company": "Madin.IA",
+            "updatedAt": {
+                "seconds": 1746029829,
+                "nanoseconds": 521000000
+            },
+            "createdAt": {
+                "seconds": 1746029360,
+                "nanoseconds": 530000000
+            },
+            "roleLevel": 3,
+            "country": "Martinique",
+            "role": "admin",
+            "email": "kisama972@gmail.com",
+            "isVerified": false,
+            "permissions": [
+                "all"
+            ],
+            "address": "Fort de France",
+            "isBanned": false,
+            "phoneNumber": "+596696303030"
+        }
+    ]
+}

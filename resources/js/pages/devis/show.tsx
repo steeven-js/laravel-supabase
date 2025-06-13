@@ -22,7 +22,8 @@ import {
     Eye,
     Phone,
     Printer,
-    Send
+    Send,
+    Settings
 } from 'lucide-react';
 
 interface LigneDevis {
@@ -62,6 +63,7 @@ interface Devis {
     conditions?: string;
     peut_etre_transforme_en_facture?: boolean;
     peut_etre_envoye?: boolean;
+    pdf_url_supabase?: string;
     lignes?: LigneDevis[];
     facture?: {
         id: number;
@@ -322,6 +324,8 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
         });
     };
 
+
+
     return (
         <AppLayout breadcrumbs={breadcrumbs(devis)}>
             <Head title={devis.numero_devis} />
@@ -338,7 +342,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                 </div>
 
                 {/* Header avec actions */}
-                <div className="space-y-4">
+                <div className="w-full max-w-5xl mx-auto">
                     {/* Navigation et titre */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-4">
@@ -349,36 +353,57 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
 
                         {/* Statuts */}
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <Badge className={`${getStatusStyles(devis.statut)} px-3 py-1`}>
+                            <div className="flex items-center gap-3">
+                                {/* Sélecteur de statut professionnel */}
+                                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-6 h-6 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
+                                            <Settings className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Modifier le statut
+                                        </span>
+                                    </div>
+                                    <Select value={devis.statut} onValueChange={handleStatutChange}>
+                                        <SelectTrigger className="w-52 h-11 border border-gray-300 dark:border-gray-600 hover:border-amber-400 dark:hover:border-amber-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors">
+                                            <div className="flex items-center gap-2">
+                                                <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                                <SelectValue placeholder="Sélectionner un statut" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {statutOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    <span className="flex items-center gap-2">
+                                                        <span>{option.icon}</span>
+                                                        <span>{option.label}</span>
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            {/* Badge de statut d'envoi avec légende */}
+                            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                                        <Mail className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Statut d'envoi
+                                    </span>
+                                </div>
+                                <Badge className={`${getStatusEnvoiStyles(devis.statut_envoi)} px-3 py-1`}>
                                     <span className="flex items-center gap-1">
-                                        {getStatusIcon(devis.statut)}
-                                        {formatStatut(devis.statut)}
+                                        {getStatusEnvoiIcon(devis.statut_envoi)}
+                                        {formatStatutEnvoi(devis.statut_envoi)}
                                     </span>
                                 </Badge>
-                                <Select value={devis.statut} onValueChange={handleStatutChange}>
-                                    <SelectTrigger className="w-40 h-8 text-xs border-dashed">
-                                        <SelectValue placeholder="Changer le statut" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {statutOptions.map((option) => (
-                                            <SelectItem key={option.value} value={option.value}>
-                                                <span className="flex items-center gap-2">
-                                                    <span>{option.icon}</span>
-                                                    <span>{option.label}</span>
-                                                </span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
                             </div>
-                            <Badge className={`${getStatusEnvoiStyles(devis.statut_envoi)} px-3 py-1`}>
-                                <span className="flex items-center gap-1">
-                                    {getStatusEnvoiIcon(devis.statut_envoi)}
-                                    {formatStatutEnvoi(devis.statut_envoi)}
-                                </span>
-                            </Badge>
                         </div>
+
+
                     </div>
 
                     {/* Actions groupées */}
@@ -408,12 +433,22 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                 <span className="hidden sm:inline">Imprimer</span>
                                 <span className="sm:hidden">Print</span>
                             </Button>
-                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" asChild>
-                                <Link href={`/devis/${devis.id}/pdf`} target="_blank">
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">Voir PDF</span>
-                                    <span className="sm:hidden">PDF</span>
-                                </Link>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 sm:flex-none"
+                                onClick={() => {
+                                    if (devis.pdf_url_supabase) {
+                                        window.open(devis.pdf_url_supabase, '_blank', 'noopener,noreferrer');
+                                    } else {
+                                        // Fallback vers l'URL locale si Supabase n'est pas disponible
+                                        window.open(`/devis/${devis.id}/pdf`, '_blank', 'noopener,noreferrer');
+                                    }
+                                }}
+                            >
+                                <Eye className="mr-2 h-4 w-4" />
+                                <span className="hidden sm:inline">Voir PDF</span>
+                                <span className="sm:hidden">PDF</span>
                             </Button>
                             <Button variant="outline" size="sm" className="flex-1 sm:flex-none" asChild>
                                 <Link href={`/devis/${devis.id}/telecharger-pdf`}>
@@ -426,7 +461,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                     </div>
                 </div>
 
-                {/* Actions de transformation en facture - EN HAUT */}
+                                {/* Header de statut uniforme pour tous les devis */}
                 <Card className="w-full max-w-5xl mx-auto">
                     <CardContent className="p-8">
                         {devis.facture ? (
@@ -465,50 +500,54 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                     </Button>
                                 </div>
                             </div>
+                        ) : devis.statut === 'envoye' ? (
+                            // Devis envoyé
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-blue-700">📧 Devis envoyé</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Le devis a été envoyé au client et attend sa validation
+                                    </p>
+                                </div>
+                            </div>
+                        ) : devis.statut === 'brouillon' ? (
+                            // Devis en brouillon
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">📝 Devis en brouillon</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Ce devis est en cours de préparation et peut être modifié
+                                    </p>
+                                </div>
+                            </div>
+                        ) : devis.statut === 'refuse' ? (
+                            // Devis refusé
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-red-700">❌ Devis refusé</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Ce devis a été refusé par le client
+                                    </p>
+                                </div>
+                            </div>
+                        ) : devis.statut === 'expire' ? (
+                            // Devis expiré
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-orange-700">⏰ Devis expiré</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Ce devis a dépassé sa date de validité
+                                    </p>
+                                </div>
+                            </div>
                         ) : (
-                            // Devis pas encore accepté
-                            <div>
-                                <div className="flex items-start gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <div className="flex-shrink-0">
-                                        <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
-                                            <Receipt className="h-4 w-4 text-blue-600" />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-blue-900 mb-1">
-                                            ℹ️ Information sur la transformation en facture
-                                        </h3>
-                                        <p className="text-sm text-blue-800 mb-3">
-                                            <strong>Seuls les devis acceptés peuvent être transformés en facture.</strong>
-                                        </p>
-                                        <div className="text-sm text-blue-700 space-y-1">
-                                            <p>• Le statut actuel du devis est : <strong className="capitalize">{formatStatut(devis.statut)}</strong></p>
-                                            <p>• Pour transformer ce devis en facture, vous devez d'abord le passer au statut "Accepté"</p>
-                                            <p>• Utilisez le sélecteur de statut en haut de page pour modifier le statut</p>
-                                        </div>
-                                        {devis.statut === 'brouillon' && (
-                                            <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded">
-                                                <p className="text-xs text-amber-800">
-                                                    💡 <strong>Conseil :</strong> Assurez-vous d'avoir envoyé le devis au client avant de l'accepter.
-                                                </p>
-                                            </div>
-                                        )}
-                                        {devis.statut === 'envoye' && (
-                                            <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded">
-                                                <p className="text-xs text-green-800">
-                                                    ✅ <strong>Prêt :</strong> Le devis a été envoyé au client. Vous pouvez l'accepter dès que le client donne son accord.
-                                                </p>
-                                            </div>
-                                        )}
-                                        {(devis.statut === 'refuse' || devis.statut === 'expire') && (
-                                            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
-                                                <p className="text-xs text-red-800">
-                                                    ⚠️ <strong>Attention :</strong> Ce devis est {formatStatut(devis.statut).toLowerCase()}.
-                                                    Il ne peut plus être transformé en facture dans cet état.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
+                            // Statut par défaut
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">📄 Devis</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Statut du devis
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -691,26 +730,26 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                             </div>
                         </div>
 
-                                                 {/* Totals section */}
-                         <div className="flex justify-end mb-8">
-                             <div className="w-full max-w-md">
-                                 <div className="space-y-2">
-                                     <div className="flex justify-between py-2">
-                                         <span className="text-gray-600">Sous-total HT</span>
-                                         <span className="font-medium">{formatPrice(devis.montant_ht)}</span>
-                                     </div>
-                                     <div className="flex justify-between py-2">
-                                         <span className="text-gray-600">TVA ({Number(devis.taux_tva || 0).toFixed(1)}%)</span>
-                                         <span className="font-medium">{formatPrice(devis.montant_ttc - devis.montant_ht)}</span>
-                                     </div>
-                                     <Separator />
-                                     <div className="flex justify-between py-3 text-lg font-bold">
-                                         <span>Total TTC</span>
-                                         <span className="text-2xl">{formatPrice(devis.montant_ttc)}</span>
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
+                        {/* Totals section */}
+                        <div className="flex justify-end mb-8">
+                            <div className="w-full max-w-md">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between py-2">
+                                        <span className="text-gray-600">Sous-total HT</span>
+                                        <span className="font-medium">{formatPrice(devis.montant_ht)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2">
+                                        <span className="text-gray-600">TVA ({Number(devis.taux_tva || 0).toFixed(1)}%)</span>
+                                        <span className="font-medium">{formatPrice(devis.montant_ttc - devis.montant_ht)}</span>
+                                    </div>
+                                    <Separator />
+                                    <div className="flex justify-between py-3 text-lg font-bold">
+                                        <span>Total TTC</span>
+                                        <span className="text-2xl">{formatPrice(devis.montant_ttc)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Notes section */}
                         {devis.notes && (
@@ -773,7 +812,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                 </Card>
 
                 {/* Historique des actions */}
-                    <Card className="w-full max-w-5xl mx-auto">
+                <Card className="w-full max-w-5xl mx-auto">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Clock className="h-5 w-5" />
@@ -789,7 +828,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                             {getActionIcon(action.action)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between">
                                                 <h4 className="font-medium text-gray-900">{action.titre}</h4>
                                                 <span className="text-sm text-gray-500">{formatActionDate(action.created_at)}</span>
                                             </div>
@@ -820,17 +859,17 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                                             </div>
                                                         )}
                                                         {action.donnees_apres && (
-                                <div>
+                                                            <div>
                                                                 <span className="font-medium text-green-600">Après :</span>
                                                                 <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
                                                                     {JSON.stringify(action.donnees_apres, null, 2)}
                                                                 </pre>
                                                             </div>
                                                         )}
-                                </div>
+                                                    </div>
                                                 </details>
-                                    )}
-                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -840,8 +879,8 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                 <p>Aucune action enregistrée pour ce devis</p>
                             </div>
                         )}
-                        </CardContent>
-                    </Card>
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );

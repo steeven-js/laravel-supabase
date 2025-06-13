@@ -1,0 +1,1233 @@
+{
+    "collection": "devis",
+    "count": 14,
+    "data": [
+        {
+            "id": "1sTPuppabCvRs8D0LoLQ",
+            "taxes": 8.5,
+            "devisTo": {
+                "zipCode": "",
+                "companyId": "",
+                "city": "",
+                "email": "victor@with-you.be",
+                "company": "",
+                "name": "Victor DESPOINTES",
+                "address": "Route de Palmiste",
+                "id": "hiWHVY0BDm9A33HTeZ2K",
+                "fullAddress": "Route de Palmiste, Le Lamentin, 97232, Martinique",
+                "phoneNumber": "",
+                "role": "",
+                "state": "",
+                "country": ""
+            },
+            "createDate": {
+                "seconds": 1749614400,
+                "nanoseconds": 0
+            },
+            "devisNumber": "DV-25-011",
+            "createdAt": {
+                "seconds": 1749647651,
+                "nanoseconds": 124000000
+            },
+            "items": [
+                {
+                    "taxRate": 8.5,
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "total": 500,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "productId": "",
+                    "totalTTC": 542.5,
+                    "quantity": 1,
+                    "type": "service",
+                    "price": 500
+                }
+            ],
+            "devisFrom": {
+                "company": "Madin.IA",
+                "id": "madinia-id",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "primary": true,
+                "name": "Madin.IA",
+                "email": "d.brault@madin-ia.com",
+                "phoneNumber": "",
+                "nda": "02973663897",
+                "businessNumber": "934 303 843 00015"
+            },
+            "subtotal": 500,
+            "status": "pending",
+            "adminId": null,
+            "contactEmail": "d.brault@madin-ia.com",
+            "assignedAdmin": null,
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1749647653796_1sTPuppabCvRs8D0LoLQ.pdf?alt=media&token=d65b4a98-9adb-4250-9584-50c44b77a5f3",
+            "contactName": null,
+            "validUntil": {
+                "seconds": 1752206400,
+                "nanoseconds": 0
+            },
+            "contactPhone": "",
+            "totalAmount": 542.5,
+            "pdfTimestamp": 1749647653796,
+            "lastUpdated": {
+                "seconds": 1749647651,
+                "nanoseconds": 123000000
+            }
+        },
+        {
+            "id": "1wJNnVlJYSA28416LfyG",
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2Fdevis-1wJNnVlJYSA28416LfyG-1744930597474.pdf?alt=media&token=05a0cfc6-e2a5-4bd3-a9a2-9d00e5bf4c8e",
+            "devisNumber": "DV-25-005",
+            "status": "sent",
+            "lastEmailSentAt": "2025-04-17T23:20:52.193Z",
+            "lastPdfGenerated": "2025-04-17T22:56:40.665Z"
+        },
+        {
+            "id": "CoG64wjFsbpFl4dG9Bje",
+            "createDate": {
+                "seconds": 1748232000,
+                "nanoseconds": 0
+            },
+            "pdfTimestamp": 1748280024057,
+            "totalAmount": 3280,
+            "devisFrom": {
+                "name": "Madin.IA",
+                "id": "madinia-id",
+                "nda": "02973663897",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "primary": true,
+                "phoneNumber": "",
+                "company": "Madin.IA",
+                "email": "d.brault@madin-ia.com",
+                "businessNumber": "934 303 843 00015"
+            },
+            "contactEmail": "d.brault@madin-ia.com",
+            "taxes": 2.5,
+            "subtotal": 3200,
+            "assignedAdmin": null,
+            "validUntil": {
+                "seconds": 1750824000,
+                "nanoseconds": 0
+            },
+            "createdAt": {
+                "seconds": 1748280020,
+                "nanoseconds": 597000000
+            },
+            "items": [
+                {
+                    "price": 800,
+                    "serviceId": "",
+                    "description": "Session 1 – Découverte & premiers pas",
+                    "totalTTC": 819.9999999999999,
+                    "title": "",
+                    "taxRate": 2.5,
+                    "total": 800,
+                    "productId": "",
+                    "type": "service",
+                    "quantity": 1
+                },
+                {
+                    "taxRate": 2.5,
+                    "description": "Session 2 – IA & performance métier",
+                    "total": 800,
+                    "price": 800,
+                    "quantity": 1,
+                    "type": "service",
+                    "productId": "",
+                    "title": "",
+                    "totalTTC": 819.9999999999999,
+                    "serviceId": ""
+                },
+                {
+                    "quantity": 1,
+                    "total": 800,
+                    "taxRate": 2.5,
+                    "type": "service",
+                    "serviceId": "",
+                    "totalTTC": 819.9999999999999,
+                    "productId": "",
+                    "price": 800,
+                    "description": "Session 3 – IA & attractivité touristique",
+                    "title": ""
+                },
+                {
+                    "totalTTC": 819.9999999999999,
+                    "quantity": 1,
+                    "price": 800,
+                    "title": "",
+                    "taxRate": 2.5,
+                    "total": 800,
+                    "serviceId": "",
+                    "type": "service",
+                    "productId": "",
+                    "description": "Session 4 – Anticiper les enjeux"
+                }
+            ],
+            "devisNumber": "DV-25-006",
+            "contactPhone": "",
+            "lastUpdated": {
+                "seconds": 1748280020,
+                "nanoseconds": 596000000
+            },
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1748280024057_CoG64wjFsbpFl4dG9Bje.pdf?alt=media&token=cf743df2-ca77-4556-a33f-5f9b965ee299",
+            "status": "pending",
+            "adminId": null,
+            "devisTo": {
+                "fullAddress": "50 rue Ernest Deproge, fort de france, 97241, Martinique",
+                "city": "",
+                "state": "",
+                "companyId": "",
+                "country": "",
+                "phoneNumber": "+596696267235",
+                "role": "",
+                "address": "50 rue Ernest Deproge",
+                "name": "DERIAU",
+                "id": "UYz89UfRAqy81CdHLpxN",
+                "company": "",
+                "zipCode": "",
+                "email": "s.deriau@martinique.cci.fr"
+            },
+            "contactName": null
+        },
+        {
+            "id": "OVZ5R1bphasibqo0HAG5",
+            "devisFrom": {
+                "id": "madinia-id",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "email": "d.brault@madin-ia.com",
+                "name": "Brault dimitri",
+                "nda": "02973663897",
+                "company": "Madin.IA",
+                "primary": true,
+                "businessNumber": "934 303 843 00015",
+                "phoneNumber": "+33647438084"
+            },
+            "lastEmailSentDate": "2025-04-23T16:07:19.514Z",
+            "contactPhone": "+33647438084",
+            "contactEmail": "d.brault@madin-ia.com",
+            "totalAmount": 1627.5,
+            "validUntil": {
+                "seconds": 1748577600,
+                "nanoseconds": 0
+            },
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1746007421994_OVZ5R1bphasibqo0HAG5.pdf?alt=media&token=3f03f9bb-d1bf-4e31-91fa-1bae0c20fe7b",
+            "taxes": 8.5,
+            "contactName": "Brault dimitri",
+            "status": "sent",
+            "statusHistory": [
+                {
+                    "comment": "Devis envoyé au client",
+                    "timestamp": "2025-04-23T16:07:19.514Z",
+                    "status": "sent"
+                }
+            ],
+            "subtotal": 1500,
+            "pdfTimestamp": 1746007421994,
+            "lastEmailType": "send",
+            "items": [
+                {
+                    "productId": "",
+                    "taxRate": 8.5,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "type": "service",
+                    "price": 1500,
+                    "totalTTC": 1627.5,
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "total": 1500,
+                    "quantity": 1,
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE"
+                }
+            ],
+            "createdAt": {
+                "seconds": 1745423113,
+                "nanoseconds": 795000000
+            },
+            "adminId": "4contbOlw9eDigamr9gV49wybtS2",
+            "createDate": {
+                "seconds": 1745380800,
+                "nanoseconds": 0
+            },
+            "emailHistory": [
+                {
+                    "timestamp": "2025-04-23T16:07:19.514Z",
+                    "recipient": "murielle.ramaye@ville-saintanne.fr",
+                    "subject": "Votre devis DV-25-006 de Madin.IA",
+                    "type": "send"
+                },
+                {
+                    "sentAt": {
+                        "seconds": 1745953145,
+                        "nanoseconds": 334000000
+                    },
+                    "withPdf": true,
+                    "to": "s.jacques@madin-ia.com",
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "subject": "Sans sujet",
+                    "type": "send",
+                    "status": "sent"
+                },
+                {
+                    "type": "send",
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "to": "s.jacques@madin-ia.com",
+                    "sentAt": {
+                        "seconds": 1745953417,
+                        "nanoseconds": 718000000
+                    },
+                    "withPdf": true,
+                    "subject": "Sans sujet",
+                    "status": "sent"
+                },
+                {
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "status": "sent",
+                    "to": "s.jacques@madin-ia.com",
+                    "type": "send",
+                    "subject": "Sans sujet",
+                    "withPdf": true,
+                    "sentAt": {
+                        "seconds": 1745953630,
+                        "nanoseconds": 924000000
+                    }
+                },
+                {
+                    "status": "sent",
+                    "to": "s.jacques@madin-ia.com",
+                    "withPdf": true,
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "sentAt": {
+                        "seconds": 1745953905,
+                        "nanoseconds": 397000000
+                    },
+                    "type": "send",
+                    "subject": "Sans sujet"
+                },
+                {
+                    "status": "sent",
+                    "to": "s.jacques@madin-ia.com",
+                    "sentAt": {
+                        "seconds": 1746005947,
+                        "nanoseconds": 759000000
+                    },
+                    "withPdf": true,
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "type": "send",
+                    "subject": "Sans sujet"
+                }
+            ],
+            "devisNumber": "DV-25-003",
+            "assignedAdmin": {
+                "role": "admin",
+                "avatarUrl": "",
+                "phoneNumber": "+33647438084",
+                "name": "Brault dimitri",
+                "id": "4contbOlw9eDigamr9gV49wybtS2",
+                "email": "d.brault@madin-ia.com"
+            },
+            "devisTo": {
+                "state": "",
+                "country": "",
+                "id": "fjUiMNoWwvknmesMoIqj",
+                "city": "",
+                "fullAddress": "France",
+                "companyId": "NLs4KAK2CGaX2YFCrSAH",
+                "email": "murielle.ramaye@ville-saintanne.fr",
+                "phoneNumber": "+590590239880",
+                "zipCode": "",
+                "role": "Autre",
+                "address": "France",
+                "company": "COLLECTIVITE DE SAINTE ANNE GUADELOUPE",
+                "name": "RAMAYE Murielle"
+            },
+            "lastUpdated": {
+                "seconds": 1746007421,
+                "nanoseconds": 88000000
+            }
+        },
+        {
+            "id": "Pnp8P8JZyZE23TxSrJXu",
+            "taxes": 8.5,
+            "createDate": {
+                "seconds": 1744603200,
+                "nanoseconds": 0
+            },
+            "devisTo": {
+                "id": "bqyI8fZW0kEIeIEWhgzP",
+                "email": "yannickgaillardon@gmail.com",
+                "city": "",
+                "state": "",
+                "companyId": "rYk0uwbPpkOg45mEBsg2",
+                "company": "BONYC FUEL DISTRIBUTION",
+                "phoneNumber": "+596696304014",
+                "role": "",
+                "zipCode": "",
+                "name": "Yannick GAILLARDON",
+                "address": "CHEZ ANAIS GALLARDON, BOULEVARD DESIR JOX, ",
+                "fullAddress": "CHEZ ANAIS GALLARDON, BOULEVARD DESIR JOX, , SAINTE-MARIE, 97230 , France",
+                "country": ""
+            },
+            "createdAt": {
+                "seconds": 1744659126,
+                "nanoseconds": 149000000
+            },
+            "devisNumber": "DV-25-001",
+            "items": [
+                {
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "totalTTC": 494.9987,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "quantity": 1,
+                    "taxRate": 8.5,
+                    "type": "service",
+                    "price": 456.22,
+                    "productId": "",
+                    "total": 456.22,
+                    "serviceId": "B4IonihnZqPnfVmHwD2D"
+                }
+            ],
+            "devisFrom": {
+                "nda": "02973663897",
+                "primary": true,
+                "phoneNumber": "0647438084",
+                "businessNumber": "934 303 843 00015",
+                "company": "Madin.IA",
+                "email": "d.brault@madin-ia.com",
+                "id": "madinia-id",
+                "name": "Madin.IA",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher"
+            },
+            "subtotal": 456.22,
+            "status": "sent",
+            "statusHistory": [
+                {
+                    "timestamp": "2025-04-15T13:38:37.522Z",
+                    "comment": "Devis envoyé au client",
+                    "status": "sent"
+                }
+            ],
+            "serverUpdatedAt": {
+                "seconds": 1744724318,
+                "nanoseconds": 398000000
+            },
+            "validUntil": {
+                "seconds": 1747195200,
+                "nanoseconds": 0
+            },
+            "totalAmount": 494.99870000000004,
+            "sentDate": "2025-04-15T13:38:37.522Z",
+            "updatedAt": "2025-04-15T13:38:37.522Z",
+            "lastUpdated": {
+                "seconds": 1744742507,
+                "nanoseconds": 936000000
+            }
+        },
+        {
+            "id": "U2z2sIDXqpQzmFUgo0jt",
+            "contactPhone": "",
+            "totalAmount": 542.5,
+            "devisNumber": "DV-25-009",
+            "validUntil": {
+                "seconds": 1752206400,
+                "nanoseconds": 0
+            },
+            "assignedAdmin": null,
+            "contactName": null,
+            "status": "pending",
+            "items": [
+                {
+                    "type": "service",
+                    "taxRate": 8.5,
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "total": 500,
+                    "quantity": 1,
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "productId": "",
+                    "price": 500,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "totalTTC": 542.5
+                }
+            ],
+            "adminId": null,
+            "contactEmail": "d.brault@madin-ia.com",
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1749645179303_U2z2sIDXqpQzmFUgo0jt.pdf?alt=media&token=b5a1d902-4dee-4d66-b006-b3de5cf37eee",
+            "devisTo": {
+                "companyId": "",
+                "email": "lpoyen@caribsup.com",
+                "phoneNumber": "",
+                "role": "",
+                "company": "",
+                "state": "",
+                "address": "Le lementin, 97230, Martinique",
+                "name": "Poyen ",
+                "fullAddress": "Le lementin, 97230, Martinique",
+                "country": "",
+                "id": "FqVKrFMAv1jxxEFs0JT4",
+                "zipCode": "",
+                "city": ""
+            },
+            "taxes": 8.5,
+            "lastUpdated": {
+                "seconds": 1749645175,
+                "nanoseconds": 183000000
+            },
+            "subtotal": 500,
+            "pdfTimestamp": 1749645179303,
+            "devisFrom": {
+                "nda": "02973663897",
+                "phoneNumber": "",
+                "name": "Madin.IA",
+                "company": "Madin.IA",
+                "email": "d.brault@madin-ia.com",
+                "id": "madinia-id",
+                "primary": true,
+                "businessNumber": "934 303 843 00015",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher"
+            },
+            "createdAt": {
+                "seconds": 1749645175,
+                "nanoseconds": 184000000
+            },
+            "createDate": {
+                "seconds": 1749614400,
+                "nanoseconds": 0
+            }
+        },
+        {
+            "id": "bMM81gcVqByV8Q8rtCi7",
+            "createDate": {
+                "seconds": 1749096000,
+                "nanoseconds": 0
+            },
+            "contactPhone": "",
+            "emailHistory": [
+                {
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "sentAt": {
+                        "seconds": 1749152187,
+                        "nanoseconds": 254000000
+                    },
+                    "withPdf": true,
+                    "status": "sent",
+                    "type": "send",
+                    "subject": "Devis conférence introductive à l'Intelligence Artificielle -  Madin.IA",
+                    "to": "lionel.delfasse@gmail.com"
+                }
+            ],
+            "devisNumber": "DV-25-007",
+            "lastEmailSentDate": {
+                "seconds": 1749152187,
+                "nanoseconds": 837000000
+            },
+            "taxes": 8.5,
+            "contactEmail": "d.brault@madin-ia.com",
+            "assignedAdmin": null,
+            "status": "sent",
+            "adminId": null,
+            "devisFrom": {
+                "phoneNumber": "",
+                "nda": "02973663897",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "primary": true,
+                "name": "Madin.IA",
+                "businessNumber": "934 303 843 00015",
+                "company": "Madin.IA",
+                "id": "madinia-id",
+                "email": "d.brault@madin-ia.com"
+            },
+            "validUntil": {
+                "seconds": 1751688000,
+                "nanoseconds": 0
+            },
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1749151733732_bMM81gcVqByV8Q8rtCi7.pdf?alt=media&token=6a7d2ca1-a154-4494-b069-e04b7d3a5d4d",
+            "createdAt": {
+                "seconds": 1749151731,
+                "nanoseconds": 395000000
+            },
+            "items": [
+                {
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "totalTTC": 495,
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "quantity": 1,
+                    "productId": "",
+                    "taxRate": 8.5,
+                    "type": "service",
+                    "price": 495,
+                    "total": 495,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques."
+                }
+            ],
+            "statusHistory": [
+                {
+                    "timestamp": "2025-06-05T19:36:27.837Z",
+                    "status": "sent",
+                    "comment": "Email de type send envoyé"
+                }
+            ],
+            "totalAmount": 537.075,
+            "subtotal": 495,
+            "lastSentAt": {
+                "seconds": 1749152187,
+                "nanoseconds": 837000000
+            },
+            "lastUpdated": {
+                "seconds": 1749152188,
+                "nanoseconds": 57000000
+            },
+            "devisTo": {
+                "fullAddress": "",
+                "state": "",
+                "phoneNumber": "",
+                "companyId": "",
+                "company": "",
+                "name": "Lionel DELFASSE",
+                "email": "lionel.delfasse@gmail.com",
+                "country": "",
+                "id": "T6uyJy3J88MYkYZNRS1l",
+                "city": "",
+                "zipCode": "",
+                "role": "",
+                "address": ""
+            },
+            "lastSentTimestamp": "2025-06-05T19:36:27.837Z",
+            "pdfTimestamp": 1749151733732,
+            "contactName": null
+        },
+        {
+            "id": "kLM1Q7c4OTaRW5vfU8vM",
+            "devisNumber": "DV-25-003",
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1747709990421_kLM1Q7c4OTaRW5vfU8vM.pdf?alt=media&token=dce41b5d-8cdb-459d-92df-7ecff11015b5",
+            "totalAmount": 467.62550000000005,
+            "lastEmailSentDate": {
+                "seconds": 1747852045,
+                "nanoseconds": 190000000
+            },
+            "contactName": null,
+            "validUntil": {
+                "seconds": 1750219200,
+                "nanoseconds": 0
+            },
+            "taxes": 2.5,
+            "devisTo": {
+                "state": "",
+                "zipCode": "",
+                "companyId": "",
+                "id": "R94aqMXtKcEVly2IJ151",
+                "company": "",
+                "email": "s.jacques@madin-ia.com",
+                "address": "Fort de France",
+                "phoneNumber": "+596696307631",
+                "city": "",
+                "fullAddress": "Fort de France, FORT DE FRANCE, 97200, France",
+                "country": "",
+                "role": "Technicien",
+                "name": "Administrateur"
+            },
+            "emailHistory": [
+                {
+                    "sentAt": {
+                        "seconds": 1747710043,
+                        "nanoseconds": 599000000
+                    },
+                    "status": "sent",
+                    "to": "s.jacques@madin-ia.com",
+                    "type": "send",
+                    "withPdf": true,
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "subject": "Votre devis DV-25-003 de Madin.IA"
+                },
+                {
+                    "type": "reminder",
+                    "sentAt": {
+                        "seconds": 1747710214,
+                        "nanoseconds": 325000000
+                    },
+                    "withPdf": true,
+                    "status": "sent",
+                    "subject": "Rappel: Votre devis DV-25-003 est en attente",
+                    "templateId": "aW17fWcdENn6LkU5wtH2",
+                    "to": "s.jacques@madin-ia.com"
+                },
+                {
+                    "type": "send",
+                    "status": "sent",
+                    "sentAt": {
+                        "seconds": 1747749944,
+                        "nanoseconds": 9000000
+                    },
+                    "withPdf": true,
+                    "to": "s.jacques@madin-ia.com",
+                    "templateId": "CT9dXhJ97Sym0NXfbKGu",
+                    "subject": "Votre devis DV-25-003 de Madin.IA"
+                },
+                {
+                    "templateId": "DSQFPvIXGLvbc2O3Jmze",
+                    "sentAt": {
+                        "seconds": 1747852044,
+                        "nanoseconds": 618000000
+                    },
+                    "status": "sent",
+                    "subject": "Suivi de votre devis DV-25-003",
+                    "to": "s.jacques@madin-ia.com",
+                    "type": "followup",
+                    "withPdf": true
+                }
+            ],
+            "assignedAdmin": null,
+            "pdfTimestamp": 1747709990421,
+            "contactPhone": "",
+            "status": "followed_up",
+            "adminId": null,
+            "devisFrom": {
+                "primary": true,
+                "nda": "02973663897",
+                "phoneNumber": "",
+                "company": "Madin.IA",
+                "email": "d.brault@madin-ia.com",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "businessNumber": "934 303 843 00015",
+                "id": "madinia-id",
+                "name": "Madin.IA"
+            },
+            "statusHistory": [
+                {
+                    "comment": "Email de type send envoyé",
+                    "status": "sent",
+                    "timestamp": "2025-05-20T03:00:43.902Z"
+                },
+                {
+                    "status": "reminded",
+                    "comment": "Email de type reminder envoyé",
+                    "timestamp": "2025-05-20T03:03:35.134Z"
+                },
+                {
+                    "comment": "Email de type send envoyé",
+                    "status": "sent",
+                    "timestamp": "2025-05-20T14:05:44.317Z"
+                },
+                {
+                    "timestamp": "2025-05-21T18:27:25.190Z",
+                    "status": "followed_up",
+                    "comment": "Email de type followup envoyé"
+                }
+            ],
+            "subtotal": 456.22,
+            "items": [
+                {
+                    "price": 456.22,
+                    "total": 456.22,
+                    "quantity": 1,
+                    "totalTTC": 467.63,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "type": "service",
+                    "productId": "",
+                    "taxRate": 2.5,
+                    "serviceId": "B4IonihnZqPnfVmHwD2D"
+                }
+            ],
+            "lastSentAt": {
+                "seconds": 1747852045,
+                "nanoseconds": 190000000
+            },
+            "contactEmail": "d.brault@madin-ia.com",
+            "lastSentTimestamp": "2025-05-21T18:27:25.190Z",
+            "createDate": {
+                "seconds": 1747627200,
+                "nanoseconds": 0
+            },
+            "lastUpdated": {
+                "seconds": 1747852045,
+                "nanoseconds": 372000000
+            },
+            "createdAt": {
+                "seconds": 1747709988,
+                "nanoseconds": 313000000
+            }
+        },
+        {
+            "id": "nHBBQxES9ygfBbKHsrF6",
+            "taxes": 2.5,
+            "devisTo": {
+                "role": "Chef de Cabinet",
+                "address": "Chemin la Laugier",
+                "fullAddress": "Chemin la Laugier, Rivière Salée, 97215, Martinique",
+                "state": "",
+                "companyId": "jRz0IFXcI7qXmYRiQ18y",
+                "phoneNumber": "",
+                "city": "",
+                "company": "Espace Sud ",
+                "name": "Coyan Parfait",
+                "email": "nathalie.coyan-parfait@espacesud.fr",
+                "id": "9jffNVMlTJ4PeZ8XSeYL",
+                "country": "",
+                "zipCode": ""
+            },
+            "createDate": {
+                "seconds": 1747281600,
+                "nanoseconds": 0
+            },
+            "createdAt": {
+                "seconds": 1747343842,
+                "nanoseconds": 32000000
+            },
+            "devisNumber": "DV-25-004",
+            "items": [
+                {
+                    "quantity": 3,
+                    "price": 1399,
+                    "type": "service",
+                    "taxRate": 2.55,
+                    "description": "Accompagnement d'environ 8 heures, spécialement conçue pour les cadres, vise à leur permettre de com prendre les fondamentaux de l’intelligence artificielle et d’en exploiter les outils dans leur quotidien professionnel.",
+                    "serviceId": "d3RAFwP8YprWcnLtQrGX",
+                    "title": "Accompagnement Prompt",
+                    "totalTTC": 4304.0235,
+                    "total": 4197,
+                    "productId": ""
+                }
+            ],
+            "devisFrom": {
+                "company": "Madin.IA",
+                "businessNumber": "934 303 843 00015",
+                "email": "d.brault@madin-ia.com",
+                "phoneNumber": "",
+                "primary": true,
+                "nda": "02973663897",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "id": "madinia-id",
+                "name": "Madin.IA"
+            },
+            "subtotal": 4197,
+            "status": "pending",
+            "adminId": null,
+            "contactEmail": "d.brault@madin-ia.com",
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1748026166735_nHBBQxES9ygfBbKHsrF6.pdf?alt=media&token=5a640c1b-2f68-4ed3-906b-088faff51a90",
+            "assignedAdmin": null,
+            "contactName": null,
+            "validUntil": {
+                "seconds": 1749873600,
+                "nanoseconds": 0
+            },
+            "contactPhone": "",
+            "totalAmount": 4301.925,
+            "pdfTimestamp": 1748026166735,
+            "lastUpdated": {
+                "seconds": 1748026164,
+                "nanoseconds": 18000000
+            }
+        },
+        {
+            "id": "pI3ZoIO2Jv7fVUdQ7IzB",
+            "devisNumber": "DV-25-005",
+            "devisFrom": {
+                "nda": "02973663897",
+                "primary": true,
+                "company": "Madin.IA",
+                "name": "Madin.IA",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "businessNumber": "934 303 843 00015",
+                "phoneNumber": "",
+                "email": "d.brault@madin-ia.com",
+                "id": "madinia-id"
+            },
+            "contactName": null,
+            "adminId": null,
+            "contactPhone": "",
+            "taxes": 2.5,
+            "devisTo": {
+                "email": "support@adn-formation.com",
+                "role": "Commercial",
+                "name": "Babot",
+                "id": "98Jmb2Bj7Mb0ObxWbY5w",
+                "company": "ADN Formation",
+                "fullAddress": "Martinique",
+                "address": "Martinique",
+                "zipCode": "",
+                "companyId": "E72ekURcBy7nmox2qZvS",
+                "country": "",
+                "city": "",
+                "state": "",
+                "phoneNumber": "+596596774438"
+            },
+            "subtotal": 10080,
+            "pdfTimestamp": 1747686565717,
+            "totalAmount": 10332,
+            "assignedAdmin": null,
+            "items": [
+                {
+                    "total": 10080,
+                    "title": "",
+                    "price": 120,
+                    "description": "Formation en IA au service de l'entreprenariat des séniors ",
+                    "serviceId": "",
+                    "productId": "",
+                    "quantity": 84,
+                    "taxRate": 2.5,
+                    "totalTTC": 10332,
+                    "type": "service"
+                }
+            ],
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1747686565717_pI3ZoIO2Jv7fVUdQ7IzB.pdf?alt=media&token=01513f3d-3b90-42eb-9dfc-ae317d57468e",
+            "lastUpdated": {
+                "seconds": 1747686563,
+                "nanoseconds": 395000000
+            },
+            "contactEmail": "d.brault@madin-ia.com",
+            "createdAt": {
+                "seconds": 1747686563,
+                "nanoseconds": 395000000
+            },
+            "validUntil": {
+                "seconds": 1750219200,
+                "nanoseconds": 0
+            },
+            "status": "pending",
+            "createDate": {
+                "seconds": 1747627200,
+                "nanoseconds": 0
+            }
+        },
+        {
+            "id": "s8Ey7sSpLN03NbNu3fub",
+            "status": "pending",
+            "subtotal": 1456.2,
+            "createdAt": {
+                "seconds": 1749651794,
+                "nanoseconds": 858000000
+            },
+            "devisNumber": "DV-25-012",
+            "pdfTimestamp": 1749651799749,
+            "contactPhone": "",
+            "devisFrom": {
+                "phoneNumber": "",
+                "id": "madinia-id",
+                "businessNumber": "934 303 843 00015",
+                "name": "Madin.IA",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "nda": "02973663897",
+                "primary": true,
+                "email": "d.brault@madin-ia.com",
+                "company": "Madin.IA"
+            },
+            "taxes": 8.5,
+            "contactEmail": "d.brault@madin-ia.com",
+            "totalAmount": 1579.977,
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1749651799749_s8Ey7sSpLN03NbNu3fub.pdf?alt=media&token=d49a2c27-c96d-4dc8-b329-9fdbabf2cc22",
+            "adminId": null,
+            "lastUpdated": {
+                "seconds": 1749651794,
+                "nanoseconds": 854000000
+            },
+            "devisTo": {
+                "country": "",
+                "companyId": "",
+                "state": "",
+                "zipCode": "",
+                "phoneNumber": "+596696836023",
+                "fullAddress": "Le Lamentin , Martinique",
+                "city": "",
+                "name": "J Christine ",
+                "email": "jchristine@mairie-lamentin.fr",
+                "company": "",
+                "role": "",
+                "address": "Le Lamentin , Martinique",
+                "id": "bcfIOXh7CrlTeGQpvnK7"
+            },
+            "assignedAdmin": null,
+            "items": [
+                {
+                    "description": "Programme de 3 heures dédié à l'introduction de l'intelligence artificielle générative, permettant de découvrir les fondamentaux de l'IA générative et ses applications pratiques.",
+                    "totalTTC": 1579.977,
+                    "quantity": 1,
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "total": 1456.2,
+                    "type": "service",
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "productId": "",
+                    "taxRate": 8.5,
+                    "price": 1456.2
+                }
+            ],
+            "contactName": null,
+            "validUntil": {
+                "seconds": 1752206400,
+                "nanoseconds": 0
+            },
+            "createDate": {
+                "seconds": 1749614400,
+                "nanoseconds": 0
+            }
+        },
+        {
+            "id": "tfO5s0LojiOghboB6I2d",
+            "createDate": {
+                "seconds": 1749528000,
+                "nanoseconds": 0
+            },
+            "pdfTimestamp": 1749575748388,
+            "totalAmount": 9110.094,
+            "devisFrom": {
+                "name": "Madin.IA",
+                "businessNumber": "934 303 843 00015",
+                "primary": true,
+                "email": "d.brault@madin-ia.com",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "nda": "02973663897",
+                "phoneNumber": "",
+                "id": "madinia-id",
+                "company": "Madin.IA"
+            },
+            "contactEmail": "d.brault@madin-ia.com",
+            "taxes": 8.5,
+            "subtotal": 8396.4,
+            "createdAt": {
+                "seconds": 1749575208,
+                "nanoseconds": 246000000
+            },
+            "assignedAdmin": null,
+            "validUntil": {
+                "seconds": 1752120000,
+                "nanoseconds": 0
+            },
+            "items": [
+                {
+                    "type": "service",
+                    "taxRate": 8.5,
+                    "price": 574.8,
+                    "serviceId": "",
+                    "total": 574.8,
+                    "description": "Solution d'automatisation suivi client fidélisation (envoi de sms après les RDV)",
+                    "totalTTC": 623.6579999999999,
+                    "productId": "",
+                    "title": "",
+                    "quantity": 1
+                },
+                {
+                    "productId": "",
+                    "taxRate": 8.5,
+                    "description": "Solution d'automatisation d'acquisition de clients via réseaux sociaux (paramétrage de message automatiques d'accueil pour instagram et tiktok)",
+                    "price": 1438.8,
+                    "type": "service",
+                    "totalTTC": 1561.098,
+                    "serviceId": "",
+                    "quantity": 1,
+                    "total": 1438.8,
+                    "title": ""
+                },
+                {
+                    "taxRate": 8.5,
+                    "serviceId": "",
+                    "quantity": 1,
+                    "price": 1438.8,
+                    "type": "service",
+                    "description": "optimisation de la capture de clients sur site internet (configuration d'un formulaire de capture qui alimente directement le CRM client depuis le site",
+                    "total": 1438.8,
+                    "productId": "",
+                    "title": "",
+                    "totalTTC": 1561.098
+                },
+                {
+                    "type": "service",
+                    "total": 3636,
+                    "totalTTC": 3945.06,
+                    "taxRate": 8.5,
+                    "quantity": 1,
+                    "serviceId": "",
+                    "title": "",
+                    "description": "Solution d'automatisation de création de contenu vidéo faceless pour les réseaux (contenu vidéo généré à 100% avec l'IA inclus voix off)",
+                    "productId": "",
+                    "price": 3636
+                },
+                {
+                    "description": "Solution d'automatisation de prospection B2B (scrapping et séquence emailing inclus pour 1 cible définie)",
+                    "totalTTC": 1419.18,
+                    "taxRate": 8.5,
+                    "serviceId": "",
+                    "type": "service",
+                    "price": 1308,
+                    "productId": "",
+                    "quantity": 1,
+                    "total": 1308,
+                    "title": ""
+                }
+            ],
+            "devisNumber": "DV-25-008",
+            "contactPhone": "",
+            "lastUpdated": {
+                "seconds": 1749575746,
+                "nanoseconds": 168000000
+            },
+            "status": "pending",
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1749575748388_tfO5s0LojiOghboB6I2d.pdf?alt=media&token=778af9e2-b9a3-4edc-a36a-2206f704ddd5",
+            "adminId": null,
+            "contactName": null,
+            "devisTo": {
+                "fullAddress": "",
+                "companyId": "",
+                "role": "",
+                "address": "",
+                "email": "",
+                "company": "",
+                "phoneNumber": "",
+                "name": "LUMINATA Hypnose",
+                "zipCode": "",
+                "state": "",
+                "id": "TizbQ6CfTanBinLvuW9J",
+                "city": "",
+                "country": ""
+            }
+        },
+        {
+            "id": "wEBC06yVi1S4MKxgJf9S",
+            "taxes": 8.5,
+            "devisTo": {
+                "name": "Ambroise Claude",
+                "email": "dgs@mairie-riviere-salee.fr",
+                "id": "4T4Pqzs7ZF44rnNfWGgW",
+                "country": "",
+                "city": "",
+                "zipCode": "",
+                "role": "",
+                "address": "Rivière Salée, 97215",
+                "fullAddress": "Rivière Salée, 97215",
+                "state": "",
+                "phoneNumber": "",
+                "companyId": "",
+                "company": ""
+            },
+            "contactName": null,
+            "lastUpdated": {
+                "seconds": 1749647093,
+                "nanoseconds": 258000000
+            },
+            "createdAt": {
+                "seconds": 1749647093,
+                "nanoseconds": 259000000
+            },
+            "items": [
+                {
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+                    "totalTTC": 542.5,
+                    "productId": "",
+                    "price": 500,
+                    "taxRate": 8.5,
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "type": "service",
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "total": 500,
+                    "quantity": 1
+                }
+            ],
+            "totalAmount": 542.5,
+            "validUntil": {
+                "seconds": 1752206400,
+                "nanoseconds": 0
+            },
+            "createDate": {
+                "seconds": 1749614400,
+                "nanoseconds": 0
+            },
+            "pdfUrl": "https://firebasestorage.googleapis.com/v0/b/madinia-dashboard.firebasestorage.app/o/devis%2F1749647095722_wEBC06yVi1S4MKxgJf9S.pdf?alt=media&token=6ffeadfc-ecda-4c85-a0a4-4dc408a1011e",
+            "devisFrom": {
+                "phoneNumber": "",
+                "primary": true,
+                "businessNumber": "934 303 843 00015",
+                "email": "d.brault@madin-ia.com",
+                "nda": "02973663897",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "name": "Madin.IA",
+                "company": "Madin.IA",
+                "id": "madinia-id"
+            },
+            "status": "pending",
+            "adminId": null,
+            "subtotal": 500,
+            "contactPhone": "",
+            "pdfTimestamp": 1749647095722,
+            "assignedAdmin": null,
+            "devisNumber": "DV-25-010",
+            "contactEmail": "d.brault@madin-ia.com"
+        },
+        {
+            "id": "xCDGR8RgrX57qk2Amg65",
+            "validUntil": {
+                "seconds": 1747281600,
+                "nanoseconds": 0
+            },
+            "contactPhone": "0647438084",
+            "taxes": 8.5,
+            "serverUpdatedAt": {
+                "seconds": 1744824215,
+                "nanoseconds": 998000000
+            },
+            "createdAt": {
+                "seconds": 1744743999,
+                "nanoseconds": 897000000
+            },
+            "createDate": {
+                "seconds": 1744689600,
+                "nanoseconds": 0
+            },
+            "status": "sent",
+            "statusHistory": [
+                {
+                    "status": "sent",
+                    "comment": "Devis envoyé au client",
+                    "timestamp": "2025-04-16T17:23:35.408Z"
+                }
+            ],
+            "items": [
+                {
+                    "total": 456.22,
+                    "price": 456.22,
+                    "serviceId": "B4IonihnZqPnfVmHwD2D",
+                    "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+                    "quantity": 1,
+                    "productId": "",
+                    "type": "service",
+                    "taxRate": 2.5,
+                    "totalTTC": 467.6255,
+                    "title": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE"
+                }
+            ],
+            "updatedAt": "2025-04-16T17:23:35.408Z",
+            "totalAmount": 494.99870000000004,
+            "devisNumber": "DV-25-003",
+            "sentDate": "2025-04-16T17:23:35.408Z",
+            "adminId": null,
+            "contactEmail": "d.brault@madin-ia.com",
+            "devisFrom": {
+                "company": "Madin.IA",
+                "fullAddress": "1 Chemin du Sud\n97233 Schoelcher",
+                "email": "d.brault@madin-ia.com",
+                "phoneNumber": "0647438084",
+                "name": "Madin.IA",
+                "id": "madinia-id",
+                "primary": true,
+                "businessNumber": "934 303 843 00015",
+                "nda": "02973663897"
+            },
+            "devisTo": {
+                "state": "",
+                "country": "",
+                "name": "Adenet-Louvet",
+                "city": "",
+                "zipCode": "",
+                "id": "Bthuif2Yz3U0CG1X66en",
+                "role": "Prestataire",
+                "address": "Le Lamentin, Martinique",
+                "companyId": "GpYmrE3fUP8OhzSZvWCA",
+                "phoneNumber": "+596696373596",
+                "company": "DEFIA",
+                "fullAddress": "Le Lamentin, Martinique",
+                "email": "a.adenetlouvet@defia.fr"
+            },
+            "assignedAdmin": null,
+            "lastUpdated": {
+                "seconds": 1744824082,
+                "nanoseconds": 960000000
+            },
+            "subtotal": 456.22,
+            "contactName": null
+        }
+    ]
+}

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('lignes_factures', function (Blueprint $table) {
             $table->id();
             $table->foreignId('facture_id')->constrained('factures')->onDelete('cascade');
-            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+            $table->foreignId('service_id')->nullable()->constrained('services')->onDelete('cascade');
             $table->integer('quantite')->default(1);
             $table->decimal('prix_unitaire_ht', 10, 2)->comment('Prix unitaire HT au moment de la facture');
             $table->decimal('taux_tva', 5, 2)->default(20.00)->comment('Taux TVA applicable');

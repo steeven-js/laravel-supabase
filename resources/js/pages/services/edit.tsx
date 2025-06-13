@@ -539,17 +539,35 @@ export default function ServiceEdit({ service }: Props) {
                                         </div>
 
                                         <div className="space-y-4">
-                                            <div className="flex items-center justify-between p-4 border rounded-lg">
-                                                <div className="space-y-1">
-                                                    <div className="font-medium">Service actif</div>
-                                                    <div className="text-sm text-muted-foreground">
-                                                        Le service est disponible pour créer des devis et factures
+                                            {/* Switch de statut mis en évidence */}
+                                            <div className="relative">
+                                                <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg blur opacity-30 animate-pulse"></div>
+                                                <div className="relative bg-white dark:bg-gray-800 rounded-lg">
+                                                    <div className="flex items-center justify-between p-6 border-2 border-green-300 hover:border-green-400 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-lg">
+                                                        <div className="space-y-2">
+                                                            <div className="font-semibold text-green-900 flex items-center gap-2">
+                                                                🚨 Service actif (Action importante)
+                                                                <Settings className="h-4 w-4" />
+                                                            </div>
+                                                            <div className="text-sm text-green-800 font-medium">
+                                                                Le service est disponible pour créer des devis et factures
+                                                            </div>
+                                                            <div className="text-xs text-green-700">
+                                                                ⚡ Ce changement aura un impact immédiat sur la disponibilité du service
+                                                            </div>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full blur opacity-50"></div>
+                                                            <div className="relative">
+                                                                <Switch
+                                                                    checked={data.actif}
+                                                                    onCheckedChange={(checked: boolean) => setData('actif', checked)}
+                                                                    className="scale-125"
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <Switch
-                                                    checked={data.actif}
-                                                    onCheckedChange={(checked: boolean) => setData('actif', checked)}
-                                                />
                                             </div>
                                         </div>
 

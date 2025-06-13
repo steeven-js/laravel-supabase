@@ -1,0 +1,104 @@
+{
+    "collection": "services",
+    "count": 2,
+    "data": [
+        {
+            "id": "B4IonihnZqPnfVmHwD2D",
+            "recommendedProductTypes": [],
+            "relatedProductIds": [],
+            "categories": [],
+            "name": "CONFERENCE INTRODUCTIVE À L'INTELLIGENCE ARTIFICIELLE GENERATIVE",
+            "type": {
+                "description": "",
+                "value": "conference",
+                "id": "1744678025067-714",
+                "label": "Conférence",
+                "createdAt": "2025-04-15T00:47:05.067Z",
+                "updatedAt": "2025-04-15T00:47:05.067Z"
+            },
+            "thumbnail": null,
+            "images": [],
+            "serverCreatedAt": {
+                "seconds": 1744658684,
+                "nanoseconds": 659000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1744734207,
+                "nanoseconds": 920000000
+            },
+            "price": 456.22,
+            "duration": {
+                "value": 1,
+                "unit": "hour"
+            },
+            "status": "active",
+            "taxRate": 2.5,
+            "updatedAt": "2025-04-15T16:23:26.859Z",
+            "code": "SRV-25-0001",
+            "cost": 0,
+            "options": [],
+            "bookings": 0,
+            "availability": {
+                "availableTimeSlots": [],
+                "maxBookingsPerDay": null,
+                "unavailableDates": [],
+                "isLimited": false,
+                "schedulingWindow": 30
+            },
+            "description": "Programme de 2 heures dédié à l'introduction de l'intelligence artificielle\ngénérative, permettant de découvrir les fondamentaux de l'IA générative et\nses applications pratiques.",
+            "viewCount": 0,
+            "createdAt": "2025-04-14T19:24:44.115Z",
+            "internalNotes": "",
+            "statusHistory": [
+                {
+                    "comment": "Service créé",
+                    "status": "draft",
+                    "timestamp": "2025-04-14T19:24:44.115Z"
+                },
+                {
+                    "status": "active",
+                    "timestamp": "2025-04-14T21:55:42.494Z",
+                    "comment": "Statut changé vers Actif"
+                }
+            ],
+            "tags": []
+        },
+        {
+            "id": "d3RAFwP8YprWcnLtQrGX",
+            "createdAt": {
+                "seconds": 1747161191,
+                "nanoseconds": 225000000
+            },
+            "updatedAt": {
+                "seconds": 1748025975,
+                "nanoseconds": 300000000
+            },
+            "price": 0,
+            "status": "active",
+            "taxRate": 8.5,
+            "description": "",
+            "duration": {
+                "unit": "hour",
+                "value": null
+            },
+            "code": "SRV-25-0001",
+            "internalNotes": "",
+            "name": "Accompagnement Prompt",
+            "type": {
+                "updatedAt": {
+                    "seconds": 1745691955,
+                    "nanoseconds": 738000000
+                },
+                "description": "Services de formation et éducation",
+                "label": "Formation",
+                "color": "#9C27B0",
+                "createdAt": {
+                    "seconds": 1745691955,
+                    "nanoseconds": 738000000
+                },
+                "id": "training"
+            },
+            "relatedProductIds": []
+        }
+    ]
+}

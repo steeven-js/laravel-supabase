@@ -15,6 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Vérifier si on doit utiliser l'import Firebase
+        if ($this->command->confirm('Voulez-vous importer les données depuis Firebase ?', false)) {
+            $this->runFirebaseImport();
+            return;
+        }
+
         // Créer l'utilisateur principal
         $this->createMainUser();
 
@@ -25,7 +31,7 @@ class DatabaseSeeder extends Seeder
             ClientSeeder::class,
             ServiceSeeder::class,
             DevisSeeder::class,
-            FactureSeeder::class,
+            // FactureSeeder::class, // Supprimé selon les instructions
         ]);
 
         $this->command->info('🎉 Toutes les données ont été créées avec succès !');
@@ -34,6 +40,57 @@ class DatabaseSeeder extends Seeder
 
         // Afficher les statistiques
         $this->afficherStatistiques();
+    }
+
+    /**
+     * Exécuter l'import Firebase
+     */
+    private function runFirebaseImport(): void
+    {
+        $this->command->info('🔥 Démarrage de l\'importation Firebase...');
+
+        // Vérifier la présence des fichiers JSON
+        $requiredFiles = [
+            'users_export_2025-06-13.json',
+            'companies_export_2025-06-13.json',
+            'customers_export_2025-06-13.json',
+            'devis_export_2025-06-13.json'
+        ];
+
+        $missingFiles = [];
+        foreach ($requiredFiles as $file) {
+            if (!file_exists(base_path($file))) {
+                $missingFiles[] = $file;
+            }
+        }
+
+        if (!empty($missingFiles)) {
+            $this->command->error('❌ Fichiers manquants :');
+            foreach ($missingFiles as $file) {
+                $this->command->error("  - {$file}");
+            }
+            return;
+        }
+
+        // Demander confirmation
+        if (!$this->command->confirm('Les fichiers Firebase ont été trouvés. Continuer l\'importation ?')) {
+            $this->command->info('Importation annulée.');
+            return;
+        }
+
+        // Créer d'abord les services et Madinia si nécessaire
+        $this->call([
+            MadiniaSeeder::class,
+            ServiceSeeder::class,
+        ]);
+
+        // Puis l'import Firebase
+        $this->call(FirebaseImportSeeder::class);
+
+        $this->command->info('');
+        $this->command->info('🎉 Importation Firebase terminée avec succès !');
+        $this->command->info('📧 Connectez-vous avec les emails des administrateurs importés');
+        $this->command->info('🔑 Mot de passe par défaut : password123');
     }
 
     /**
@@ -92,25 +149,28 @@ class DatabaseSeeder extends Seeder
             $this->command->info("  {$statut}: {$count}");
         }
 
-        // Statistiques détaillées pour les factures
-        $factureStats = [
-            'Brouillon' => \App\Models\Facture::where('statut', 'brouillon')->count(),
-            'Envoyée' => \App\Models\Facture::where('statut', 'envoyee')->count(),
-            'Payée' => \App\Models\Facture::where('statut', 'payee')->count(),
-            'En retard' => \App\Models\Facture::where('statut', 'en_retard')->count(),
-            'Annulée' => \App\Models\Facture::where('statut', 'annulee')->count(),
-        ];
+        // Statistiques détaillées pour les factures (si elles existent)
+        $factureCount = \App\Models\Facture::count();
+        if ($factureCount > 0) {
+            $factureStats = [
+                'Brouillon' => \App\Models\Facture::where('statut', 'brouillon')->count(),
+                'Envoyée' => \App\Models\Facture::where('statut', 'envoyee')->count(),
+                'Payée' => \App\Models\Facture::where('statut', 'payee')->count(),
+                'En retard' => \App\Models\Facture::where('statut', 'en_retard')->count(),
+                'Annulée' => \App\Models\Facture::where('statut', 'annulee')->count(),
+            ];
 
-        $this->command->info('');
-        $this->command->info('💰 Répartition des factures par statut :');
-        foreach ($factureStats as $statut => $count) {
-            $this->command->info("  {$statut}: {$count}");
+            $this->command->info('');
+            $this->command->info('💰 Répartition des factures par statut :');
+            foreach ($factureStats as $statut => $count) {
+                $this->command->info("  {$statut}: {$count}");
+            }
+
+            // Montant total des factures
+            $montantTotal = \App\Models\Facture::sum('montant_ttc');
+            $this->command->info('');
+            $this->command->info("💰 Montant total des factures : " . number_format($montantTotal, 2, ',', ' ') . "€");
         }
-
-        // Montant total des factures
-        $montantTotal = \App\Models\Facture::sum('montant_ttc');
-        $this->command->info('');
-        $this->command->info("💰 Montant total des factures : " . number_format($montantTotal, 2, ',', ' ') . "€");
     }
 
     /**

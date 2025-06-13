@@ -1,0 +1,1079 @@
+{
+    "collection": "customers",
+    "count": 34,
+    "data": [
+        {
+            "id": "1NMmHeTDLI7sjlJQNEy3",
+            "lastUpdate": {
+                "timestamp": "2025-04-23T15:42:06.466Z",
+                "userId": "tusmpsuy3cUK6nRsZoW5QcxMFdP2",
+                "type": "added_task",
+                "userName": "FADILA BENJEBARA"
+            },
+            "address": "",
+            "avatarUrl": "",
+            "phoneNumber": "+596696451836",
+            "city": "",
+            "company": "VGAZ",
+            "email": "",
+            "quote": "",
+            "createdAt": "17 avr. 2025",
+            "status": "active",
+            "updatedAt": "23 avr. 2025",
+            "state": "MARTINIQUE",
+            "serverCreatedAt": {
+                "seconds": 1744905957,
+                "nanoseconds": 13000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1745422926,
+                "nanoseconds": 818000000
+            },
+            "opportunity_ids": [],
+            "task_ids": [
+                "zcqXbdWpk4zoLTcvfTMx"
+            ],
+            "viewed": 0,
+            "name": "VICTOIRE Steeve",
+            "notes": "",
+            "companyId": "Cxq4Tj7v8HES0LNrUDCu",
+            "ticket_ids": [],
+            "role": "Gérant",
+            "zipCode": "",
+            "country": "France",
+            "school": ""
+        },
+        {
+            "id": "4T4Pqzs7ZF44rnNfWGgW",
+            "phoneNumber": "",
+            "role": "",
+            "address": "",
+            "company": "",
+            "avatarUrl": null,
+            "status": "active",
+            "state": "",
+            "zipCode": "97215",
+            "companyId": "",
+            "city": "Rivière Salée",
+            "serverUpdatedAt": {
+                "seconds": 1749647036,
+                "nanoseconds": 59000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1749647036,
+                "nanoseconds": 59000000
+            },
+            "updatedAt": {
+                "seconds": 1749647036,
+                "nanoseconds": 59000000
+            },
+            "country": "",
+            "createdAt": {
+                "seconds": 1749647036,
+                "nanoseconds": 59000000
+            },
+            "email": "dgs@mairie-riviere-salee.fr",
+            "name": "Ambroise Claude"
+        },
+        {
+            "id": "5AJfKVLYCNChCUmuEHWh",
+            "createdAt": {
+                "seconds": 1747161074,
+                "nanoseconds": 793000000
+            },
+            "phoneNumber": "+596696378177",
+            "serverUpdatedAt": {
+                "seconds": 1749646115,
+                "nanoseconds": 560000000
+            },
+            "companyId": "x03QcvKyN8X8rxtapCEP",
+            "company": "France TV publicité",
+            "role": "Directeur",
+            "name": "FTPIO Martinique",
+            "city": "FORT DE FRANCE",
+            "address": "Immeuble le lagon, rue Ernest Hermingway Zac Etang Z'Abricots",
+            "status": "active",
+            "email": "gilles.joseph-alexandre@francetvpub.fr",
+            "avatarUrl": null,
+            "serverCreatedAt": {
+                "seconds": 1747161074,
+                "nanoseconds": 793000000
+            },
+            "state": "",
+            "country": "Martinique",
+            "zipCode": "97200",
+            "updatedAt": "2025-06-11T12:48:34.156Z"
+        },
+        {
+            "id": "5OgLtpec6MjmZBkfiIWp",
+            "state": "MARTINIQUE",
+            "updatedAt": "28 avr. 2025",
+            "ticket_ids": [],
+            "task_ids": [],
+            "quote": "",
+            "name": "Loic ADOPLHE",
+            "companyId": "Q77w38oWsDdBF6V62uov",
+            "school": "",
+            "phoneNumber": "+596696656696",
+            "company": "SOPROREST (FOOD CIRCUS)",
+            "createdAt": "28 avr. 2025",
+            "address": "",
+            "viewed": 0,
+            "notes": "",
+            "role": "",
+            "avatarUrl": "",
+            "zipCode": "",
+            "city": "LAMENTIN",
+            "email": "loic.adolphe@soprorest.com",
+            "opportunity_ids": [],
+            "serverCreatedAt": {
+                "seconds": 1745845353,
+                "nanoseconds": 34000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1745845353,
+                "nanoseconds": 34000000
+            },
+            "status": "active",
+            "country": "France"
+        },
+        {
+            "id": "7agyGErdlDt1CGmETiGJ",
+            "email": "mj.gertrude@gmail.com",
+            "zipCode": "97200",
+            "avatarUrl": null,
+            "name": "Inner Wheel Club",
+            "status": "active",
+            "city": "Fort-de-France",
+            "state": "",
+            "synced_with_api": true,
+            "address": "",
+            "api_id": 2,
+            "phoneNumber": "+596696841256",
+            "createdAt": 1744040295450,
+            "updatedAt": {
+                "seconds": 1744060972,
+                "nanoseconds": 88000000
+            },
+            "companyId": "mYCWibXMpfz5VKwwlXCg",
+            "country": "Martinique",
+            "company": "",
+            "role": "Président"
+        },
+        {
+            "id": "98Jmb2Bj7Mb0ObxWbY5w",
+            "role": "Commercial",
+            "companyId": "E72ekURcBy7nmox2qZvS",
+            "city": "",
+            "updatedAt": "2025-05-19T20:19:56.933Z",
+            "email": "support@adn-formation.com",
+            "status": "active",
+            "zipCode": "",
+            "company": "ADN Formation",
+            "address": "",
+            "country": "Martinique",
+            "state": "",
+            "phoneNumber": "+596596774438",
+            "createdAt": {
+                "seconds": 1747685968,
+                "nanoseconds": 692000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1747685968,
+                "nanoseconds": 692000000
+            },
+            "avatarUrl": null,
+            "serverUpdatedAt": {
+                "seconds": 1747685997,
+                "nanoseconds": 981000000
+            },
+            "name": "Babot"
+        },
+        {
+            "id": "9Rk2InhPEFmWds5WbzQQ",
+            "address": "",
+            "company": "",
+            "name": "Bessie LEBORGNE",
+            "createdAt": {
+                "seconds": 1749041776,
+                "nanoseconds": 279000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1749041802,
+                "nanoseconds": 243000000
+            },
+            "city": "",
+            "state": "GUADELOUPE",
+            "phoneNumber": "+590690585996",
+            "avatarUrl": null,
+            "role": "Autre",
+            "updatedAt": "2025-06-04T12:56:41.894Z",
+            "zipCode": "",
+            "companyId": "",
+            "country": "Guadeloupe",
+            "serverCreatedAt": {
+                "seconds": 1749041776,
+                "nanoseconds": 279000000
+            },
+            "status": "active",
+            "email": ""
+        },
+        {
+            "id": "9jffNVMlTJ4PeZ8XSeYL",
+            "avatarUrl": null,
+            "city": "Rivière Salée",
+            "companyId": "jRz0IFXcI7qXmYRiQ18y",
+            "country": "Martinique",
+            "email": "nathalie.coyan-parfait@espacesud.fr",
+            "zipCode": "97215",
+            "lastUpdate": {
+                "userName": "Steeven Jacques",
+                "userId": "sONcdNjvlOgyMdJ8LyRJCFgCt4e2",
+                "timestamp": "2025-04-12T19:37:01.575Z",
+                "type": "added_ticket"
+            },
+            "task_ids": [
+                "dKQZj8rAYc9GUm2SqR4m"
+            ],
+            "createdAt": {
+                "seconds": 1744037542,
+                "nanoseconds": 612000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1744486621,
+                "nanoseconds": 880000000
+            },
+            "name": "Coyan Parfait",
+            "updatedAt": "12 avr. 2025",
+            "state": "",
+            "opportunity_ids": [
+                "gma7UtzPztQaGQLsvtyg"
+            ],
+            "synced_with_api": true,
+            "ticket_ids": [
+                "ivwuaW5XDw3HPHFNeES2",
+                "TIC-620268"
+            ],
+            "address": "Chemin la Laugier",
+            "phoneNumber": "",
+            "role": "Chef de Cabinet",
+            "company": "",
+            "api_id": 1,
+            "status": "active"
+        },
+        {
+            "id": "BRuMDNCYZCMEFFnI7CXP",
+            "country": "",
+            "address": "",
+            "serverUpdatedAt": {
+                "seconds": 1748957134,
+                "nanoseconds": 330000000
+            },
+            "city": "",
+            "phoneNumber": "+590690641470",
+            "status": "active",
+            "companyId": "",
+            "email": "luce.evans@gmail.com",
+            "state": "guadeloupe",
+            "updatedAt": "2025-06-03T13:25:34.251Z",
+            "serverCreatedAt": {
+                "seconds": 1748619956,
+                "nanoseconds": 521000000
+            },
+            "role": "Autre",
+            "avatarUrl": null,
+            "createdAt": {
+                "seconds": 1748619956,
+                "nanoseconds": 521000000
+            },
+            "company": "",
+            "zipCode": "",
+            "name": "LUCE Evans"
+        },
+        {
+            "id": "Bthuif2Yz3U0CG1X66en",
+            "role": "Prestataire",
+            "phoneNumber": "+596696373596",
+            "quote": "",
+            "address": "",
+            "ticket_ids": [],
+            "avatarUrl": "",
+            "company": "DEFIA",
+            "status": "active",
+            "state": "",
+            "school": "",
+            "zipCode": "",
+            "task_ids": [],
+            "companyId": "GpYmrE3fUP8OhzSZvWCA",
+            "city": "Le Lamentin",
+            "serverUpdatedAt": {
+                "seconds": 1744735095,
+                "nanoseconds": 129000000
+            },
+            "notes": "",
+            "serverCreatedAt": {
+                "seconds": 1744735095,
+                "nanoseconds": 129000000
+            },
+            "updatedAt": "15 avr. 2025",
+            "country": "Martinique",
+            "createdAt": "15 avr. 2025",
+            "opportunity_ids": [],
+            "email": "a.adenetlouvet@defia.fr",
+            "name": "Adenet-Louvet",
+            "viewed": 0
+        },
+        {
+            "id": "EofxG0bQW4TFkFFdAdjJ",
+            "createdAt": "17 avr. 2025",
+            "updatedAt": "17 avr. 2025",
+            "zipCode": "",
+            "role": "Directeur",
+            "phoneNumber": "+590590239889",
+            "school": "",
+            "serverUpdatedAt": {
+                "seconds": 1744904964,
+                "nanoseconds": 754000000
+            },
+            "company": "COLLECTIVITE DE SAINTE ANNE GUADELOUPE",
+            "city": "SAINTE ANNE",
+            "opportunity_ids": [],
+            "ticket_ids": [],
+            "address": "",
+            "task_ids": [],
+            "companyId": "NLs4KAK2CGaX2YFCrSAH",
+            "state": "Guadeloupe",
+            "avatarUrl": "",
+            "name": "MALACQUIS Lydia",
+            "viewed": 0,
+            "status": "active",
+            "country": "France",
+            "serverCreatedAt": {
+                "seconds": 1744904964,
+                "nanoseconds": 754000000
+            },
+            "notes": "",
+            "email": "",
+            "quote": ""
+        },
+        {
+            "id": "FqVKrFMAv1jxxEFs0JT4",
+            "status": "active",
+            "role": "",
+            "state": "",
+            "country": "Martinique",
+            "name": "Poyen ",
+            "city": "Le lementin",
+            "companyId": "",
+            "email": "lpoyen@caribsup.com",
+            "address": "",
+            "phoneNumber": "",
+            "company": "",
+            "avatarUrl": null,
+            "createdAt": {
+                "seconds": 1749645100,
+                "nanoseconds": 315000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1749645100,
+                "nanoseconds": 315000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1749645100,
+                "nanoseconds": 315000000
+            },
+            "zipCode": "97230",
+            "updatedAt": {
+                "seconds": 1749645100,
+                "nanoseconds": 315000000
+            }
+        },
+        {
+            "id": "N3XXdeMjvlYyhCLc8gae",
+            "email": "eric.caberia@espacesud.fr",
+            "quote": "",
+            "status": "active",
+            "viewed": 0,
+            "updatedAt": "2025-04-16T01:00:05.999Z",
+            "task_ids": [],
+            "ticket_ids": [],
+            "zipCode": "97215",
+            "address": "Chemin la Laugier",
+            "phoneNumber": "+596696863018",
+            "companyId": "jRz0IFXcI7qXmYRiQ18y",
+            "school": "",
+            "notes": "",
+            "avatarUrl": "",
+            "state": "",
+            "serverUpdatedAt": {
+                "seconds": 1744765206,
+                "nanoseconds": 202000000
+            },
+            "name": "Eric Caberia ",
+            "country": "Martinique",
+            "serverCreatedAt": {
+                "seconds": 1744765117,
+                "nanoseconds": 243000000
+            },
+            "opportunity_ids": [],
+            "city": "Rivière Salée",
+            "createdAt": "15 avr. 2025",
+            "role": "Prestataire",
+            "company": "Espace Sud "
+        },
+        {
+            "id": "R94aqMXtKcEVly2IJ151",
+            "zipCode": "97200",
+            "phoneNumber": "+596696307631",
+            "address": "Fort de France",
+            "country": "France",
+            "serverCreatedAt": {
+                "seconds": 1747709903,
+                "nanoseconds": 947000000
+            },
+            "name": "Administrateur",
+            "company": "",
+            "email": "s.jacques@madin-ia.com",
+            "createdAt": {
+                "seconds": 1747709903,
+                "nanoseconds": 947000000
+            },
+            "updatedAt": {
+                "seconds": 1747709903,
+                "nanoseconds": 947000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1747709903,
+                "nanoseconds": 947000000
+            },
+            "avatarUrl": null,
+            "state": "Martinique",
+            "role": "Technicien",
+            "status": "active",
+            "city": "FORT DE FRANCE",
+            "companyId": ""
+        },
+        {
+            "id": "Szk0KKRFfOHm8eVb6G7Z",
+            "companyId": "",
+            "name": "Cédric BENJAMIN",
+            "address": "",
+            "serverCreatedAt": {
+                "seconds": 1748892080,
+                "nanoseconds": 313000000
+            },
+            "company": "",
+            "role": "Autre",
+            "state": "SAINT MARTIN",
+            "updatedAt": "2025-06-03T13:25:50.782Z",
+            "email": "cedric.benjamin@com-saint-martin.com",
+            "country": "Saint Martin (French part)",
+            "createdAt": {
+                "seconds": 1748892080,
+                "nanoseconds": 313000000
+            },
+            "avatarUrl": null,
+            "serverUpdatedAt": {
+                "seconds": 1748957150,
+                "nanoseconds": 860000000
+            },
+            "status": "active",
+            "city": "",
+            "zipCode": "",
+            "phoneNumber": "+590690519143"
+        },
+        {
+            "id": "T322TjewvuENjv4ujXYv",
+            "createdAt": {
+                "seconds": 1749041665,
+                "nanoseconds": 126000000
+            },
+            "city": "",
+            "updatedAt": "2025-06-04T13:02:00.539Z",
+            "role": "Autre",
+            "zipCode": "",
+            "serverCreatedAt": {
+                "seconds": 1749041665,
+                "nanoseconds": 126000000
+            },
+            "state": "SAINT MARTIN",
+            "company": "",
+            "name": "Mme MARTIN",
+            "companyId": "",
+            "status": "active",
+            "country": "Saint Martin (French part)",
+            "avatarUrl": null,
+            "phoneNumber": "+590690325280",
+            "email": "mmartin@ccism.com",
+            "serverUpdatedAt": {
+                "seconds": 1749042121,
+                "nanoseconds": 384000000
+            },
+            "address": ""
+        },
+        {
+            "id": "T6uyJy3J88MYkYZNRS1l",
+            "zipCode": "",
+            "serverUpdatedAt": {
+                "seconds": 1749151213,
+                "nanoseconds": 565000000
+            },
+            "state": "",
+            "phoneNumber": "",
+            "email": "lionel.delfasse@gmail.com",
+            "createdAt": {
+                "seconds": 1749151185,
+                "nanoseconds": 147000000
+            },
+            "name": "Lionel DELFASSE",
+            "updatedAt": "2025-06-05T19:20:13.348Z",
+            "company": "",
+            "companyId": "",
+            "country": "",
+            "city": "",
+            "address": "",
+            "status": "active",
+            "avatarUrl": null,
+            "serverCreatedAt": {
+                "seconds": 1749151185,
+                "nanoseconds": 147000000
+            },
+            "role": ""
+        },
+        {
+            "id": "TizbQ6CfTanBinLvuW9J",
+            "status": "active",
+            "serverCreatedAt": {
+                "seconds": 1749575112,
+                "nanoseconds": 793000000
+            },
+            "address": "",
+            "state": "",
+            "createdAt": {
+                "seconds": 1749575112,
+                "nanoseconds": 793000000
+            },
+            "company": "",
+            "avatarUrl": null,
+            "city": "",
+            "role": "",
+            "zipCode": "",
+            "email": "",
+            "companyId": "",
+            "country": "",
+            "serverUpdatedAt": {
+                "seconds": 1749575112,
+                "nanoseconds": 793000000
+            },
+            "phoneNumber": "",
+            "name": "LUMINATA Hypnose",
+            "updatedAt": {
+                "seconds": 1749575112,
+                "nanoseconds": 793000000
+            }
+        },
+        {
+            "id": "UYz89UfRAqy81CdHLpxN",
+            "zipCode": "97241",
+            "address": "50 rue Ernest Deproge",
+            "phoneNumber": "+596696267235",
+            "email": "s.deriau@martinique.cci.fr",
+            "role": "Autre",
+            "updatedAt": "2025-06-03T13:25:19.505Z",
+            "name": "DERIAU",
+            "serverCreatedAt": {
+                "seconds": 1748279845,
+                "nanoseconds": 287000000
+            },
+            "state": "Martinique",
+            "createdAt": {
+                "seconds": 1748279845,
+                "nanoseconds": 287000000
+            },
+            "companyId": "",
+            "avatarUrl": null,
+            "status": "active",
+            "serverUpdatedAt": {
+                "seconds": 1748957120,
+                "nanoseconds": 7000000
+            },
+            "company": "",
+            "city": "fort de france",
+            "country": "Martinique"
+        },
+        {
+            "id": "Z3gZZQibhguZLjhfmxpG",
+            "serverCreatedAt": {
+                "seconds": 1746459739,
+                "nanoseconds": 960000000
+            },
+            "country": "Martinique",
+            "company": "CCIM",
+            "state": "MARTINIQUE",
+            "updatedAt": "2025-05-15T21:30:23.068Z",
+            "companyId": "uaDJygUloyk6owBbbgl7",
+            "role": "",
+            "city": "",
+            "status": "active",
+            "serverUpdatedAt": {
+                "seconds": 1747344624,
+                "nanoseconds": 200000000
+            },
+            "email": "",
+            "avatarUrl": null,
+            "address": "",
+            "zipCode": "",
+            "createdAt": {
+                "seconds": 1746459739,
+                "nanoseconds": 960000000
+            },
+            "phoneNumber": "+596696869634",
+            "name": "Nathalie LUGIERY"
+        },
+        {
+            "id": "bcfIOXh7CrlTeGQpvnK7",
+            "companyId": "",
+            "email": "jchristine@mairie-lamentin.fr",
+            "updatedAt": {
+                "seconds": 1749651320,
+                "nanoseconds": 6000000
+            },
+            "company": "",
+            "state": "",
+            "country": "Martinique",
+            "status": "active",
+            "avatarUrl": null,
+            "phoneNumber": "+596696836023",
+            "name": "J Christine ",
+            "serverUpdatedAt": {
+                "seconds": 1749651320,
+                "nanoseconds": 6000000
+            },
+            "role": "",
+            "city": "Le Lamentin ",
+            "zipCode": "",
+            "address": "",
+            "createdAt": {
+                "seconds": 1749651320,
+                "nanoseconds": 6000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1749651320,
+                "nanoseconds": 6000000
+            }
+        },
+        {
+            "id": "bqyI8fZW0kEIeIEWhgzP",
+            "zipCode": "97230 ",
+            "updatedAt": "2025-04-15T16:11:32.269Z",
+            "createdAt": {
+                "seconds": 1744388393,
+                "nanoseconds": 49000000
+            },
+            "country": "Martinique",
+            "companyId": "rYk0uwbPpkOg45mEBsg2",
+            "name": "Yannick GAILLARDON",
+            "lastUpdate": {
+                "type": "added_task",
+                "userName": "FADILA BENJEBARA",
+                "timestamp": "2025-04-15T13:40:30.592Z",
+                "userId": "tusmpsuy3cUK6nRsZoW5QcxMFdP2"
+            },
+            "role": "",
+            "address": "CHEZ ANAIS GALLARDON, BOULEVARD DESIR JOX, ",
+            "city": "SAINTE-MARIE",
+            "task_ids": [
+                "evLpVH7jg871MS2flEE5"
+            ],
+            "serverUpdatedAt": {
+                "seconds": 1744733493,
+                "nanoseconds": 177000000
+            },
+            "company": "BONYC FUEL DISTRIBUTION",
+            "email": "yannickgaillardon@gmail.com",
+            "state": "MARTINIQUE",
+            "status": "active",
+            "avatarUrl": null,
+            "phoneNumber": "+596696304014"
+        },
+        {
+            "id": "fjUiMNoWwvknmesMoIqj",
+            "companyId": "NLs4KAK2CGaX2YFCrSAH",
+            "serverUpdatedAt": {
+                "seconds": 1744906078,
+                "nanoseconds": 106000000
+            },
+            "city": "",
+            "email": "murielle.ramaye@ville-saintanne.fr",
+            "country": "France",
+            "company": "COLLECTIVITE DE SAINTE ANNE GUADELOUPE",
+            "notes": "",
+            "role": "Autre",
+            "task_ids": [],
+            "school": "",
+            "ticket_ids": [],
+            "serverCreatedAt": {
+                "seconds": 1744905095,
+                "nanoseconds": 686000000
+            },
+            "status": "active",
+            "avatarUrl": "",
+            "opportunity_ids": [],
+            "viewed": 0,
+            "state": "GUADELOUPE",
+            "createdAt": "17 avr. 2025",
+            "updatedAt": "2025-04-17T16:07:57.444Z",
+            "zipCode": "",
+            "quote": "",
+            "name": "RAMAYE Murielle",
+            "phoneNumber": "+590590239880",
+            "address": ""
+        },
+        {
+            "id": "fxcJe04rW2og3HcE8oi6",
+            "avatarUrl": null,
+            "status": "active",
+            "createdAt": {
+                "seconds": 1747344551,
+                "nanoseconds": 363000000
+            },
+            "name": "Philbert Vincent",
+            "country": "Martinique",
+            "phoneNumber": "",
+            "state": "Martinique",
+            "city": "Fort-de-France",
+            "email": "vincent.philbert@creditmutuel.fr",
+            "role": "",
+            "serverCreatedAt": {
+                "seconds": 1747344551,
+                "nanoseconds": 363000000
+            },
+            "company": "Crédit Mutuel ",
+            "serverUpdatedAt": {
+                "seconds": 1747752767,
+                "nanoseconds": 56000000
+            },
+            "address": "",
+            "updatedAt": "2025-05-20T14:52:46.548Z",
+            "companyId": "TUZNJSPruLpw47zFXzNO",
+            "zipCode": "97200"
+        },
+        {
+            "id": "hN09Sw0GJPNi8xTWYLF6",
+            "status": "active",
+            "serverUpdatedAt": {
+                "seconds": 1749078858,
+                "nanoseconds": 947000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1749078858,
+                "nanoseconds": 947000000
+            },
+            "state": "GUYANE",
+            "address": "",
+            "company": "",
+            "phoneNumber": "+594594392460",
+            "name": "Franck MOREL",
+            "createdAt": {
+                "seconds": 1749078858,
+                "nanoseconds": 947000000
+            },
+            "avatarUrl": null,
+            "city": "",
+            "email": "",
+            "companyId": "",
+            "country": "French Guiana",
+            "updatedAt": {
+                "seconds": 1749078858,
+                "nanoseconds": 947000000
+            },
+            "role": "",
+            "zipCode": ""
+        },
+        {
+            "id": "hiWHVY0BDm9A33HTeZ2K",
+            "zipCode": "97232",
+            "companyId": "",
+            "createdAt": {
+                "seconds": 1749647611,
+                "nanoseconds": 636000000
+            },
+            "avatarUrl": null,
+            "company": "",
+            "country": "Martinique",
+            "address": "Route de Palmiste",
+            "role": "",
+            "updatedAt": {
+                "seconds": 1749647611,
+                "nanoseconds": 636000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1749647611,
+                "nanoseconds": 636000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1749647611,
+                "nanoseconds": 636000000
+            },
+            "email": "victor@with-you.be",
+            "city": "Le Lamentin",
+            "state": "",
+            "status": "active",
+            "name": "Victor DESPOINTES",
+            "phoneNumber": ""
+        },
+        {
+            "id": "hpxmN2yNlyvOKJE8tgNz",
+            "company": "",
+            "status": "active",
+            "avatarUrl": null,
+            "serverUpdatedAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 868000000
+            },
+            "zipCode": "",
+            "role": "",
+            "address": "",
+            "createdAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 868000000
+            },
+            "phoneNumber": "+590690329435",
+            "country": "Guadeloupe",
+            "city": "",
+            "updatedAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 868000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 868000000
+            },
+            "state": "GUADELOUPE",
+            "companyId": "",
+            "name": "Muriel CIETTE FLANDERS",
+            "email": "muriel.ciette@cnfpt.fr"
+        },
+        {
+            "id": "mOEFYYI2OPRBaqrzK5OU",
+            "company": "VILLE DE MORNE A L'EAU",
+            "city": "MORNE A L'EAU",
+            "serverCreatedAt": {
+                "seconds": 1748891927,
+                "nanoseconds": 331000000
+            },
+            "status": "active",
+            "updatedAt": {
+                "seconds": 1748891927,
+                "nanoseconds": 331000000
+            },
+            "state": "guadeloupe",
+            "name": "Mireille CORNEILLE",
+            "phoneNumber": "+590590245828",
+            "zipCode": "",
+            "createdAt": {
+                "seconds": 1748891927,
+                "nanoseconds": 331000000
+            },
+            "avatarUrl": null,
+            "serverUpdatedAt": {
+                "seconds": 1748891927,
+                "nanoseconds": 331000000
+            },
+            "email": "mireille.corneille@mornealeau.fr",
+            "companyId": "VGBCpUp8ZPjdAx5lsk2d",
+            "country": "Guadeloupe",
+            "address": "",
+            "role": ""
+        },
+        {
+            "id": "nHrhvbhj4CE1xZLl5UN0",
+            "updatedAt": {
+                "seconds": 1748960394,
+                "nanoseconds": 581000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1748960394,
+                "nanoseconds": 581000000
+            },
+            "role": "",
+            "createdAt": {
+                "seconds": 1748960394,
+                "nanoseconds": 581000000
+            },
+            "email": "",
+            "name": "defia",
+            "status": "active",
+            "city": "",
+            "companyId": "",
+            "state": "",
+            "phoneNumber": "",
+            "company": "",
+            "avatarUrl": null,
+            "address": "",
+            "serverUpdatedAt": {
+                "seconds": 1748960394,
+                "nanoseconds": 581000000
+            },
+            "country": "",
+            "zipCode": ""
+        },
+        {
+            "id": "oohSeJH63JC5a0akJ1Us",
+            "serverCreatedAt": {
+                "seconds": 1748891789,
+                "nanoseconds": 920000000
+            },
+            "createdAt": {
+                "seconds": 1748891789,
+                "nanoseconds": 920000000
+            },
+            "email": "k.galoyer@ville-baillif.fr",
+            "role": "",
+            "company": "COMMUNE DE BAILLIF",
+            "state": "guadeloupe",
+            "zipCode": "",
+            "updatedAt": {
+                "seconds": 1748891789,
+                "nanoseconds": 920000000
+            },
+            "companyId": "Iy0NErWqChRlXACmey8Z",
+            "status": "active",
+            "address": "",
+            "avatarUrl": null,
+            "name": "MME GALOYER",
+            "phoneNumber": "+590590991170",
+            "serverUpdatedAt": {
+                "seconds": 1748891789,
+                "nanoseconds": 920000000
+            },
+            "city": "BAILLIF",
+            "country": "Guadeloupe"
+        },
+        {
+            "id": "rcasazCTWuDVyTSgIvRa",
+            "companyId": "",
+            "zipCode": "",
+            "phoneNumber": "+590590256254",
+            "serverCreatedAt": {
+                "seconds": 1749654180,
+                "nanoseconds": 651000000
+            },
+            "state": "GUADELOUPE",
+            "createdAt": {
+                "seconds": 1749654180,
+                "nanoseconds": 651000000
+            },
+            "country": "",
+            "serverUpdatedAt": {
+                "seconds": 1749654180,
+                "nanoseconds": 651000000
+            },
+            "city": "BAILLIF",
+            "address": "",
+            "updatedAt": {
+                "seconds": 1749654180,
+                "nanoseconds": 651000000
+            },
+            "role": "",
+            "company": "",
+            "name": "NICOLAS Noémie",
+            "status": "active",
+            "avatarUrl": null,
+            "email": "dpo@ville-baillif.fr"
+        },
+        {
+            "id": "rqP5T1diCNoyZyzIlN0E",
+            "role": "",
+            "companyId": "9p0qqA1w3CA2AsBJeMLF",
+            "zipCode": "",
+            "company": "DAUPHIN TELECOM",
+            "serverCreatedAt": {
+                "seconds": 1746460987,
+                "nanoseconds": 516000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1746460987,
+                "nanoseconds": 516000000
+            },
+            "avatarUrl": null,
+            "status": "active",
+            "updatedAt": {
+                "seconds": 1746460987,
+                "nanoseconds": 516000000
+            },
+            "city": "",
+            "address": "",
+            "email": "lea.durand@dauphintelecom.com",
+            "state": "",
+            "createdAt": {
+                "seconds": 1746460987,
+                "nanoseconds": 516000000
+            },
+            "name": "Léa DURAND",
+            "phoneNumber": "+590690880165",
+            "country": ""
+        },
+        {
+            "id": "tjy9jU6Za5Opb0n9gQZV",
+            "status": "active",
+            "createdAt": {
+                "seconds": 1748960428,
+                "nanoseconds": 903000000
+            },
+            "email": "",
+            "updatedAt": {
+                "seconds": 1748960428,
+                "nanoseconds": 903000000
+            },
+            "country": "",
+            "company": "",
+            "role": "",
+            "address": "Résidence Saphir",
+            "name": "DEFIA",
+            "zipCode": "97232",
+            "avatarUrl": null,
+            "serverUpdatedAt": {
+                "seconds": 1748960428,
+                "nanoseconds": 903000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1748960428,
+                "nanoseconds": 903000000
+            },
+            "city": "Le Lamentin",
+            "companyId": "",
+            "phoneNumber": "",
+            "state": ""
+        },
+        {
+            "id": "zvObnKEDYQWxaGJoYbGL",
+            "email": "veronique.feliot@cnfpt.fr",
+            "status": "active",
+            "city": "",
+            "country": "",
+            "createdAt": {
+                "seconds": 1749152851,
+                "nanoseconds": 998000000
+            },
+            "zipCode": "",
+            "state": "",
+            "serverUpdatedAt": {
+                "seconds": 1749152891,
+                "nanoseconds": 555000000
+            },
+            "name": "Véronique FELIOT",
+            "serverCreatedAt": {
+                "seconds": 1749152851,
+                "nanoseconds": 998000000
+            },
+            "companyId": "",
+            "company": "",
+            "updatedAt": "2025-06-05T19:48:11.337Z",
+            "role": "",
+            "avatarUrl": null,
+            "phoneNumber": "",
+            "address": ""
+        }
+    ]
+}

@@ -698,7 +698,12 @@ export default function FacturesIndex({ factures }: Props) {
                                             <TableCell>
                                                 <div className="space-y-1">
                                                     <div className="font-medium">
-                                                        {facture.client.prenom} {facture.client.nom}
+                                                        <Link
+                                                            href={`/clients/${facture.client.id}`}
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                        >
+                                                            {facture.client.prenom} {facture.client.nom}
+                                                        </Link>
                                                     </div>
                                                     {facture.client.entreprise && (
                                                         <div className="text-sm text-muted-foreground">

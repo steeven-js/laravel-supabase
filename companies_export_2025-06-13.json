@@ -1,0 +1,1131 @@
+{
+    "collection": "companies",
+    "count": 29,
+    "data": [
+        {
+            "id": "5HhZAqwAmHc0LH4uanWR",
+            "logo": null,
+            "serverCreatedAt": {
+                "seconds": 1749152891,
+                "nanoseconds": 425000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1749152891,
+                "nanoseconds": 425000000
+            },
+            "address": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "sector": "",
+            "customer_ids": [],
+            "name": "CNFPT MARTINIQUE",
+            "createdAt": {
+                "seconds": 1749152891,
+                "nanoseconds": 196000000
+            },
+            "businessNumber": "",
+            "email": "",
+            "updatedAt": "2025-06-05T19:48:11.196Z",
+            "city": "",
+            "description": "",
+            "phone": "",
+            "country": "",
+            "socialLinks": {
+                "linkedin": "",
+                "instagram": "",
+                "facebook": "",
+                "twitter": ""
+            },
+            "type": "private",
+            "status": "pending",
+            "website": "",
+            "customerIds": []
+        },
+        {
+            "id": "9p0qqA1w3CA2AsBJeMLF",
+            "sector": "61.10Z-Télécommunications filaires",
+            "country": "",
+            "updatedAt": "2025-05-05T16:03:07.806Z",
+            "customerIds": [],
+            "businessNumber": "",
+            "email": "",
+            "website": "",
+            "createdAt": "2025-05-05T16:01:42.681Z",
+            "name": "DAUPHIN TELECOM",
+            "description": "",
+            "status": "active",
+            "address": "",
+            "city": "",
+            "serverUpdatedAt": {
+                "seconds": 1746460988,
+                "nanoseconds": 158000000
+            },
+            "type": "private",
+            "phone": "",
+            "customer_ids": [
+                "rqP5T1diCNoyZyzIlN0E"
+            ],
+            "socialLinks": {
+                "linkedin": "",
+                "facebook": "",
+                "instagram": "",
+                "twitter": ""
+            },
+            "serverCreatedAt": {
+                "seconds": 1746460903,
+                "nanoseconds": 43000000
+            }
+        },
+        {
+            "id": "Cxq4Tj7v8HES0LNrUDCu",
+            "city": "FORT DE FRANCE",
+            "serverUpdatedAt": {
+                "seconds": 1744905957,
+                "nanoseconds": 372000000
+            },
+            "createdAt": "17 avr. 2025",
+            "business_number": "",
+            "sector": "",
+            "name": "VGAZ",
+            "type": "private",
+            "serverCreatedAt": {
+                "seconds": 1744905865,
+                "nanoseconds": 804000000
+            },
+            "status": "active",
+            "logo": "",
+            "email": "",
+            "address": "N 6 ESPACE CORAIL DILLON, AVENUE ANTOINE VITEZ, ",
+            "location": {},
+            "social_links": {},
+            "description": "Dirigeant station service VITO\n",
+            "updatedAt": "2025-04-17T16:05:57.116Z",
+            "customer_ids": [
+                "1NMmHeTDLI7sjlJQNEy3"
+            ],
+            "phone": "+596696451836",
+            "viewed": 0,
+            "website": "",
+            "notes": "",
+            "country": "France"
+        },
+        {
+            "id": "DfwEvZSoMgXBZoXRUC6e",
+            "phone": "",
+            "serverCreatedAt": {
+                "seconds": 1749645100,
+                "nanoseconds": 256000000
+            },
+            "updatedAt": "2025-06-11T12:31:38.688Z",
+            "sector": "",
+            "email": "",
+            "customerIds": [],
+            "description": "",
+            "address": "",
+            "customer_ids": [],
+            "website": "",
+            "businessNumber": "",
+            "type": "private",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "country": "",
+            "logo": null,
+            "name": "LP Holding",
+            "createdAt": {
+                "seconds": 1749645098,
+                "nanoseconds": 687000000
+            },
+            "socialLinks": {
+                "facebook": "",
+                "linkedin": "",
+                "twitter": "",
+                "instagram": ""
+            },
+            "status": "pending",
+            "city": "",
+            "serverUpdatedAt": {
+                "seconds": 1749645100,
+                "nanoseconds": 256000000
+            }
+        },
+        {
+            "id": "E72ekURcBy7nmox2qZvS",
+            "phone": "+596596775538",
+            "customer_ids": [
+                "98Jmb2Bj7Mb0ObxWbY5w"
+            ],
+            "address": "",
+            "socialLinks": {
+                "linkedin": "",
+                "instagram": "",
+                "twitter": "",
+                "facebook": ""
+            },
+            "serverCreatedAt": {
+                "seconds": 1747685968,
+                "nanoseconds": 635000000
+            },
+            "website": "",
+            "email": "support@adn-formation.com",
+            "createdAt": {
+                "seconds": 1747685966,
+                "nanoseconds": 924000000
+            },
+            "logo": null,
+            "status": "pending",
+            "name": "ADN Formation",
+            "updatedAt": "2025-05-19T20:19:57.504Z",
+            "businessNumber": "",
+            "country": "Martinique",
+            "serverUpdatedAt": {
+                "seconds": 1747685998,
+                "nanoseconds": 545000000
+            },
+            "type": "private",
+            "sector": "",
+            "description": "",
+            "location": {
+                "latitude": null,
+                "longitude": null
+            },
+            "city": "LE Lamentin",
+            "customerIds": []
+        },
+        {
+            "id": "GVP7bhCBkS4VaQXcWmm3",
+            "logo": null,
+            "address": "",
+            "createdAt": {
+                "seconds": 1749041775,
+                "nanoseconds": 337000000
+            },
+            "updatedAt": "2025-06-04T23:16:04.447Z",
+            "customer_ids": [],
+            "serverCreatedAt": {
+                "seconds": 1749041776,
+                "nanoseconds": 193000000
+            },
+            "name": "VILLE DE GOYAVE",
+            "customerIds": [],
+            "sector": "",
+            "businessNumber": "",
+            "serverUpdatedAt": {
+                "seconds": 1749078964,
+                "nanoseconds": 764000000
+            },
+            "website": "",
+            "country": "",
+            "phone": "",
+            "city": "",
+            "email": "",
+            "status": "active",
+            "description": "",
+            "type": "private",
+            "socialLinks": {
+                "instagram": "",
+                "twitter": "",
+                "facebook": "",
+                "linkedin": ""
+            },
+            "location": {
+                "longitude": null,
+                "latitude": null
+            }
+        },
+        {
+            "id": "GpYmrE3fUP8OhzSZvWCA",
+            "sector": "84.11Z-Administration publique générale",
+            "customer_ids": [
+                "Bthuif2Yz3U0CG1X66en"
+            ],
+            "social_links": {},
+            "description": "",
+            "serverCreatedAt": {
+                "seconds": 1744735083,
+                "nanoseconds": 493000000
+            },
+            "viewed": 0,
+            "status": "pending",
+            "email": "a.adenetlouvet@defia.fr",
+            "notes": "",
+            "address": "",
+            "updatedAt": "2025-04-15T16:39:56.875Z",
+            "name": "DEFIA",
+            "country": "Martinique",
+            "phone": "+596696373596",
+            "type": "public",
+            "serverUpdatedAt": {
+                "seconds": 1744735197,
+                "nanoseconds": 624000000
+            },
+            "business_number": "",
+            "website": "",
+            "socialLinks": {
+                "twitter": "",
+                "linkedin": "",
+                "facebook": "",
+                "instagram": ""
+            },
+            "createdAt": "15 avr. 2025",
+            "city": "LE Lamentin",
+            "businessNumber": "",
+            "logo": null,
+            "customerIds": [
+                "ffOiwXXZYkbUgAyYcfoU"
+            ],
+            "location": {
+                "longitude": null,
+                "latitude": null
+            }
+        },
+        {
+            "id": "Iy0NErWqChRlXACmey8Z",
+            "serverCreatedAt": {
+                "seconds": 1748891615,
+                "nanoseconds": 180000000
+            },
+            "email": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "logo": null,
+            "type": "private",
+            "customerIds": [],
+            "country": "",
+            "phone": "",
+            "updatedAt": "2025-06-02T19:16:30.455Z",
+            "website": "",
+            "status": "pending",
+            "businessNumber": "",
+            "socialLinks": {
+                "facebook": "",
+                "twitter": "",
+                "instagram": "",
+                "linkedin": ""
+            },
+            "description": "",
+            "customer_ids": [
+                "oohSeJH63JC5a0akJ1Us"
+            ],
+            "name": "COMMUNE DE BAILLIF",
+            "serverUpdatedAt": {
+                "seconds": 1748891790,
+                "nanoseconds": 728000000
+            },
+            "address": "",
+            "city": "",
+            "createdAt": {
+                "seconds": 1748891614,
+                "nanoseconds": 387000000
+            },
+            "sector": ""
+        },
+        {
+            "id": "LwwiyrDxpX6wksQlRcbo",
+            "customerIds": [],
+            "address": "7 rue Victor Lamon Place d'Armes BP 213 97232 LE LAMENTIN",
+            "city": "LE LAMENTIN",
+            "businessNumber": "",
+            "sector": "36.00Z-Captage, traitement et distribution d'eau",
+            "customer_ids": [],
+            "createdAt": "2025-05-20T14:18:32.067Z",
+            "country": "Martinique",
+            "serverUpdatedAt": {
+                "seconds": 1747750712,
+                "nanoseconds": 573000000
+            },
+            "socialLinks": {
+                "linkedin": "",
+                "instagram": "",
+                "facebook": "",
+                "twitter": ""
+            },
+            "updatedAt": "2025-05-20T14:18:32.067Z",
+            "phone": "+33696455323",
+            "name": "SME",
+            "description": "La production de l'eau potable et le traitement des eaux usées en Martinique sont des services publiques assurés par la SME pour le compte des communautés des agglomérations qui en ont la compétence.",
+            "type": "public",
+            "website": "https://smeaux.fr",
+            "email": "roland.catimel@sme.mq",
+            "status": "active",
+            "serverCreatedAt": {
+                "seconds": 1747750712,
+                "nanoseconds": 573000000
+            }
+        },
+        {
+            "id": "MmV21irkzujY9pn2eCfM",
+            "status": "pending",
+            "email": "",
+            "type": "private",
+            "updatedAt": "2025-06-05T19:20:13.152Z",
+            "country": "",
+            "phone": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "serverCreatedAt": {
+                "seconds": 1749151213,
+                "nanoseconds": 380000000
+            },
+            "name": "DECATHLON",
+            "customerIds": [],
+            "description": "",
+            "customer_ids": [],
+            "website": "",
+            "createdAt": {
+                "seconds": 1749151213,
+                "nanoseconds": 151000000
+            },
+            "logo": null,
+            "sector": "",
+            "city": "",
+            "serverUpdatedAt": {
+                "seconds": 1749151213,
+                "nanoseconds": 380000000
+            },
+            "socialLinks": {
+                "facebook": "",
+                "linkedin": "",
+                "instagram": "",
+                "twitter": ""
+            },
+            "businessNumber": "",
+            "address": ""
+        },
+        {
+            "id": "NLs4KAK2CGaX2YFCrSAH",
+            "email": "",
+            "updatedAt": "2025-04-17T15:53:51.712Z",
+            "business_number": "",
+            "status": "active",
+            "description": "La collectivité de Sainte Anne en Guadeloupe souhaite réaliser une matinée d'information sur l'IA en générale. pour environ 50 agents qui ont plutôt des fonctions administratives.\nLa formation sera a réaliser au plus tôt mais avant juin 2025. Il mettrons un espace à disposition.\nIl faudrait prendre contact avec eux pour établir un devis et approfondir les besoins.",
+            "viewed": 0,
+            "customer_ids": [
+                "EofxG0bQW4TFkFFdAdjJ",
+                "fjUiMNoWwvknmesMoIqj"
+            ],
+            "address": "",
+            "city": "",
+            "serverCreatedAt": {
+                "seconds": 1744904533,
+                "nanoseconds": 437000000
+            },
+            "createdAt": "17 avr. 2025",
+            "name": "COLLECTIVITE DE SAINTE ANNE GUADELOUPE",
+            "logo": "",
+            "country": "Guadeloupe",
+            "sector": "",
+            "phone": "",
+            "website": "",
+            "type": "private",
+            "social_links": {},
+            "location": {},
+            "notes": "",
+            "serverUpdatedAt": {
+                "seconds": 1744905231,
+                "nanoseconds": 939000000
+            }
+        },
+        {
+            "id": "Q77w38oWsDdBF6V62uov",
+            "notes": "",
+            "customer_ids": [
+                "5OgLtpec6MjmZBkfiIWp"
+            ],
+            "address": "GALLERIA",
+            "updatedAt": "2025-04-28T13:02:51.745Z",
+            "website": "",
+            "viewed": 0,
+            "serverUpdatedAt": {
+                "seconds": 1745845372,
+                "nanoseconds": 203000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1745845327,
+                "nanoseconds": 821000000
+            },
+            "type": "private",
+            "logo": null,
+            "country": "Martinique",
+            "social_links": {},
+            "name": "SOPROREST (FOOD CIRCUS)",
+            "description": "",
+            "createdAt": "28 avr. 2025",
+            "sector": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "phone": "",
+            "business_number": "",
+            "city": "LAMENTIN",
+            "status": "pending",
+            "email": ""
+        },
+        {
+            "id": "TUZNJSPruLpw47zFXzNO",
+            "description": "",
+            "location": {
+                "latitude": null,
+                "longitude": null
+            },
+            "updatedAt": "2025-06-03T13:29:26.417Z",
+            "customer_ids": [
+                "fxcJe04rW2og3HcE8oi6"
+            ],
+            "createdAt": {
+                "seconds": 1747344549,
+                "nanoseconds": 640000000
+            },
+            "sector": "64.30Z-Fonds de placement et entités financières similaires",
+            "email": "",
+            "country": "",
+            "serverUpdatedAt": {
+                "seconds": 1748957366,
+                "nanoseconds": 750000000
+            },
+            "socialLinks": {
+                "instagram": "",
+                "linkedin": "",
+                "twitter": "",
+                "facebook": ""
+            },
+            "website": "",
+            "name": "Crédit Mutuel ",
+            "status": "pending",
+            "type": "private",
+            "address": "",
+            "logo": null,
+            "businessNumber": "",
+            "city": "",
+            "phone": "",
+            "serverCreatedAt": "2025-05-15T21:29:11.310Z",
+            "customerIds": []
+        },
+        {
+            "id": "UgmSu5XaYTaxitPadPZW",
+            "phone": "",
+            "customer_ids": [],
+            "address": "",
+            "socialLinks": {
+                "linkedin": "",
+                "facebook": "",
+                "twitter": "",
+                "instagram": ""
+            },
+            "serverCreatedAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 804000000
+            },
+            "website": "",
+            "logo": null,
+            "email": "",
+            "createdAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 41000000
+            },
+            "name": "CNFPT",
+            "status": "pending",
+            "updatedAt": "2025-06-02T19:36:45.041Z",
+            "country": "",
+            "businessNumber": "",
+            "serverUpdatedAt": {
+                "seconds": 1748893005,
+                "nanoseconds": 804000000
+            },
+            "type": "private",
+            "sector": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "description": "",
+            "city": "",
+            "customerIds": []
+        },
+        {
+            "id": "VGBCpUp8ZPjdAx5lsk2d",
+            "address": "",
+            "phone": "",
+            "type": "private",
+            "updatedAt": "2025-06-02T19:18:47.646Z",
+            "createdAt": {
+                "seconds": 1748891916,
+                "nanoseconds": 596000000
+            },
+            "status": "pending",
+            "email": "",
+            "city": "",
+            "serverUpdatedAt": {
+                "seconds": 1748891927,
+                "nanoseconds": 916000000
+            },
+            "businessNumber": "",
+            "country": "",
+            "customerIds": [],
+            "serverCreatedAt": {
+                "seconds": 1748891917,
+                "nanoseconds": 385000000
+            },
+            "website": "",
+            "description": "",
+            "sector": "",
+            "name": "VILLE DE MORNE A L'EAU",
+            "customer_ids": [
+                "mOEFYYI2OPRBaqrzK5OU"
+            ],
+            "socialLinks": {
+                "linkedin": "",
+                "twitter": "",
+                "facebook": "",
+                "instagram": ""
+            },
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "logo": null
+        },
+        {
+            "id": "W4epu39XvuZrXvxaX3L2",
+            "serverCreatedAt": {
+                "seconds": 1749078858,
+                "nanoseconds": 890000000
+            },
+            "name": "GUYANE DEVELOPPEMENT",
+            "socialLinks": {
+                "linkedin": "",
+                "twitter": "",
+                "facebook": "",
+                "instagram": ""
+            },
+            "serverUpdatedAt": {
+                "seconds": 1749078910,
+                "nanoseconds": 653000000
+            },
+            "email": "",
+            "country": "French Guiana",
+            "address": "",
+            "description": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "website": "",
+            "logo": null,
+            "createdAt": {
+                "seconds": 1749078858,
+                "nanoseconds": 67000000
+            },
+            "type": "private",
+            "updatedAt": "2025-06-04T23:15:10.347Z",
+            "businessNumber": "",
+            "customer_ids": [],
+            "status": "pending",
+            "customerIds": [],
+            "phone": "",
+            "city": "",
+            "sector": ""
+        },
+        {
+            "id": "WDoSc63wVUGUeGJkw7jv",
+            "businessNumber": "",
+            "updatedAt": "2025-06-11T15:02:59.037Z",
+            "sector": "",
+            "socialLinks": {
+                "facebook": "",
+                "instagram": "",
+                "twitter": "",
+                "linkedin": ""
+            },
+            "email": "",
+            "website": "",
+            "phone": "+590590991170",
+            "customerIds": [],
+            "description": "",
+            "country": "",
+            "address": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "customer_ids": [],
+            "city": "",
+            "name": "COMMUNE DE BAILLIF",
+            "type": "private",
+            "logo": null,
+            "serverUpdatedAt": {
+                "seconds": 1749654180,
+                "nanoseconds": 575000000
+            },
+            "createdAt": {
+                "seconds": 1749654179,
+                "nanoseconds": 37000000
+            },
+            "serverCreatedAt": {
+                "seconds": 1749654180,
+                "nanoseconds": 575000000
+            },
+            "status": "pending"
+        },
+        {
+            "id": "YLZix4qb4DNUEwsQHKEe",
+            "socialLinks": {
+                "instagram": "",
+                "twitter": "",
+                "facebook": "",
+                "linkedin": ""
+            },
+            "customerIds": [],
+            "name": "IDEX",
+            "address": "Lieu-dit Habitation Champigny ZI de Petite Cocotte 97224 DUCOS",
+            "customer_ids": [],
+            "updatedAt": "2025-05-20T14:10:03.218Z",
+            "city": "DUCOS",
+            "website": "https://www.idex.fr",
+            "country": "Martinique",
+            "serverUpdatedAt": {
+                "seconds": 1747750203,
+                "nanoseconds": 684000000
+            },
+            "businessNumber": "",
+            "sector": "35.11Z-Production d'électricité",
+            "phone": "+33696221244",
+            "email": "nicolas.touche@idex.fr",
+            "status": "active",
+            "createdAt": "2025-05-20T14:10:03.218Z",
+            "serverCreatedAt": {
+                "seconds": 1747750203,
+                "nanoseconds": 684000000
+            },
+            "type": "private",
+            "description": "IDEX maximise la valeur des ressources locales en transformant les déchets ménagers, la biomasse, la géothermie, le solaire et la chaleur perdue, en circuit court, sous forme de chaleur, de froid ou d’électricité pour les utilités industrielles pour les bâtiments résidentiels et tertiaires."
+        },
+        {
+            "id": "ZSONYKwakN91b3999pMI",
+            "city": "",
+            "customerIds": [],
+            "phone": "",
+            "socialLinks": {
+                "linkedin": "",
+                "instagram": "",
+                "facebook": "",
+                "twitter": ""
+            },
+            "status": "pending",
+            "type": "private",
+            "createdAt": {
+                "seconds": 1749041664,
+                "nanoseconds": 197000000
+            },
+            "sector": "",
+            "location": {
+                "latitude": null,
+                "longitude": null
+            },
+            "country": "",
+            "name": "CCI SAINT MARTIN",
+            "address": "",
+            "description": "",
+            "businessNumber": "",
+            "email": "",
+            "website": "",
+            "logo": null,
+            "serverCreatedAt": {
+                "seconds": 1749041665,
+                "nanoseconds": 56000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1749041665,
+                "nanoseconds": 56000000
+            },
+            "updatedAt": "2025-06-04T12:54:24.197Z",
+            "customer_ids": []
+        },
+        {
+            "id": "iWRCoORQVI6zAnbKYnF6",
+            "customerIds": [],
+            "sector": "94.11Z-Activités des organisations patronales et consulaires",
+            "description": "Fédération régionale du bâtiment et des travaux publics de la Martinique",
+            "city": "FORT DE FRANCE",
+            "serverCreatedAt": {
+                "seconds": 1747753517,
+                "nanoseconds": 753000000
+            },
+            "type": "public",
+            "status": "active",
+            "createdAt": "2025-05-20T15:05:17.201Z",
+            "address": "Maison du BTP 13 lot Bardinet CS 30100 97256 Fort de France Cedex",
+            "phone": "+33696267046",
+            "country": "Martinique",
+            "name": "FRBTP",
+            "website": "https://www.btpmartinique.fr",
+            "socialLinks": {
+                "instagram": "",
+                "linkedin": "",
+                "facebook": "",
+                "twitter": ""
+            },
+            "email": "jeanyves.bonnaire@btpmartinique.fr",
+            "businessNumber": "",
+            "customer_ids": [],
+            "updatedAt": "2025-05-20T15:05:17.201Z",
+            "serverUpdatedAt": {
+                "seconds": 1747753517,
+                "nanoseconds": 753000000
+            }
+        },
+        {
+            "id": "jRz0IFXcI7qXmYRiQ18y",
+            "type": "public",
+            "address": "Chemin la Laugier",
+            "description": "",
+            "city": "Rivière-Salée",
+            "sector": "84.11Z-Administration publique générale",
+            "serverUpdatedAt": {
+                "seconds": 1744765134,
+                "nanoseconds": 100000000
+            },
+            "logo": null,
+            "website": "https://espacesud.fr",
+            "socialLinks": {
+                "facebook": "",
+                "twitter": "",
+                "linkedin": "",
+                "instagram": ""
+            },
+            "location": {
+                "latitude": null,
+                "longitude": null
+            },
+            "customerIds": [],
+            "email": "nathalie.coyan-parfait@espacesud.fr",
+            "name": "Espace Sud ",
+            "updatedAt": "2025-04-16T00:58:54.431Z",
+            "country": "Martinique",
+            "phone": "",
+            "businessNumber": "",
+            "status": "active",
+            "createdAt": {
+                "seconds": 1744037438,
+                "nanoseconds": 556000000
+            },
+            "customer_ids": [
+                "N3XXdeMjvlYyhCLc8gae"
+            ]
+        },
+        {
+            "id": "lDa9tuJffwH1YnfmaXX8",
+            "socialLinks": {
+                "twitter": "",
+                "linkedin": "",
+                "facebook": "",
+                "instagram": ""
+            },
+            "customerIds": [],
+            "email": "",
+            "name": "Ville Rivière Salée ",
+            "country": "",
+            "type": "private",
+            "sector": "",
+            "website": "",
+            "address": "",
+            "serverUpdatedAt": {
+                "seconds": 1749647036,
+                "nanoseconds": 1000000
+            },
+            "customer_ids": [],
+            "phone": "",
+            "logo": null,
+            "status": "pending",
+            "createdAt": {
+                "seconds": 1749647034,
+                "nanoseconds": 556000000
+            },
+            "updatedAt": "2025-06-11T13:03:54.556Z",
+            "description": "",
+            "city": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "businessNumber": "",
+            "serverCreatedAt": {
+                "seconds": 1749647036,
+                "nanoseconds": 1000000
+            }
+        },
+        {
+            "id": "mYCWibXMpfz5VKwwlXCg",
+            "name": "Inner Wheel Club",
+            "businessNumber": "",
+            "createdAt": {
+                "seconds": 1744040216,
+                "nanoseconds": 444000000
+            },
+            "city": "Fort-de-France",
+            "sector": "70.21Z-Conseil en relations publiques et communication",
+            "type": "private",
+            "address": "",
+            "phone": "+596696841256",
+            "customerIds": [],
+            "socialLinks": {
+                "twitter": "",
+                "linkedin": "",
+                "facebook": "",
+                "instagram": ""
+            },
+            "email": "",
+            "updatedAt": {
+                "seconds": 1744060976,
+                "nanoseconds": 171000000
+            },
+            "description": "",
+            "country": "Martinique",
+            "website": "",
+            "status": "active"
+        },
+        {
+            "id": "qKaJAWJ42XeuIouuWU3a",
+            "description": "",
+            "updatedAt": "2025-06-11T13:13:30.114Z",
+            "address": "",
+            "customerIds": [],
+            "name": "With You",
+            "businessNumber": "",
+            "website": "",
+            "serverUpdatedAt": {
+                "seconds": 1749647611,
+                "nanoseconds": 573000000
+            },
+            "status": "pending",
+            "city": "",
+            "customer_ids": [],
+            "phone": "",
+            "socialLinks": {
+                "twitter": "",
+                "linkedin": "",
+                "facebook": "",
+                "instagram": ""
+            },
+            "sector": "",
+            "email": "",
+            "serverCreatedAt": {
+                "seconds": 1749647611,
+                "nanoseconds": 573000000
+            },
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "createdAt": {
+                "seconds": 1749647610,
+                "nanoseconds": 114000000
+            },
+            "type": "private",
+            "country": "",
+            "logo": null
+        },
+        {
+            "id": "rR3yMLYu67VFEn03tWac",
+            "logo": null,
+            "sector": "",
+            "customer_ids": [],
+            "serverCreatedAt": {
+                "seconds": 1748620065,
+                "nanoseconds": 453000000
+            },
+            "serverUpdatedAt": {
+                "seconds": 1748620065,
+                "nanoseconds": 453000000
+            },
+            "type": "private",
+            "customerIds": [],
+            "phone": "",
+            "country": "Guadeloupe",
+            "status": "pending",
+            "updatedAt": "2025-05-30T15:47:44.605Z",
+            "description": "",
+            "socialLinks": {
+                "twitter": "",
+                "facebook": "",
+                "linkedin": "",
+                "instagram": ""
+            },
+            "email": "",
+            "city": "Baie Mahault",
+            "businessNumber": "",
+            "createdAt": {
+                "seconds": 1748620064,
+                "nanoseconds": 605000000
+            },
+            "name": "SODEXTILE",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "website": "",
+            "address": "31 rue de l'industrie "
+        },
+        {
+            "id": "rYk0uwbPpkOg45mEBsg2",
+            "country": "Martinique",
+            "sector": "09.10Z-Activités de soutien à l'extraction d'hydrocarbures",
+            "socialLinks": {
+                "linkedin": "",
+                "facebook": "",
+                "twitter": "",
+                "instagram": ""
+            },
+            "businessNumber": "80399199100016",
+            "type": "private",
+            "updatedAt": {
+                "seconds": 1744389289,
+                "nanoseconds": 362000000
+            },
+            "description": "RDV du 11/04 : \nEnvoyer devis pour conference IA pour 5 personnes (gerante, ass admin, 3 managers)\nIntéressée par la suite pour un suivi personnalisé : \nBesoins : Automatiser Courriers, notes de services, avertissements, plannings taches manager (a telle date il faut remettre telle doc, créer des alertes, …).\nProcess (taches des employés, fiches de poste, règlements intérieurs…)\n",
+            "website": "",
+            "createdAt": {
+                "seconds": 1744388393,
+                "nanoseconds": 629000000
+            },
+            "city": "SAINTE MARIE",
+            "status": "active",
+            "name": "BONYC FUEL DISTRIBUTION",
+            "phone": "+596696304014",
+            "customerIds": [
+                "bqyI8fZW0kEIeIEWhgzP"
+            ],
+            "email": "yannickgaillardon@gmail.com",
+            "address": "CHEZ ANAIS GALLARDON, BOULEVARD DESIR JOX"
+        },
+        {
+            "id": "uaDJygUloyk6owBbbgl7",
+            "serverCreatedAt": {
+                "seconds": 1746459837,
+                "nanoseconds": 719000000
+            },
+            "website": "",
+            "businessNumber": "",
+            "sector": "",
+            "customerIds": [
+                "Z3gZZQibhguZLjhfmxpG"
+            ],
+            "description": "",
+            "socialLinks": {
+                "twitter": "",
+                "instagram": "",
+                "facebook": "",
+                "linkedin": ""
+            },
+            "type": "private",
+            "phone": "",
+            "name": "CCIM",
+            "country": "",
+            "city": "",
+            "createdAt": "2025-05-05T15:43:56.180Z",
+            "address": "",
+            "email": "",
+            "serverUpdatedAt": {
+                "seconds": 1747344624,
+                "nanoseconds": 880000000
+            },
+            "status": "active",
+            "customer_ids": [
+                "Z3gZZQibhguZLjhfmxpG"
+            ],
+            "updatedAt": "2025-05-15T21:30:24.414Z"
+        },
+        {
+            "id": "x03QcvKyN8X8rxtapCEP",
+            "country": "Martinique",
+            "type": "private",
+            "email": "gilles.joseph‑alexandre@francetvpub.fr",
+            "city": "Fort de France",
+            "status": "pending",
+            "logo": null,
+            "website": "www.francetvpub.fr",
+            "sector": "59.11A-Production de films et de programmes pour la télévision",
+            "createdAt": {
+                "seconds": 1747161074,
+                "nanoseconds": 570000000
+            },
+            "address": "Immeuble Le Lagon, rue Ernest Hemingway, Zac Etang Z’Abricots",
+            "customer_ids": [
+                "5AJfKVLYCNChCUmuEHWh"
+            ],
+            "businessNumber": "",
+            "serverUpdatedAt": {
+                "seconds": 1747752541,
+                "nanoseconds": 339000000
+            },
+            "name": "France TV publicité",
+            "location": {
+                "latitude": null,
+                "longitude": null
+            },
+            "updatedAt": "2025-05-20T14:49:00.868Z",
+            "serverCreatedAt": {
+                "seconds": 1747161074,
+                "nanoseconds": 722000000
+            },
+            "description": "",
+            "socialLinks": {
+                "instagram": "",
+                "facebook": "",
+                "linkedin": "",
+                "twitter": ""
+            },
+            "customerIds": [],
+            "phone": "+596596425662"
+        },
+        {
+            "id": "xBOJKqjSPKmCjsrVa0v7",
+            "city": "",
+            "businessNumber": "",
+            "name": "COLLECTIVITE DE SAINT MARTIN",
+            "logo": null,
+            "customer_ids": [],
+            "customerIds": [],
+            "status": "pending",
+            "country": "",
+            "createdAt": {
+                "seconds": 1748892079,
+                "nanoseconds": 447000000
+            },
+            "email": "",
+            "serverUpdatedAt": {
+                "seconds": 1748892080,
+                "nanoseconds": 237000000
+            },
+            "address": "",
+            "updatedAt": "2025-06-02T19:21:19.447Z",
+            "description": "",
+            "serverCreatedAt": {
+                "seconds": 1748892080,
+                "nanoseconds": 237000000
+            },
+            "sector": "",
+            "socialLinks": {
+                "linkedin": "",
+                "twitter": "",
+                "instagram": "",
+                "facebook": ""
+            },
+            "type": "private",
+            "website": "",
+            "location": {
+                "longitude": null,
+                "latitude": null
+            },
+            "phone": ""
+        }
+    ]
+}

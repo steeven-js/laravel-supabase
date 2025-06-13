@@ -220,6 +220,7 @@ class DevisController extends Controller
             'updated_at' => $devis->updated_at->toISOString(),
             'peut_etre_transforme_en_facture' => $devis->peutEtreTransformeEnFacture(),
             'peut_etre_envoye' => $devis->peutEtreEnvoye(),
+            'pdf_url_supabase' => $this->devisPdfService->getUrlSupabasePdf($devis),
             'lignes' => $devis->lignes->map(function ($ligne) {
                 return [
                     'id' => $ligne->id,

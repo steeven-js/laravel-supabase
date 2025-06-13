@@ -286,10 +286,26 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                                    <Button variant="outline" size="sm" onClick={handleToggleStatus}>
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        {service.actif ? 'Désactiver' : 'Activer'}
-                                    </Button>
+                                    {/* Bouton de changement de statut professionnel */}
+                                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
+                                                <Settings className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Modifier le statut
+                                            </span>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleToggleStatus}
+                                            className="w-full h-11 border border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium transition-colors"
+                                        >
+                                            <Settings className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            {service.actif ? 'Désactiver le service' : 'Activer le service'}
+                                        </Button>
+                                    </div>
 
                                     <Button variant="outline" size="sm" onClick={handleDuplicate}>
                                         <Copy className="mr-2 h-4 w-4" />
@@ -510,15 +526,26 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                                         Dupliquer le service
                                     </Button>
 
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full justify-start"
-                                        onClick={handleToggleStatus}
-                                    >
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        {service.actif ? 'Désactiver' : 'Activer'}
-                                    </Button>
+                                    {/* Modification de statut professionnelle */}
+                                    <div className="bg-gradient-to-r from-slate-50 to-emerald-50 dark:from-slate-900/50 dark:to-emerald-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-5 h-5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                                                <Settings className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                                                Statut du service
+                                            </span>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full justify-start border border-slate-300 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium transition-colors"
+                                            onClick={handleToggleStatus}
+                                        >
+                                            <Settings className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            {service.actif ? 'Désactiver' : 'Activer'}
+                                        </Button>
+                                    </div>
 
                                     <Button variant="outline" size="sm" className="w-full justify-start" asChild>
                                         <Link href="/services">

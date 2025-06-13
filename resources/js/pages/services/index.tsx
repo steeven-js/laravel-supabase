@@ -416,7 +416,7 @@ export default function ServicesIndex({
                                                     <div className="space-y-1">
                                                         <Link
                                                             href={`/services/${service.id}`}
-                                                            className="font-medium hover:text-primary hover:underline"
+                                                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                                                         >
                                                             {service.nom}
                                                         </Link>

@@ -321,7 +321,12 @@ export default function EntreprisesIndex({ entreprises }: Props) {
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium">
-                                                {entreprise.nom_commercial || entreprise.nom}
+                                                <Link
+                                                    href={`/entreprises/${entreprise.id}`}
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                >
+                                                    {entreprise.nom_commercial || entreprise.nom}
+                                                </Link>
                                                 {entreprise.nom_commercial && (
                                                     <div className="text-sm text-muted-foreground">{entreprise.nom}</div>
                                                 )}

@@ -299,18 +299,20 @@ class DevisPdfService
                 return;
             }
 
+            // Obtenir le contenu binaire du PDF
+            $pdfContent = $pdf->output();
+
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$serviceKey}",
                 'Content-Type' => 'application/pdf',
-            ])->put(
-                "{$supabaseUrl}/storage/v1/object/{$bucketName}/devis/{$nomFichier}",
-                $pdf->output()
-            );
+            ])->withBody($pdfContent, 'application/pdf')
+            ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/devis/{$nomFichier}");
 
             if ($response->successful()) {
                 Log::info('PDF sauvegardé sur Supabase', [
                     'fichier' => $nomFichier,
-                    'bucket' => $bucketName
+                    'bucket' => $bucketName,
+                    'taille' => strlen($pdfContent) . ' bytes'
                 ]);
             } else {
                 Log::error('Erreur sauvegarde PDF Supabase', [

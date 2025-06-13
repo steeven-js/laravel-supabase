@@ -37,6 +37,7 @@ interface Devis {
     montant_ttc: number;
     peut_etre_envoye?: boolean;
     client: {
+        id: number;
         nom: string;
         prenom: string;
         email: string;
@@ -651,7 +652,12 @@ export default function DevisIndex({ devis }: Props) {
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium">
-                                                {item.numero_devis}
+                                                <Link
+                                                    href={`/devis/${item.id}`}
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                >
+                                                    {item.numero_devis}
+                                                </Link>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="max-w-[200px] truncate">
@@ -661,7 +667,12 @@ export default function DevisIndex({ devis }: Props) {
                                             <TableCell>
                                                 <div className="space-y-1">
                                                     <div className="font-medium">
-                                                        {item.client.prenom} {item.client.nom}
+                                                        <Link
+                                                            href={`/clients/${item.client.id}`}
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                        >
+                                                            {item.client.prenom} {item.client.nom}
+                                                        </Link>
                                                     </div>
                                                     {item.client.entreprise && (
                                                         <div className="text-sm text-muted-foreground">

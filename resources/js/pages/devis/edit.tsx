@@ -28,7 +28,8 @@ import {
     CheckCircle,
     Clock,
     XCircle,
-    AlertCircle
+    AlertCircle,
+    Settings
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -506,23 +507,41 @@ export default function DevisEdit({ devis, clients, services, madinia }: Props) 
                                     )}
                                 </div>
 
-                                <div>
-                                    <Label htmlFor="statut">Statut</Label>
-                                    <Select value={data.statut || ''} onValueChange={(value) => setData('statut', value as 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire')}>
-                                        <SelectTrigger className="w-full mt-1">
-                                            <SelectValue placeholder="Sélectionner un statut" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="brouillon">Brouillon</SelectItem>
-                                            <SelectItem value="envoye">Envoyé</SelectItem>
-                                            <SelectItem value="accepte">Accepté</SelectItem>
-                                            <SelectItem value="refuse">Refusé</SelectItem>
-                                            <SelectItem value="expire">Expiré</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.statut && (
-                                        <p className="text-sm text-red-500 mt-1">{errors.statut}</p>
-                                    )}
+                                <div className="bg-gradient-to-r from-slate-50 to-amber-50 dark:from-slate-900/50 dark:to-amber-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-6 h-6 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
+                                            <Settings className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                        </div>
+                                        <Label htmlFor="statut" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                            Statut du devis
+                                        </Label>
+                                        <Badge variant="outline" className="ml-auto text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700">
+                                            Important
+                                        </Badge>
+                                    </div>
+                                    <div>
+                                        <Select value={data.statut || ''} onValueChange={(value) => setData('statut', value as 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire')}>
+                                            <SelectTrigger className="w-full h-11 border border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-colors">
+                                                <div className="flex items-center gap-2">
+                                                    <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                                    <SelectValue placeholder="Sélectionner un statut" />
+                                                </div>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="brouillon">Brouillon</SelectItem>
+                                                <SelectItem value="envoye">Envoyé</SelectItem>
+                                                <SelectItem value="accepte">Accepté</SelectItem>
+                                                <SelectItem value="refuse">Refusé</SelectItem>
+                                                <SelectItem value="expire">Expiré</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.statut && (
+                                            <p className="text-sm text-red-500 mt-2">{errors.statut}</p>
+                                        )}
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
+                                            Ce changement aura un impact immédiat sur le devis
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>

@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->string('nom');
-            $table->string('code')->unique()->comment('Code unique du service');
+            $table->string('code')->unique()->nullable()->comment('Code unique du service');
             $table->text('description')->nullable();
-            $table->decimal('prix_ht', 10, 2)->comment('Prix unitaire hors taxes');
-            $table->integer('qte_defaut')->default(1)->comment('Quantité par défaut');
-            $table->boolean('actif')->default(true)->comment('Service disponible');
+            $table->decimal('prix_ht', 10, 2)->nullable()->comment('Prix unitaire hors taxes');
+            $table->integer('qte_defaut')->default(1)->nullable()->comment('Quantité par défaut');
+            $table->boolean('actif')->default(true)->nullable()->comment('Service disponible');
             $table->timestamps();
 
             // Index pour optimiser les recherches
