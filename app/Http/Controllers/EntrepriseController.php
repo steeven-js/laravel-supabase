@@ -42,7 +42,7 @@ class EntrepriseController extends Controller
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
                 'nom_commercial' => 'nullable|string|max:255',
-                'siret' => 'nullable|string|max:14|unique:entreprises,siret',
+                'siret' => 'nullable|string|unique:entreprises,siret',
                 'siren' => 'nullable|string|max:9',
                 'secteur_activite' => 'nullable|string|max:255',
                 'adresse' => 'nullable|string',
@@ -103,7 +103,7 @@ class EntrepriseController extends Controller
             $validated = $request->validate([
                 'nom' => 'required|string|max:255',
                 'nom_commercial' => 'nullable|string|max:255',
-                'siret' => 'nullable|string|max:14|unique:entreprises,siret,' . $entreprise->id,
+                'siret' => 'nullable|string|unique:entreprises,siret,' . $entreprise->id,
                 'siren' => 'nullable|string|max:9',
                 'secteur_activite' => 'nullable|string|max:255',
                 'adresse' => 'nullable|string',

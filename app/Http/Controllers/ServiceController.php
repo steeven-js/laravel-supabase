@@ -69,7 +69,7 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:services,code',
+            'code' => 'nullable|string|max:50|unique:services,code',
             'description' => 'nullable|string|max:1000',
             'prix_ht' => 'required|numeric|min:0|max:999999.99',
             'qte_defaut' => 'required|integer|min:1|max:9999',

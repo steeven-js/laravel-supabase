@@ -30,7 +30,12 @@ class EmailTemplateController extends Controller
             ->orderBy('name')
             ->paginate(20);
 
-                $categories = EmailTemplate::CATEGORIES;
+        // Ajouter les accessors pour l'affichage à tous les templates
+        $templates->getCollection()->transform(function ($template) {
+            return $template->append(['category_name', 'sub_category_name']);
+        });
+
+        $categories = EmailTemplate::CATEGORIES;
 
         // Récupérer les filtres actuels
         $filters = [
@@ -85,6 +90,9 @@ class EmailTemplateController extends Controller
      */
     public function show(EmailTemplate $emailTemplate)
     {
+        // Ajouter les accessors pour l'affichage
+        $emailTemplate->append(['category_name', 'sub_category_name']);
+
         return inertia('EmailTemplates/Show', compact('emailTemplate'));
     }
 
@@ -168,6 +176,9 @@ class EmailTemplateController extends Controller
      */
     public function preview(EmailTemplate $emailTemplate, Request $request)
     {
+        // Ajouter les accessors pour l'affichage
+        $emailTemplate->append(['category_name', 'sub_category_name']);
+
         // Données de test par défaut
         $testData = [
             'client_nom' => 'M. Dupont',

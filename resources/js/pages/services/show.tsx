@@ -2,6 +2,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
@@ -57,6 +65,7 @@ interface RecentDevis {
     numero_devis: string;
     objet: string;
     client: {
+        id?: number;
         nom: string;
         prenom: string;
     };
@@ -70,6 +79,7 @@ interface RecentFacture {
     numero_facture: string;
     objet: string;
     client: {
+        id?: number;
         nom: string;
         prenom: string;
     };
@@ -102,6 +112,7 @@ const breadcrumbs = (service: Service): BreadcrumbItem[] => [
 
 export default function ServiceShow({ service, stats, recent_devis, recent_factures }: Props) {
     const [activeTab, setActiveTab] = useState<'overview' | 'devis' | 'factures'>('overview');
+    const [showStatusModal, setShowStatusModal] = useState(false);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -128,12 +139,18 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
     };
 
     const handleToggleStatus = () => {
+        setShowStatusModal(true);
+    };
+
+    const confirmToggleStatus = () => {
         router.patch(`/services/${service.id}/toggle`, {}, {
             onSuccess: () => {
                 toast.success(`Service ${service.actif ? 'désactivé' : 'activé'} avec succès`);
+                setShowStatusModal(false);
             },
             onError: () => {
                 toast.error('Une erreur est survenue');
+                setShowStatusModal(false);
             }
         });
     };
@@ -219,122 +236,127 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                     </Button>
                 </div>
 
-                {/* En-tête avec informations principales */}
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg" />
-                    <Card className="relative border-0 shadow-sm">
-                        <CardContent className="p-6">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <h1 className="text-3xl font-bold tracking-tight">
-                                                {service.nom}
-                                            </h1>
-                                            <Badge
-                                                className={`border-0 ${service.actif ?
-                                                    "bg-green-600 hover:bg-green-700" :
-                                                    "bg-gray-600 hover:bg-gray-700"
-                                                }`}
-                                            >
-                                                {service.actif ? (
-                                                    <>
-                                                        <CheckCircle className="w-3 h-3 mr-1" />
-                                                        Actif
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <XCircle className="w-3 h-3 mr-1" />
-                                                        Inactif
-                                                    </>
-                                                )}
-                                            </Badge>
-                                            <div className="flex items-center gap-2 bg-muted px-3 py-1 rounded-md">
-                                                <Hash className="h-4 w-4 text-muted-foreground" />
-                                                <code className="text-sm font-mono">{service.code}</code>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => copyToClipboard(service.code, 'Code service')}
-                                                    className="h-auto p-1"
-                                                >
-                                                    <Copy className="h-3 w-3" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-1">
-                                                    <Euro className="h-4 w-4" />
-                                                    {formatPrice(service.prix_ht)} HT
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Package className="h-4 w-4" />
-                                                    Qté défaut: {service.qte_defaut}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="h-4 w-4" />
-                                                    Créé le {formatDate(service.created_at)}
-                                                </div>
-                                            </div>
-                                            {service.description && (
-                                                <p className="text-muted-foreground">
-                                                    {service.description}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                                    {/* Bouton de changement de statut professionnel */}
-                                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-                                                <Settings className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                                            </div>
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Modifier le statut
-                                            </span>
-                                        </div>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleToggleStatus}
-                                            className="w-full h-11 border border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium transition-colors"
-                                        >
-                                            <Settings className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                            {service.actif ? 'Désactiver le service' : 'Activer le service'}
-                                        </Button>
-                                    </div>
-
-                                    <Button variant="outline" size="sm" onClick={handleDuplicate}>
-                                        <Copy className="mr-2 h-4 w-4" />
-                                        Dupliquer
+                {/* Header avec actions - Version harmonisée */}
+                <Card className="w-full max-w-5xl mx-auto bg-white shadow-sm border border-gray-200">
+                    <CardContent className="p-6">
+                        {/* Titre et informations principales */}
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
+                            <div className="flex-1">
+                                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Service {service.nom}
+                                </h1>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Badge
+                                        className={`border-0 ${service.actif ?
+                                            "bg-green-600 hover:bg-green-700" :
+                                            "bg-gray-600 hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        {service.actif ? (
+                                            <>
+                                                <CheckCircle className="w-3 h-3 mr-1" />
+                                                Actif
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="w-3 h-3 mr-1" />
+                                                Inactif
+                                            </>
+                                        )}
+                                    </Badge>
+                                    <code className="bg-muted px-2 py-1 rounded text-xs font-mono whitespace-nowrap">
+                                        {service.code}
+                                    </code>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyToClipboard(service.code, 'Code service')}
+                                        className="h-auto p-1"
+                                    >
+                                        <Copy className="h-3 w-3" />
                                     </Button>
-
-                                    {stats.lignes_devis_count === 0 && stats.lignes_factures_count === 0 && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleDelete}
-                                            className="text-destructive hover:text-destructive border-destructive/20"
-                                        >
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Supprimer
-                                        </Button>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                        <div className="flex items-center gap-1">
+                                            <Euro className="h-4 w-4" />
+                                            {formatPrice(service.prix_ht)} HT
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Package className="h-4 w-4" />
+                                            Qté défaut: {service.qte_defaut}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="h-4 w-4" />
+                                            Créé le {formatDate(service.created_at)}
+                                        </div>
+                                    </div>
+                                    {service.description && (
+                                        <p className="text-muted-foreground">
+                                            {service.description}
+                                        </p>
                                     )}
+                                </div>
+                            </div>
 
-                                    <Button asChild>
-                                        <Link href={`/services/${service.id}/edit`}>
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            Modifier
-                                        </Link>
+                            {/* Section statut organisée */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {/* Statut du service */}
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Settings className="h-4 w-4 text-amber-600" />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Statut du service
+                                        </span>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleToggleStatus}
+                                        className="w-full h-10 border-gray-300 hover:border-amber-400 bg-white transition-colors"
+                                    >
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        {service.actif ? 'Désactiver' : 'Activer'}
                                     </Button>
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        </div>
+
+                        <Separator className="my-6" />
+
+                        {/* Actions organisées */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            {/* Actions principales */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button asChild className="h-10 px-4">
+                                    <Link href={`/services/${service.id}/edit`}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Modifier
+                                    </Link>
+                                </Button>
+                                <Button variant="outline" size="sm" className="h-10 px-4" onClick={handleDuplicate}>
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Dupliquer
+                                </Button>
+                            </div>
+
+                            {/* Actions secondaires */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {stats.lignes_devis_count === 0 && stats.lignes_factures_count === 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 px-4 text-destructive hover:text-destructive border-destructive/20"
+                                        onClick={handleDelete}
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Supprimer
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Navigation par onglets */}
                 <Card>
@@ -635,7 +657,9 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                                                     {devis.objet}
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">
-                                                    {devis.client.prenom} {devis.client.nom} • {formatDateShort(devis.date_devis)}
+                                                    {devis.client?.prenom && devis.client?.nom
+                                                        ? `${devis.client.prenom} ${devis.client.nom}`
+                                                        : `Client ID: ${devis.client?.id || 'N/A'}`} • {devis.date_devis ? formatDateShort(devis.date_devis) : 'Date inconnue'}
                                                 </div>
                                             </div>
                                             <div className="text-right">
@@ -686,7 +710,9 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                                                     {facture.objet}
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">
-                                                    {facture.client.prenom} {facture.client.nom} • {formatDateShort(facture.date_facture)}
+                                                    {facture.client?.prenom && facture.client?.nom
+                                                        ? `${facture.client.prenom} ${facture.client.nom}`
+                                                        : `Client ID: ${facture.client?.id || 'N/A'}`} • {facture.date_facture ? formatDateShort(facture.date_facture) : 'Date inconnue'}
                                                 </div>
                                             </div>
                                             <div className="text-right">
@@ -705,6 +731,106 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                     </Card>
                 )}
             </div>
+
+            {/* Modal de confirmation changement de statut */}
+            <Dialog open={showStatusModal} onOpenChange={setShowStatusModal}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Settings className="h-5 w-5" />
+                            Confirmer le changement de statut
+                        </DialogTitle>
+                        <DialogDescription>
+                            Êtes-vous sûr de vouloir {service.actif ? 'désactiver' : 'activer'} ce service ?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <Package className="h-5 w-5 text-gray-600" />
+                                <div>
+                                    <div className="font-medium">{service.nom}</div>
+                                    <div className="text-sm text-gray-500">{service.code}</div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-sm">
+                                <span>Statut actuel :</span>
+                                <Badge
+                                    className={`${service.actif ?
+                                        "bg-green-600 text-white" :
+                                        "bg-gray-600 text-white"
+                                    }`}
+                                >
+                                    {service.actif ? (
+                                        <>
+                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                            Actif
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircle className="w-3 h-3 mr-1" />
+                                            Inactif
+                                        </>
+                                    )}
+                                </Badge>
+                                <span>→</span>
+                                <Badge
+                                    className={`${!service.actif ?
+                                        "bg-green-600 text-white" :
+                                        "bg-gray-600 text-white"
+                                    }`}
+                                >
+                                    {!service.actif ? (
+                                        <>
+                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                            Actif
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircle className="w-3 h-3 mr-1" />
+                                            Inactif
+                                        </>
+                                    )}
+                                </Badge>
+                            </div>
+
+                            {service.actif && (stats.lignes_devis_count > 0 || stats.lignes_factures_count > 0) && (
+                                <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                    <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5" />
+                                    <div className="text-sm text-orange-800">
+                                        <p className="font-medium">Attention</p>
+                                        <p>Ce service est utilisé dans {stats.lignes_devis_count} devis et {stats.lignes_factures_count} factures. Le désactiver peut affecter la visibilité de ces documents.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!service.actif && (
+                                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                                    <div className="text-sm text-blue-800">
+                                        <p>L'activation de ce service le rendra disponible pour la création de nouveaux devis et factures.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowStatusModal(false)}>
+                            Annuler
+                        </Button>
+                        <Button
+                            onClick={confirmToggleStatus}
+                            className={service.actif ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
+                        >
+                            <Settings className="mr-2 h-4 w-4" />
+                            {service.actif ? 'Désactiver' : 'Activer'} le service
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

@@ -52,7 +52,7 @@ export default function ServiceCreate() {
         description: '',
         prix_ht: '',
         qte_defaut: '1',
-        actif: true,
+        actif: true as boolean,
     });
 
     // Générer automatiquement le code basé sur le nom
@@ -332,29 +332,19 @@ export default function ServiceCreate() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="code" className="flex items-center gap-2">
+                                            <Label className="flex items-center gap-2">
                                                 <Hash className="h-4 w-4" />
                                                 Code du service
-                                                <span className="text-destructive">*</span>
-                                                {renderFieldIcon(getFieldStatus('code', data.code))}
+                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Auto-généré</span>
                                             </Label>
-                                            <Input
-                                                id="code"
-                                                value={data.code}
-                                                onChange={(e) => setData('code', e.target.value.toUpperCase())}
-                                                placeholder="DEV-APP-WEB"
-                                                required
-                                                className={getFieldError('code') ? 'border-destructive' : ''}
-                                            />
-                                            {getFieldError('code') && (
-                                                <div className="flex items-center gap-2 text-sm text-destructive">
-                                                    <AlertCircle className="h-4 w-4" />
-                                                    {getFieldError('code')}
-                                                </div>
-                                            )}
-                                            <p className="text-xs text-muted-foreground">
-                                                Code unique pour identifier le service (généré automatiquement depuis le nom)
-                                            </p>
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                <p className="text-sm text-blue-800 font-medium">
+                                                    📋 Code généré automatiquement au format <strong>SRV-25-XXX</strong>
+                                                </p>
+                                                <p className="text-xs text-blue-600 mt-1">
+                                                    Le code sera assigné lors de la création du service
+                                                </p>
+                                            </div>
                                         </div>
 
                                         {data.nom && data.code && (
@@ -540,7 +530,7 @@ export default function ServiceCreate() {
                                                 </div>
                                                 <Switch
                                                     checked={data.actif}
-                                                    onCheckedChange={(checked) => setData('actif', checked)}
+                                                    onCheckedChange={(checked: boolean) => setData('actif', checked)}
                                                 />
                                             </div>
                                         </div>

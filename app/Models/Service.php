@@ -60,4 +60,47 @@ class Service extends Model
               ->orWhere('description', 'like', '%' . $term . '%');
         });
     }
+
+    /**
+     * Générer automatiquement le code au format SRV-25-001
+     */
+    public static function genererCodeService(): string
+    {
+        $annee = date('y'); // Année sur 2 digits (25)
+
+        // Trouver le prochain ID disponible
+        $dernierService = self::orderBy('id', 'desc')->first();
+        $prochainId = $dernierService ? $dernierService->id + 1 : 1;
+
+        // Formater l'ID sur 3 digits
+        $id = str_pad($prochainId, 3, '0', STR_PAD_LEFT);
+
+        return "SRV-{$annee}-{$id}";
+    }
+
+    /**
+     * Boot du modèle pour générer automatiquement le code
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($service) {
+            // Générer automatiquement le code si pas fourni
+            if (empty($service->code)) {
+                $service->code = self::genererCodeService();
+            }
+        });
+
+        static::created(function ($service) {
+            // Mettre à jour le code avec l'ID réel après création
+            $annee = date('y');
+            $id = str_pad($service->id, 3, '0', STR_PAD_LEFT);
+            $nouveauCode = "SRV-{$annee}-{$id}";
+
+            if ($service->code !== $nouveauCode) {
+                $service->update(['code' => $nouveauCode]);
+            }
+        });
+    }
 }

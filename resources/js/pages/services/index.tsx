@@ -4,6 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
@@ -26,7 +34,8 @@ import {
     XCircle,
     Hash,
     FileText,
-    BarChart3
+    BarChart3,
+    Info
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -80,34 +89,25 @@ interface Props {
         statut?: string;
         sort?: string;
         direction?: string;
-    };
+    } | any;
 }
 
 export default function ServicesIndex({
     services,
     stats,
-    filters = {}
+    filters
 }: Props) {
-    // Debug: log des props pour identifier le problème
-    console.log('ServicesIndex props:', { services, stats, filters });
-
     // Vérifications de sécurité renforcées
     const safeServices = services || { data: [], links: [], meta: { current_page: 1, per_page: 15, total: 0, last_page: 1 } };
     const safeStats = stats || { total: 0, actifs: 0, inactifs: 0, chiffre_affaires_total: 0 };
 
-    // Correction spéciale pour filters qui peut arriver comme array vide
-    let safeFilters: {
+    // Correction spéciale pour filters qui peut arriver comme array vide ou null
+    const safeFilters: {
         search?: string;
         statut?: string;
         sort?: string;
         direction?: string;
-    } = {};
-    if (filters && typeof filters === 'object' && !Array.isArray(filters)) {
-        safeFilters = filters;
-    } else {
-        console.warn('Filters is not a valid object:', filters);
-        safeFilters = {};
-    }
+    } = (filters && typeof filters === 'object' && !Array.isArray(filters)) ? filters : {};
 
     // S'assurer que services.data existe et est un array
     if (!safeServices.data || !Array.isArray(safeServices.data)) {
@@ -129,6 +129,8 @@ export default function ServicesIndex({
     const [statutFilter, setStatutFilter] = useState(safeFilters.statut || 'tous');
     const [sortBy, setSortBy] = useState(safeFilters.sort || 'nom');
     const [sortDirection, setSortDirection] = useState(safeFilters.direction || 'asc');
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [selectedService, setSelectedService] = useState<Service | null>(null);
 
     const formatPrice = (price: number | undefined | null) => {
         const safePrice = price || 0;
@@ -167,12 +169,23 @@ export default function ServicesIndex({
     };
 
     const handleToggleStatus = (service: Service) => {
-        router.patch(`/services/${service.id}/toggle`, {}, {
+        setSelectedService(service);
+        setShowStatusModal(true);
+    };
+
+    const confirmToggleStatus = () => {
+        if (!selectedService) return;
+
+        router.patch(`/services/${selectedService.id}/toggle`, {}, {
             onSuccess: () => {
-                toast.success(`Service ${service.actif ? 'désactivé' : 'activé'} avec succès`);
+                toast.success(`Service ${selectedService.actif ? 'désactivé' : 'activé'} avec succès`);
+                setShowStatusModal(false);
+                setSelectedService(null);
             },
             onError: () => {
                 toast.error('Une erreur est survenue');
+                setShowStatusModal(false);
+                setSelectedService(null);
             }
         });
     };
@@ -428,12 +441,9 @@ export default function ServicesIndex({
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Hash className="h-4 w-4 text-muted-foreground" />
-                                                        <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
-                                                            {service.code}
-                                                        </code>
-                                                    </div>
+                                                    <code className="bg-muted px-2 py-1 rounded text-xs font-mono whitespace-nowrap">
+                                                        {service.code}
+                                                    </code>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="font-medium">
@@ -548,6 +558,113 @@ export default function ServicesIndex({
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Modal de confirmation changement de statut */}
+            <Dialog open={showStatusModal} onOpenChange={setShowStatusModal}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Settings className="h-5 w-5" />
+                            Confirmer le changement de statut
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedService && (
+                                <>Êtes-vous sûr de vouloir {selectedService.actif ? 'désactiver' : 'activer'} ce service ?</>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {selectedService && (
+                        <div className="py-4">
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <Package className="h-5 w-5 text-gray-600" />
+                                    <div>
+                                        <div className="font-medium">{selectedService.nom}</div>
+                                        <div className="text-sm text-gray-500">{selectedService.code}</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span>Statut actuel :</span>
+                                    <Badge
+                                        className={`${selectedService.actif ?
+                                            "bg-green-600 text-white" :
+                                            "bg-gray-600 text-white"
+                                        }`}
+                                    >
+                                        {selectedService.actif ? (
+                                            <>
+                                                <CheckCircle className="w-3 h-3 mr-1" />
+                                                Actif
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="w-3 h-3 mr-1" />
+                                                Inactif
+                                            </>
+                                        )}
+                                    </Badge>
+                                    <span>→</span>
+                                    <Badge
+                                        className={`${!selectedService.actif ?
+                                            "bg-green-600 text-white" :
+                                            "bg-gray-600 text-white"
+                                        }`}
+                                    >
+                                        {!selectedService.actif ? (
+                                            <>
+                                                <CheckCircle className="w-3 h-3 mr-1" />
+                                                Actif
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="w-3 h-3 mr-1" />
+                                                Inactif
+                                            </>
+                                        )}
+                                    </Badge>
+                                </div>
+
+                                {selectedService.actif && (selectedService.lignes_devis_count > 0 || selectedService.lignes_factures_count > 0) && (
+                                    <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                        <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5" />
+                                        <div className="text-sm text-orange-800">
+                                            <p className="font-medium">Attention</p>
+                                            <p>Ce service est utilisé dans {selectedService.lignes_devis_count} devis et {selectedService.lignes_factures_count} factures. Le désactiver peut affecter la visibilité de ces documents.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!selectedService.actif && (
+                                    <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                                        <div className="text-sm text-blue-800">
+                                            <p>L'activation de ce service le rendra disponible pour la création de nouveaux devis et factures.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => {
+                            setShowStatusModal(false);
+                            setSelectedService(null);
+                        }}>
+                            Annuler
+                        </Button>
+                        <Button
+                            onClick={confirmToggleStatus}
+                            className={selectedService?.actif ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
+                        >
+                            <Settings className="mr-2 h-4 w-4" />
+                            {selectedService?.actif ? 'Désactiver' : 'Activer'} le service
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

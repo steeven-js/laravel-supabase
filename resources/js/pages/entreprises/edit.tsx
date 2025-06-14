@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -23,7 +24,8 @@ import {
     Globe,
     Users,
     Euro,
-    Shield
+    Shield,
+    Search
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -51,6 +53,157 @@ interface Props {
     entreprise: Entreprise;
 }
 
+// Liste des secteurs d'activité NAF français
+const SECTEURS_ACTIVITE = [
+    "01.11Z-Culture de céréales (sauf riz), légumineuses et graines oléagineuses",
+    "01.13Z-Culture de légumes, de melons, de racines et de tubercules",
+    "01.19Z-Autres cultures non permanentes",
+    "01.21Z-Culture de la vigne",
+    "01.24Z-Culture de fruits à pépins et à noyau",
+    "01.41Z-Élevage de vaches laitières",
+    "01.42Z-Élevage d'autres bovins et de buffles",
+    "01.47Z-Élevage de volailles",
+    "01.50Z-Culture et élevage associés",
+    "02.10Z-Sylviculture et autres activités forestières",
+    "02.20Z-Exploitation forestière",
+    "03.11Z-Pêche en mer",
+    "03.21Z-Aquaculture en mer",
+    "05.10Z-Extraction de houille",
+    "06.10Z-Extraction de pétrole brut",
+    "07.10Z-Extraction de minerais de fer",
+    "08.11Z-Extraction de pierres ornementales et de construction",
+    "08.12Z-Exploitation de gravières et sablières",
+    "09.10Z-Activités de soutien à l'extraction d'hydrocarbures",
+    "10.11Z-Transformation et conservation de la viande de boucherie",
+    "10.51A-Fabrication de lait liquide et de produits frais",
+    "10.71A-Fabrication industrielle de pain et de pâtisserie fraîche",
+    "11.01Z-Production de boissons alcooliques distillées",
+    "11.02A-Fabrication de vins effervescents",
+    "13.20Z-Tissage",
+    "14.11Z-Fabrication de vêtements en cuir",
+    "15.20Z-Fabrication de chaussures",
+    "16.10A-Sciage et rabotage du bois",
+    "17.12Z-Fabrication de papier et de carton",
+    "18.11Z-Imprimerie de journaux",
+    "19.20Z-Raffinage du pétrole",
+    "20.11Z-Fabrication de gaz industriels",
+    "21.10Z-Fabrication de produits pharmaceutiques de base",
+    "22.11Z-Fabrication et rechapage de pneumatiques",
+    "23.32Z-Fabrication de briques, tuiles et produits de construction",
+    "24.10Z-Sidérurgie",
+    "25.11Z-Fabrication de structures métalliques",
+    "26.20Z-Fabrication d'ordinateurs et d'équipements périphériques",
+    "27.11Z-Fabrication de moteurs, génératrices et transformateurs électriques",
+    "28.11Z-Fabrication de moteurs et turbines",
+    "29.10Z-Construction de véhicules automobiles",
+    "30.30Z-Construction aéronautique et spatiale",
+    "31.01Z-Fabrication de meubles de bureau et de magasin",
+    "32.50A-Fabrication de matériel médico-chirurgical et dentaire",
+    "33.11Z-Réparation d'ouvrages en métaux",
+    "35.11Z-Production d'électricité",
+    "35.22Z-Distribution de combustibles gazeux par conduites",
+    "35.30Z-Production et distribution de vapeur et d'air conditionné",
+    "36.00Z-Captage, traitement et distribution d'eau",
+    "37.00Z-Collecte et traitement des eaux usées",
+    "38.11Z-Collecte des déchets non dangereux",
+    "39.00Z-Dépollution et autres services de gestion des déchets",
+    "41.20A-Construction de maisons individuelles",
+    "42.11Z-Construction de routes et autoroutes",
+    "42.21Z-Construction de réseaux pour fluides",
+    "43.11Z-Travaux de démolition",
+    "43.21A-Travaux d'installation électrique dans tous locaux",
+    "43.31Z-Travaux de plâtrerie",
+    "43.34Z-Travaux de peinture et vitrerie",
+    "43.99C-Travaux de maçonnerie générale et gros œuvre de bâtiment",
+    "45.11Z-Commerce de voitures et de véhicules automobiles légers",
+    "45.20A-Entretien et réparation de véhicules automobiles légers",
+    "46.11Z-Intermédiaires du commerce en produits agricoles",
+    "46.34Z-Commerce de gros de boissons",
+    "47.11A-Commerce de détail de produits surgelés",
+    "47.21Z-Commerce de détail de fruits et légumes en magasin spécialisé",
+    "47.71Z-Commerce de détail d'habillement en magasin spécialisé",
+    "47.91A-Vente à distance sur catalogue général",
+    "49.10Z-Transport ferroviaire interurbain de voyageurs",
+    "49.31Z-Transports urbains et suburbains de voyageurs",
+    "49.41A-Transports routiers de fret interurbains",
+    "50.10Z-Transports maritimes et côtiers de passagers",
+    "51.10Z-Transports aériens de passagers",
+    "52.10A-Entreposage et stockage frigorifique",
+    "53.10Z-Activités de poste dans le cadre d'une obligation de service universel",
+    "55.10Z-Hôtels et hébergement similaire",
+    "55.20Z-Hébergement touristique et autre hébergement de courte durée",
+    "56.10A-Restauration traditionnelle",
+    "56.10C-Restauration de type rapide",
+    "56.30Z-Débits de boissons",
+    "58.11Z-Édition de livres",
+    "59.11A-Production de films et de programmes pour la télévision",
+    "60.10Z-Édition et diffusion de programmes radio",
+    "61.10Z-Télécommunications filaires",
+    "62.01Z-Programmation informatique",
+    "62.02A-Conseil en systèmes et logiciels informatiques",
+    "63.11Z-Traitement de données, hébergement et activités connexes",
+    "63.91Z-Activités des agences de presse",
+    "64.19Z-Autres intermédiations monétaires",
+    "64.30Z-Fonds de placement et entités financières similaires",
+    "65.11Z-Assurance vie",
+    "66.11Z-Administration de marchés financiers",
+    "66.21Z-Évaluation des risques et dommages",
+    "68.10Z-Activités des marchands de biens immobiliers",
+    "68.20A-Location de logements",
+    "68.31Z-Agences immobilières",
+    "68.32A-Administration d'immeubles et autres biens immobiliers",
+    "69.10Z-Activités juridiques",
+    "69.20Z-Activités comptables",
+    "70.10Z-Activités des sièges sociaux",
+    "70.21Z-Conseil en relations publiques et communication",
+    "70.22Z-Conseil pour les affaires et autres conseils de gestion",
+    "71.11Z-Activités d'architecture",
+    "71.12B-Ingénierie, études techniques",
+    "72.11Z-Recherche-développement en biotechnologie",
+    "73.11Z-Activités des agences de publicité",
+    "74.10Z-Activités spécialisées de design",
+    "74.20Z-Activités photographiques",
+    "75.00Z-Activités vétérinaires",
+    "77.11A-Location de courte durée de voitures et de véhicules automobiles légers",
+    "78.10Z-Activités des agences de placement de main-d'œuvre",
+    "78.20Z-Activités des agences de travail temporaire",
+    "79.11Z-Activités des agences de voyage",
+    "80.10Z-Activités de sécurité privée",
+    "81.10Z-Activités combinées de soutien lié aux bâtiments",
+    "81.21Z-Nettoyage courant des bâtiments",
+    "82.11Z-Services administratifs combinés de bureau",
+    "82.30Z-Organisation de foires, salons professionnels et congrès",
+    "84.11Z-Administration publique générale",
+    "84.22Z-Défense",
+    "84.30A-Activités générales de sécurité sociale",
+    "85.10Z-Enseignement pré-primaire",
+    "85.20Z-Enseignement primaire",
+    "85.31Z-Enseignement secondaire général",
+    "85.41Z-Enseignement post-secondaire non supérieur",
+    "85.42Z-Enseignement supérieur",
+    "86.10Z-Activités hospitalières",
+    "86.21Z-Activité des médecins généralistes",
+    "86.23Z-Pratique dentaire",
+    "87.10A-Hébergement médicalisé pour personnes âgées",
+    "88.10A-Aide à domicile",
+    "88.91A-Accueil de jeunes enfants",
+    "90.01Z-Arts du spectacle vivant",
+    "90.04Z-Gestion de salles de spectacles",
+    "91.01Z-Gestion des bibliothèques et des archives",
+    "92.00Z-Organisation de jeux de hasard et d'argent",
+    "93.11Z-Gestion d'installations sportives",
+    "93.21Z-Activités des parcs d'attractions et parcs à thèmes",
+    "94.11Z-Activités des organisations patronales et consulaires",
+    "94.20Z-Activités des syndicats de salariés",
+    "95.11Z-Réparation d'ordinateurs et d'équipements périphériques",
+    "96.01A-Blanchisserie-teinturerie de gros",
+    "96.02A-Coiffure",
+    "96.03Z-Services funéraires",
+    "97.00Z-Activités des ménages en tant qu'employeurs de personnel domestique",
+    "98.10Z-Activités indifférenciées des ménages en tant que producteurs de biens pour usage propre",
+    "99.00Z-Activités des organisations et organismes extraterritoriaux"
+];
+
 const breadcrumbs = (entreprise: Entreprise): BreadcrumbItem[] => [
     {
         title: 'Dashboard',
@@ -74,6 +227,8 @@ export default function EntreprisesEdit({ entreprise }: Props) {
     const [activeSection, setActiveSection] = useState<'company' | 'contact' | 'legal' | 'business' | 'notes'>('company');
     const [isDirty, setIsDirty] = useState(false);
     const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
+    const [secteurSearch, setSecteurSearch] = useState('');
+    const [secteurOpen, setSecteurOpen] = useState(false);
 
     const { data, setData, patch, processing, errors, isDirty: formIsDirty, reset } = useForm({
         nom: entreprise.nom || '',
@@ -92,6 +247,20 @@ export default function EntreprisesEdit({ entreprise }: Props) {
         active: entreprise.active,
         notes: entreprise.notes || '',
     });
+
+    // Filtrer les secteurs d'activité selon la recherche
+    const filteredSecteurs = SECTEURS_ACTIVITE.filter(secteur =>
+        secteur.toLowerCase().includes(secteurSearch.toLowerCase())
+    );
+
+    // Gérer l'ouverture/fermeture du Select
+    const handleSecteurOpenChange = (open: boolean) => {
+        setSecteurOpen(open);
+        if (!open) {
+            // Vider la recherche quand on ferme le dropdown
+            setSecteurSearch('');
+        }
+    };
 
     // Surveiller les changements
     useEffect(() => {
@@ -348,19 +517,57 @@ export default function EntreprisesEdit({ entreprise }: Props) {
                                                     Secteur d'activité
                                                     {renderFieldIcon(getFieldStatus('secteur_activite', data.secteur_activite))}
                                                 </Label>
-                                                <Input
-                                                    id="secteur_activite"
+                                                <Select
                                                     value={data.secteur_activite}
-                                                    onChange={(e) => setData('secteur_activite', e.target.value)}
-                                                    placeholder="Informatique, Services, Commerce..."
-                                                    className={getFieldError('secteur_activite') ? 'border-destructive' : ''}
-                                                />
+                                                    onValueChange={(value) => setData('secteur_activite', value)}
+                                                    open={secteurOpen}
+                                                    onOpenChange={handleSecteurOpenChange}
+                                                >
+                                                    <SelectTrigger className={getFieldError('secteur_activite') ? 'border-destructive' : ''}>
+                                                        <SelectValue placeholder="Sélectionnez le secteur d'activité de l'entreprise" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="p-0">
+                                                        <div className="sticky top-0 z-10 bg-background p-2 border-b shadow-sm">
+                                                            <Input
+                                                                placeholder="Rechercher un secteur d'activité..."
+                                                                value={secteurSearch}
+                                                                onChange={(e) => setSecteurSearch(e.target.value)}
+                                                                className="h-8 text-sm"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                onKeyDown={(e) => e.stopPropagation()}
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                        <div className="max-h-48 overflow-y-auto">
+                                                            {filteredSecteurs.length > 0 ? (
+                                                                filteredSecteurs.map((secteur) => (
+                                                                    <SelectItem key={secteur} value={secteur}>
+                                                                        {secteur}
+                                                                    </SelectItem>
+                                                                ))
+                                                            ) : (
+                                                                <div className="p-4 text-sm text-muted-foreground text-center">
+                                                                    Aucun secteur trouvé pour "{secteurSearch}"
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {secteurSearch && (
+                                                            <div className="sticky bottom-0 bg-background p-2 border-t text-xs text-muted-foreground text-center shadow-sm">
+                                                                {filteredSecteurs.length} résultat(s) sur {SECTEURS_ACTIVITE.length}
+                                                            </div>
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
                                                 {getFieldError('secteur_activite') && (
                                                     <div className="flex items-center gap-2 text-sm text-destructive">
                                                         <AlertCircle className="h-4 w-4" />
                                                         {getFieldError('secteur_activite')}
                                                     </div>
                                                 )}
+                                                <p className="text-xs text-muted-foreground">
+                                                    <Search className="inline h-3 w-3 mr-1" />
+                                                    Tapez dans le champ de recherche pour filtrer les codes NAF français
+                                                </p>
                                             </div>
                                         </div>
                                     </CardContent>

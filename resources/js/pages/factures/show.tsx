@@ -14,7 +14,6 @@ import {
     XCircle,
     Clock,
     AlertCircle,
-    CreditCard,
     Mail,
     Download,
     Eye,
@@ -22,8 +21,9 @@ import {
     Printer,
     Send,
     FileText,
-    DollarSign,
-    Settings
+    Settings,
+    User,
+    Calendar
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -64,8 +64,26 @@ interface Facture {
     updated_at: string;
 }
 
+interface Madinia {
+    id: number;
+    name: string;
+    telephone?: string;
+    email?: string;
+    site_web?: string;
+    siret?: string;
+    numero_nda?: string;
+    pays?: string;
+    adresse?: string;
+    description?: string;
+    nom_compte_bancaire?: string;
+    nom_banque?: string;
+    numero_compte?: string;
+    iban_bic_swift?: string;
+}
+
 interface Props {
     facture: Facture;
+    madinia?: Madinia;
 }
 
 const getStatusStyles = (statut: string) => {
@@ -132,7 +150,7 @@ const breadcrumbs = (facture: Facture): BreadcrumbItem[] => [
     },
 ];
 
-export default function FactureShow({ facture }: Props) {
+export default function FactureShow({ facture, madinia }: Props) {
     const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'documents'>('overview');
 
     const formatPrice = (price: number) => {
@@ -161,7 +179,7 @@ export default function FactureShow({ facture }: Props) {
 
     const isRetard = () => {
         return new Date(facture.date_echeance) < new Date() &&
-               !['payee', 'annulee'].includes(facture.statut);
+            !['payee', 'annulee'].includes(facture.statut);
     };
 
     const getDelaiPaiement = () => {
@@ -221,35 +239,40 @@ export default function FactureShow({ facture }: Props) {
                     </Button>
                 </div>
 
-                {/* Header with actions */}
-                <div className="space-y-4">
-                    {/* Navigation et titre */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-xl font-semibold text-gray-900">
-                                Facture {facture.numero_facture}
-                            </h1>
-                        </div>
+                {/* Header avec actions - Version harmonisée comme devis */}
+                <Card className="w-full max-w-5xl mx-auto bg-white shadow-sm border border-gray-200">
+                    <CardContent className="p-6">
+                        {/* Titre et informations principales */}
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
+                            <div className="flex-1">
+                                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Facture {facture.numero_facture}
+                                </h1>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <User className="h-4 w-4" />
+                                    <span className="font-medium">{facture.client.prenom} {facture.client.nom}</span>
+                                    {facture.client.entreprise && (
+                                        <>
+                                            <span>•</span>
+                                            <span>{facture.client.entreprise.nom_commercial || facture.client.entreprise.nom}</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
 
-                        {/* Statuts */}
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-3">
-                                {/* Sélecteur de statut professionnel */}
-                                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                            {/* Statuts organisés */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {/* Statut principal */}
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                                            <Settings className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Modifier le statut
+                                        <Settings className="h-4 w-4 text-amber-600" />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Statut de la facture
                                         </span>
                                     </div>
                                     <Select value={facture.statut} onValueChange={handleStatutChange}>
-                                        <SelectTrigger className="w-52 h-11 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors">
-                                            <div className="flex items-center gap-2">
-                                                <Settings className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                <SelectValue placeholder="Sélectionner un statut" />
-                                            </div>
+                                        <SelectTrigger className="w-full h-10 border-gray-300 hover:border-amber-400 bg-white transition-colors">
+                                            <SelectValue placeholder="Sélectionner un statut" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {statutOptions.map((option) => (
@@ -263,64 +286,212 @@ export default function FactureShow({ facture }: Props) {
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* Informations de délai */}
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Calendar className="h-4 w-4 text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Échéance
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-center h-10">
+                                        <div className="text-center">
+                                            <div className={`text-sm font-medium ${isRetard() ? 'text-red-600' : 'text-gray-900'}`}>
+                                                {formatDateShort(facture.date_echeance)}
+                                            </div>
+                                            <div className={`text-xs ${isRetard() ? 'text-red-500' : 'text-gray-500'}`}>
+                                                {getDelaiPaiement()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Actions groupées */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Actions principales */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            {facture.statut === 'brouillon' && (
-                                <Button asChild className="flex-1 sm:flex-none">
-                                    <Link href={`/factures/${facture.id}/edit`}>
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Modifier
-                                    </Link>
-                                </Button>
-                            )}
-                            {!['payee', 'annulee'].includes(facture.statut) && (
-                                <Button variant="outline" className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700 flex-1 sm:flex-none" asChild>
-                                    <Link href={`/factures/${facture.id}/envoyer-email`}>
-                                        <Send className="mr-2 h-4 w-4" />
-                                        Envoyer par email
-                                    </Link>
-                                </Button>
-                            )}
-                            {facture.statut === 'envoyee' && (
-                                <Button className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none" asChild>
-                                    <Link href={`/factures/${facture.id}/marquer-payee`}>
+                        <Separator className="my-6" />
+
+                        {/* Actions organisées */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            {/* Actions principales */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                {facture.statut === 'brouillon' && (
+                                    <Button asChild className="h-10 px-4">
+                                        <Link href={`/factures/${facture.id}/edit`}>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            Modifier
+                                        </Link>
+                                    </Button>
+                                )}
+                                {!['payee', 'annulee'].includes(facture.statut) && (
+                                    <Button className="bg-green-600 hover:bg-green-700 h-10 px-4" asChild>
+                                        <Link href={`/factures/${facture.id}/envoyer-email`}>
+                                            <Send className="mr-2 h-4 w-4" />
+                                            Envoyer par email
+                                        </Link>
+                                    </Button>
+                                )}
+                                {facture.statut === 'envoyee' && (
+                                    <Button className="bg-blue-600 hover:bg-blue-700 h-10 px-4" onClick={handleMarquerPayee}>
                                         <CheckCircle className="mr-2 h-4 w-4" />
                                         Marquer payée
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Actions PDF */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                    asChild
+                                >
+                                    <Link href={`/factures/${facture.id}/pdf`} target="_blank">
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        Aperçu PDF
                                     </Link>
                                 </Button>
-                            )}
+                                <Button variant="outline" size="sm" className="h-10 px-4" asChild>
+                                    <Link href={`/factures/${facture.id}/telecharger-pdf`}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Télécharger PDF
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
+                    </CardContent>
+                </Card>
 
-                        {/* Actions PDF */}
-                        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                                <Printer className="mr-2 h-4 w-4" />
-                                <span className="hidden sm:inline">Imprimer</span>
-                                <span className="sm:hidden">Print</span>
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" asChild>
-                                <Link href={`/factures/${facture.id}/pdf`} target="_blank">
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">Voir PDF</span>
-                                    <span className="sm:hidden">PDF</span>
-                                </Link>
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" asChild>
-                                <Link href={`/factures/${facture.id}/telecharger-pdf`}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">Télécharger</span>
-                                    <span className="sm:hidden">DL</span>
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                {/* Header de statut uniforme pour toutes les factures */}
+                <Card className="w-full max-w-5xl mx-auto">
+                    <CardContent className="p-8">
+                        {facture.statut === 'payee' ? (
+                            // Facture payée
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-green-700">✅ Facture payée</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Cette facture a été payée le {facture.date_paiement ? formatDateShort(facture.date_paiement) : 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-green-600">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Montant payé
+                                    </div>
+                                </div>
+                            </div>
+                        ) : facture.statut === 'envoyee' ? (
+                            // Facture envoyée
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-blue-700">📧 Facture envoyée</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Cette facture a été envoyée au client et attend le paiement
+                                    </p>
+                                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="h-4 w-4" />
+                                            <span>Émise: {formatDateShort(facture.date_facture)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="h-4 w-4" />
+                                            <span className={isRetard() ? 'text-red-600 font-medium' : ''}>
+                                                Échéance: {formatDateShort(facture.date_echeance)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-blue-600">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        En attente de paiement
+                                    </div>
+                                </div>
+                            </div>
+                        ) : facture.statut === 'en_retard' ? (
+                            // Facture en retard
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-red-700">⚠️ Facture en retard</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Cette facture n'a pas été payée dans les délais
+                                    </p>
+                                    <div className="text-sm text-red-600 font-medium mt-1">
+                                        {getDelaiPaiement()}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-red-600">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-red-500">
+                                        Paiement en retard
+                                    </div>
+                                </div>
+                            </div>
+                        ) : facture.statut === 'brouillon' ? (
+                            // Facture en brouillon
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">📝 Facture en brouillon</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Cette facture est en cours de préparation et peut être modifiée
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-gray-600">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Montant TTC
+                                    </div>
+                                </div>
+                            </div>
+                        ) : facture.statut === 'annulee' ? (
+                            // Facture annulée
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">❌ Facture annulée</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Cette facture a été annulée
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-gray-500 line-through">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Facture annulée
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            // Statut par défaut
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">📄 Facture</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Informations sur la facture
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-gray-600">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Montant TTC
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Invoice-style layout */}
                 <Card className="w-full max-w-5xl mx-auto bg-white shadow-lg">
@@ -354,22 +525,34 @@ export default function FactureShow({ facture }: Props) {
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Facture de</h3>
                                 <div className="space-y-1">
-                                    <p className="font-semibold text-gray-900">Madin.IA</p>
-                                    <p className="text-gray-600">123 Rue de l'Innovation</p>
-                                    <p className="text-gray-600">97200 Fort-de-France, Martinique</p>
+                                    <p className="font-semibold text-gray-900">
+                                        {madinia?.name || 'Madin.IA'}
+                                    </p>
+                                    {madinia?.adresse && (
+                                        <p className="text-gray-600">{madinia.adresse}</p>
+                                    )}
+                                    {madinia?.pays && (
+                                        <p className="text-gray-600">{madinia.pays}</p>
+                                    )}
                                     <div className="flex flex-col gap-1 mt-2">
-                                        <div className="flex items-center gap-2">
-                                            <Phone className="h-4 w-4 text-gray-400" />
-                                            <span className="text-gray-600">+596 696 12 34 56</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="h-4 w-4 text-gray-400" />
-                                            <span className="text-gray-600">contact@madinia.com</span>
-                                        </div>
+                                        {madinia?.telephone && (
+                                            <div className="flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-gray-400" />
+                                                <span className="text-gray-600">{madinia.telephone}</span>
+                                            </div>
+                                        )}
+                                        {madinia?.email && (
+                                            <div className="flex items-center gap-2">
+                                                <Mail className="h-4 w-4 text-gray-400" />
+                                                <span className="text-gray-600">{madinia.email}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-2">
-                                        SIRET: 123 456 789 00012
-                                    </div>
+                                    {madinia?.siret && (
+                                        <div className="text-xs text-gray-500 mt-2">
+                                            SIRET: {madinia.siret}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -525,8 +708,8 @@ export default function FactureShow({ facture }: Props) {
                                 </p>
                                 <div className="flex justify-center items-center gap-4 text-sm text-gray-500">
                                     <span>Une question ?</span>
-                                    <a href="mailto:contact@madinia.com" className="text-blue-600 hover:underline">
-                                        contact@madinia.com
+                                    <a href={`mailto:${madinia?.email || 'contact@madinia.com'}`} className="text-blue-600 hover:underline">
+                                        {madinia?.email || 'contact@madinia.com'}
                                     </a>
                                 </div>
                             </div>
@@ -536,20 +719,42 @@ export default function FactureShow({ facture }: Props) {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-600">
                                     <div>
                                         <p className="font-medium text-gray-700 mb-1">Informations légales</p>
-                                        <p>SIRET : 123 456 789 00012</p>
-                                        <p>N° DA : 97 97 12345 97</p>
+                                        {madinia?.siret && (
+                                            <p>SIRET : {madinia.siret}</p>
+                                        )}
+                                        {madinia?.numero_nda && (
+                                            <p>N° DA : {madinia.numero_nda}</p>
+                                        )}
+                                        {!madinia?.siret && !madinia?.numero_nda && (
+                                            <p className="text-gray-500">Non renseigné</p>
+                                        )}
                                     </div>
                                     <div>
                                         <p className="font-medium text-gray-700 mb-1">Coordonnées bancaires</p>
-                                        <p>Banque de Martinique</p>
-                                        <p>IBAN : FR76 1234 5678 9012 3456 7890 123</p>
+                                        {madinia?.nom_banque && (
+                                            <p>{madinia.nom_banque}</p>
+                                        )}
+                                        {madinia?.iban_bic_swift && (
+                                            <p>IBAN/BIC : {madinia.iban_bic_swift}</p>
+                                        )}
+                                        {madinia?.nom_compte_bancaire && (
+                                            <p>{madinia.nom_compte_bancaire}</p>
+                                        )}
+                                        {!madinia?.nom_banque && !madinia?.iban_bic_swift && (
+                                            <p className="text-gray-500">Non renseigné</p>
+                                        )}
                                     </div>
                                     <div>
                                         <p className="font-medium text-gray-700 mb-1">Contact</p>
-                                        <p>Madin.IA</p>
-                                        <a href="https://madinia.com" target="_blank" className="text-blue-600 hover:underline">
-                                            www.madinia.com
-                                        </a>
+                                        <p>{madinia?.name || 'Madin.IA'}</p>
+                                        {madinia?.site_web && (
+                                            <a href={madinia.site_web} target="_blank" className="text-blue-600 hover:underline">
+                                                {madinia.site_web.replace(/^https?:\/\//, '')}
+                                            </a>
+                                        )}
+                                        {!madinia?.site_web && (
+                                            <span className="text-gray-500">Site web non renseigné</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

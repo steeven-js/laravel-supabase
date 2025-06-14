@@ -22,24 +22,20 @@ class EmailTemplateSeeder extends Seeder
                 'subject' => '🎉 Offre spéciale - Votre devis {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
-J'espère que vous allez bien !
+C'est avec enthousiasme que nous vous présentons notre devis n° {{devis_numero}} pour votre projet.
 
-Je suis ravi de vous présenter notre devis {{devis_numero}} d'un montant de {{devis_montant}}.
+Cette offre spéciale d'un montant de {{devis_montant}} est valable jusqu'au {{devis_validite}} et comprend tous les services détaillés dans le document joint.
 
-🎁 OFFRE SPÉCIALE : Pour toute validation avant le {{devis_validite}}, bénéficiez de 10% de remise supplémentaire !
+Pour toute signature avant la date d'expiration, bénéficiez d'un suivi personnalisé pendant le premier mois de déploiement !
 
-Ce devis comprend tous les éléments dont nous avons discuté et reflète notre engagement à vous offrir la meilleure qualité au meilleur prix.
+N'hésitez pas à nous contacter pour échanger sur cette proposition.
 
-N'hésitez pas à me contacter pour toute question.
+Bien cordialement,
 
-Cordialement,
-{{contact_nom}}
-{{entreprise_nom}}
-📞 {{contact_telephone}}
-✉️ {{contact_email}}",
+L'équipe Madin.IA",
                 'description' => 'Template promotionnel avec offre spéciale',
                 'is_default' => true,
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite']
             ],
             [
                 'name' => 'Devis concis et direct',
@@ -48,39 +44,37 @@ Cordialement,
                 'subject' => 'Devis {{devis_numero}} - {{entreprise_nom}}',
                 'body' => "Bonjour {{client_nom}},
 
-Veuillez trouver ci-joint votre devis {{devis_numero}} pour un montant de {{devis_montant}}.
+Veuillez trouver en pièce jointe notre devis n° {{devis_numero}} d'un montant de {{devis_montant}}, valable jusqu'au {{devis_validite}}.
 
-Validité : {{devis_validite}}
-
-Pour toute question : {{contact_telephone}}
+Pour l'accepter, il vous suffit de nous le retourner signé ou de nous confirmer votre accord par retour de mail.
 
 Cordialement,
-{{contact_nom}}",
+
+Madin.IA",
                 'description' => 'Template court et efficace',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_nom', 'contact_telephone']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'entreprise_nom']
             ],
             [
                 'name' => 'Devis standard professionnel',
                 'category' => 'envoi_initial',
                 'sub_category' => 'standard_professionnel',
                 'subject' => 'Devis {{devis_numero}} - {{entreprise_nom}}',
-                'body' => "Madame, Monsieur {{client_nom}},
+                'body' => "Bonjour {{client_nom}},
 
-Suite à notre échange, j'ai le plaisir de vous transmettre le devis {{devis_numero}} correspondant à votre demande.
+Nous vous remercions pour votre confiance en Madin.IA.
 
-Montant total : {{devis_montant}}
-Date de validité : {{devis_validite}}
+Suite à notre échange, nous avons le plaisir de vous faire parvenir notre devis n° {{devis_numero}} d'un montant de {{devis_montant}}, valable jusqu'au {{devis_validite}}.
 
-Ce devis détaille l'ensemble des prestations que nous vous proposons. Nous restons à votre disposition pour tout complément d'information.
+Vous trouverez tous les détails de notre proposition en pièce jointe. N'hésitez pas à nous contacter pour toute information complémentaire ou modification souhaitée.
 
-Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+Cordialement,
 
-{{contact_nom}}
-{{entreprise_nom}}
-Tél : {{contact_telephone}}
-Email : {{contact_email}}",
+L'équipe Madin.IA
+
+{{contact_telephone}}",
                 'description' => 'Template professionnel standard',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
+                'is_default' => true,
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_telephone', 'entreprise_nom']
             ],
             [
                 'name' => 'Devis détaillé avec étapes',
@@ -89,62 +83,48 @@ Email : {{contact_email}}",
                 'subject' => 'Votre projet - Devis détaillé {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
-J'ai le plaisir de vous présenter le devis {{devis_numero}} pour votre projet.
+Suite à notre analyse approfondie de vos besoins, nous vous adressons notre devis n° {{devis_numero}} d'un montant de {{devis_montant}}.
 
-📋 DÉTAILS DU PROJET
-Montant total : {{devis_montant}}
-Validité : {{devis_validite}}
+Notre proposition comprend :
+- Une phase d'analyse et conception
+- Le développement et l'implémentation
+- Les tests et déploiement
+- Le support post-lancement
 
-🗓️ ÉTAPES DE RÉALISATION
-1. Validation du devis et signature
-2. Acompte de 30% à la commande
-3. Début des travaux sous 7 jours
-4. Suivi régulier et points d'étape
-5. Livraison et solde
+Cette offre est valable jusqu'au {{devis_validite}}.
 
-💼 AVANTAGES INCLUS
-✓ Garantie satisfaction
-✓ Support technique inclus
-✓ Révisions comprises
+Nous restons à votre disposition pour discuter des modalités de mise en œuvre et répondre à vos questions.
 
-Je reste à votre disposition pour échanger sur ce projet.
+Cordialement,
 
-Bien à vous,
-{{contact_nom}}
-{{entreprise_nom}}
-📞 {{contact_telephone}}
-✉️ {{contact_email}}",
+L'équipe Madin.IA
+
+{{contact_email}}",
                 'description' => 'Template détaillé avec processus étape par étape',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_email']
             ],
             [
                 'name' => 'Devis personnalisé et chaleureux',
                 'category' => 'envoi_initial',
                 'sub_category' => 'personnalise_chaleureux',
                 'subject' => 'Votre projet nous enthousiasme ! Devis {{devis_numero}}',
-                'body' => "Cher {{client_nom}},
+                'body' => "Bonjour {{client_nom}},
 
-Quel plaisir d'avoir échangé avec vous sur votre projet ! Votre vision nous inspire vraiment.
+Nous sommes ravis de l'intérêt que vous portez à notre solution et vous remercions pour la confiance que vous nous accordez.
 
-J'ai préparé avec soin le devis {{devis_numero}} qui, j'espère, répondra parfaitement à vos attentes.
+Comme promis, vous trouverez ci-joint notre devis n° {{devis_numero}} personnalisé selon vos besoins spécifiques, pour un montant de {{devis_montant}}.
 
-💝 VOTRE PROJET
-Montant : {{devis_montant}}
-Valable jusqu'au : {{devis_validite}}
+Notre équipe est impatiente de collaborer avec vous sur ce projet et de vous accompagner dans sa réalisation.
 
-Ce qui me plaît dans votre approche, c'est cette volonté de créer quelque chose d'unique. Nous sommes là pour vous accompagner dans cette belle aventure !
+Ce devis est valable jusqu'au {{devis_validite}}.
 
-J'aimerais beaucoup continuer notre discussion. N'hésitez pas à m'appeler pour qu'on puisse échanger de vive voix.
+N'hésitez pas à nous appeler directement au {{contact_telephone}} pour toute question.
 
-Avec toute ma considération,
-{{contact_nom}}
-{{entreprise_nom}}
-📱 {{contact_telephone}} (je réponds toujours !)
-💌 {{contact_email}}
+Très cordialement,
 
-P.S. : Si vous avez des questions, même les plus petites, je suis là !",
+L'équipe Madin.IA",
                 'description' => 'Template chaleureux et personnalisé',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_telephone']
             ],
 
             // RAPPEL DE DEVIS
@@ -155,24 +135,18 @@ P.S. : Si vous avez des questions, même les plus petites, je suis là !",
                 'subject' => '⏰ Derniers jours - Offre spéciale sur votre devis {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
-J'espère que vous allez bien !
+Nous vous rappelons que notre devis n° {{devis_numero}} est toujours disponible et valable jusqu'au {{devis_validite}}.
 
-Je me permets de revenir vers vous concernant le devis {{devis_numero}} que je vous ai transmis.
+Pour toute acceptation dans les 7 prochains jours, nous vous offrons une réduction de 5% sur le montant total de {{devis_montant}}.
 
-🎁 OFFRE LIMITÉE
-Pour vous remercier de votre confiance, je vous propose exceptionnellement une remise de 15% si vous validez votre devis avant le {{devis_validite}}.
-
-Cette offre représente une économie significative sur le montant initial de {{devis_montant}}.
-
-Avez-vous eu l'occasion d'examiner notre proposition ? Je reste disponible pour répondre à toutes vos questions.
+Nous serions ravis de pouvoir démarrer cette collaboration avec vous.
 
 Cordialement,
-{{contact_nom}}
-{{entreprise_nom}}
-📞 {{contact_telephone}}",
+
+L'équipe Madin.IA",
                 'description' => 'Rappel avec offre promotionnelle limitée',
                 'is_default' => true,
-                'variables' => ['client_nom', 'devis_numero', 'devis_validite', 'devis_montant', 'contact_nom', 'entreprise_nom', 'contact_telephone']
+                'variables' => ['client_nom', 'devis_numero', 'devis_validite', 'devis_montant']
             ],
             [
                 'name' => 'Rappel avec date d\'expiration',
@@ -181,19 +155,17 @@ Cordialement,
                 'subject' => '⏳ Votre devis {{devis_numero}} expire bientôt',
                 'body' => "Bonjour {{client_nom}},
 
-Je vous contacte pour vous informer que votre devis {{devis_numero}} d'un montant de {{devis_montant}} arrive à expiration le {{devis_validite}}.
+Nous vous informons que votre devis n° {{devis_numero}} d'un montant de {{devis_montant}} arrive bientôt à expiration ({{devis_validite}}).
 
-Afin de maintenir les conditions tarifaires proposées, il serait nécessaire de valider le devis avant cette date.
+Souhaitez-vous que nous procédions à sa mise à jour ou que nous prolongions sa validité ?
 
-Souhaitez-vous que nous programmions un échange téléphonique pour faire le point ?
-
-Je reste à votre entière disposition.
+N'hésitez pas à nous contacter pour en discuter.
 
 Cordialement,
-{{contact_nom}}
-{{contact_telephone}}",
+
+L'équipe Madin.IA",
                 'description' => 'Rappel centré sur la date d\'expiration',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite', 'contact_nom', 'contact_telephone']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite']
             ],
             [
                 'name' => 'Rappel standard',
@@ -202,19 +174,18 @@ Cordialement,
                 'subject' => 'Suivi de votre devis {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
-J'espère que vous allez bien.
+Nous souhaitons vous rappeler que notre devis n° {{devis_numero}} d'un montant de {{devis_montant}} est toujours en attente de votre décision.
 
-Je me permets de revenir vers vous concernant le devis {{devis_numero}} que je vous ai transmis il y a quelques jours.
+Ce devis est valable jusqu'au {{devis_validite}}.
 
-Avez-vous eu l'occasion de l'examiner ? Avez-vous des questions ou souhaitez-vous des précisions sur certains points ?
-
-Je reste à votre disposition pour tout échange.
+N'hésitez pas à nous contacter pour toute question ou pour nous faire part de votre décision.
 
 Cordialement,
-{{contact_nom}}
-{{entreprise_nom}}",
+
+L'équipe Madin.IA",
                 'description' => 'Rappel simple et professionnel',
-                'variables' => ['client_nom', 'devis_numero', 'contact_nom', 'entreprise_nom']
+                'is_default' => true,
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite']
             ],
 
             // RELANCE DE DEVIS
@@ -225,23 +196,20 @@ Cordialement,
                 'subject' => 'Nouvelles de votre projet - Devis {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
-J'espère que tout va bien pour vous.
+Nous faisons suite à notre devis n° {{devis_numero}} d'un montant de {{devis_montant}} que nous vous avons envoyé précédemment.
 
-Je souhaitais prendre de vos nouvelles concernant le devis {{devis_numero}} que nous avons préparé pour votre projet.
+Avez-vous pu prendre connaissance de cette proposition ?
 
-Votre projet nous tient à cœur et nous serions ravis de pouvoir vous accompagner dans sa réalisation.
+Nous sommes disponibles pour discuter des modalités de ce devis ou pour répondre à vos questions.
 
-N'hésitez pas à me faire part de vos questions ou préoccupations éventuelles.
-
-Dans l'attente de votre retour.
+Ce devis reste valable jusqu'au {{devis_validite}}.
 
 Cordialement,
-{{contact_nom}}
-{{entreprise_nom}}
-{{contact_telephone}}",
+
+L'équipe Madin.IA",
                 'description' => 'Relance bienveillante et professionnelle',
                 'is_default' => true,
-                'variables' => ['client_nom', 'devis_numero', 'contact_nom', 'entreprise_nom', 'contact_telephone']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'devis_validite']
             ],
             [
                 'name' => 'Suivi avec ajustements possibles',
@@ -250,25 +218,19 @@ Cordialement,
                 'subject' => 'Votre devis {{devis_numero}} - Possibilité d\'ajustements',
                 'body' => "Bonjour {{client_nom}},
 
-Suite à notre devis {{devis_numero}}, je souhaitais savoir si celui-ci correspond bien à vos attentes.
+Nous souhaitons faire un suivi concernant notre devis n° {{devis_numero}} envoyé précédemment.
 
-Si certains éléments ne vous conviennent pas parfaitement, sachez que nous pouvons ajuster notre proposition :
-• Modification du périmètre
-• Étalement des paiements
-• Options alternatives
-• Adaptation du planning
+Si certains éléments de notre proposition ne correspondent pas exactement à vos attentes ou à votre budget actuel, nous serions ravis d'en discuter pour trouver des ajustements possibles.
 
-Votre satisfaction est notre priorité. N'hésitez pas à me faire part de vos remarques.
+Notre objectif est de vous proposer une solution adaptée à vos besoins spécifiques.
 
-Je suis à votre écoute !
+N'hésitez pas à nous faire part de vos retours.
 
 Cordialement,
-{{contact_nom}}
-{{entreprise_nom}}
-📞 {{contact_telephone}}
-✉️ {{contact_email}}",
+
+L'équipe Madin.IA",
                 'description' => 'Relance avec proposition d\'ajustements',
-                'variables' => ['client_nom', 'devis_numero', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
+                'variables' => ['client_nom', 'devis_numero']
             ],
             [
                 'name' => 'Suivi avec demande de feedback',
@@ -277,25 +239,20 @@ Cordialement,
                 'subject' => 'Votre avis nous intéresse - Devis {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
-J'aimerais avoir votre retour sur le devis {{devis_numero}} que nous vous avons proposé.
+Suite à l'envoi de notre devis n° {{devis_numero}} d'un montant de {{devis_montant}}, nous n'avons pas encore reçu de retour de votre part.
 
-Vos commentaires sont précieux pour nous aider à améliorer nos services :
+Afin de mieux répondre à vos attentes, nous serions intéressés par votre feedback sur notre proposition :
+- Le devis répond-il à vos besoins actuels ?
+- Les tarifs proposés sont-ils en adéquation avec votre budget ?
+- Y a-t-il des éléments que vous souhaiteriez modifier ?
 
-• Le devis était-il clair et complet ?
-• Les délais proposés vous conviennent-ils ?
-• Avez-vous des suggestions d'amélioration ?
-• Qu'est-ce qui pourrait faciliter votre décision ?
+Nous restons à votre disposition pour échanger et adapter notre offre si nécessaire.
 
-Même si vous ne donnez pas suite à ce projet, votre feedback nous aidera à mieux servir nos futurs clients.
+Cordialement,
 
-Je vous remercie par avance pour le temps que vous pourrez consacrer à ces questions.
-
-Bien à vous,
-{{contact_nom}}
-{{entreprise_nom}}
-{{contact_email}}",
+L'équipe Madin.IA",
                 'description' => 'Relance axée sur le feedback client',
-                'variables' => ['client_nom', 'devis_numero', 'contact_nom', 'entreprise_nom', 'contact_email']
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant']
             ],
 
             // CONFIRMATION DE DEVIS ACCEPTÉ
@@ -304,36 +261,27 @@ Bien à vous,
                 'category' => 'confirmation',
                 'sub_category' => 'confirmation_infos',
                 'subject' => '🎉 Confirmation - Devis {{devis_numero}} accepté',
-                'body' => "Cher {{client_nom}},
+                'body' => "Bonjour {{client_nom}},
 
-Excellente nouvelle ! Nous avons bien reçu votre accord pour le devis {{devis_numero}}.
+Nous vous remercions vivement pour l'acceptation de notre devis n° {{devis_numero}}.
 
-Nous sommes ravis de travailler avec vous sur ce projet !
+Votre commande a été enregistrée avec succès sous la référence {{numero_commande}}.
 
-📋 INFORMATIONS NÉCESSAIRES
-Pour finaliser le démarrage, nous aurons besoin de :
-• Contrat signé (envoyé en pièce jointe)
-• Coordonnées bancaires pour l'acompte
-• Personne de contact désignée
-• Adresse de livraison/intervention
-• Contraintes particulières à prendre en compte
+Afin de préparer au mieux le démarrage de votre projet, nous aurions besoin de quelques informations complémentaires :
+- Vos disponibilités pour une réunion de cadrage dans les prochains jours
+- Les coordonnées des personnes impliquées dans le projet de votre côté
+- Vos préférences concernant la fréquence des points d'avancement
 
-🗓️ PROCHAINES ÉTAPES
-1. Retour des documents signés
-2. Facturation de l'acompte (30% du montant)
-3. Démarrage sous 48h après réception
-4. Point de lancement prévu dans les 7 jours
+Nous vous invitons à nous communiquer ces informations par retour de mail.
 
-Je vous recontacte demain pour organiser tout cela.
+Merci encore pour votre confiance.
 
-Encore merci pour votre confiance !
+Cordialement,
 
-{{contact_nom}}
-{{entreprise_nom}}
-📞 {{contact_telephone}}",
+L'équipe Madin.IA",
                 'description' => 'Confirmation avec collecte d\'informations pratiques',
                 'is_default' => true,
-                'variables' => ['client_nom', 'devis_numero', 'contact_nom', 'entreprise_nom', 'contact_telephone']
+                'variables' => ['client_nom', 'devis_numero', 'numero_commande']
             ],
             [
                 'name' => 'Confirmation avec étapes suivantes',
@@ -342,122 +290,115 @@ Encore merci pour votre confiance !
                 'subject' => '✅ Devis {{devis_numero}} validé - Voici la suite',
                 'body' => "Bonjour {{client_nom}},
 
-Parfait ! Votre devis {{devis_numero}} est maintenant confirmé.
+Excellente nouvelle ! Nous vous confirmons l'acceptation de notre devis n° {{devis_numero}} et vous remercions pour votre confiance.
 
-🚀 PLANNING DE RÉALISATION
+Votre commande est maintenant enregistrée sous la référence {{numero_commande}}.
 
-📅 SEMAINE 1
-• Envoi du contrat et bon de commande
-• Réception de l'acompte ({{devis_montant}} x 30%)
-• Constitution de l'équipe projet
+Voici les prochaines étapes :
+1. Un chef de projet va vous contacter dans les 48h pour planifier une réunion de lancement
+2. Nous établirons ensemble un calendrier détaillé du projet
+3. Le développement démarrera selon le planning convenu
+4. Des points d'avancement réguliers seront organisés
 
-📅 SEMAINE 2
-• Démarrage effectif des travaux
-• Point de lancement avec votre équipe
-• Mise en place du suivi hebdomadaire
+N'hésitez pas à nous contacter si vous avez des questions.
 
-📅 SEMAINES SUIVANTES
-• Réalisation selon planning détaillé
-• Points d'étape réguliers
-• Ajustements si nécessaire
+Nous sommes impatients de démarrer ce projet avec vous !
 
-🤝 VOTRE INTERLOCUTEUR
-Je reste votre contact privilégié tout au long du projet.
+Cordialement,
 
-Rendez-vous très bientôt !
-
-{{contact_nom}}
-{{entreprise_nom}}
-{{contact_telephone}}",
+L'équipe Madin.IA",
                 'description' => 'Confirmation avec planning détaillé',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'contact_nom', 'entreprise_nom', 'contact_telephone']
+                'variables' => ['client_nom', 'devis_numero', 'numero_commande']
             ],
             [
                 'name' => 'Confirmation standard',
                 'category' => 'confirmation',
                 'sub_category' => 'confirmation_standard',
                 'subject' => 'Confirmation de votre commande - Devis {{devis_numero}}',
-                'body' => "Madame, Monsieur {{client_nom}},
+                'body' => "Bonjour {{client_nom}},
 
-Nous accusons réception de votre accord concernant le devis {{devis_numero}} d'un montant de {{devis_montant}}.
+Nous vous remercions d'avoir accepté notre devis n° {{devis_numero}}.
 
-Nous vous remercions pour votre confiance et confirmons le démarrage de votre projet selon les modalités convenues.
+Votre commande a été enregistrée sous la référence {{numero_commande}}.
 
-Vous recevrez prochainement :
-• Le contrat d'engagement
-• La facture d'acompte
-• Le planning détaillé d'intervention
+Nous allons maintenant procéder aux étapes suivantes de votre projet conformément à notre proposition.
 
-Notre équipe se tient à votre disposition pour toute information complémentaire.
+Notre équipe va vous contacter très prochainement pour planifier le démarrage des travaux.
+
+Nous vous remercions pour votre confiance et nous réjouissons de cette collaboration.
 
 Cordialement,
-{{contact_nom}}
-{{entreprise_nom}}
-{{contact_telephone}}
-{{contact_email}}",
+
+L'équipe Madin.IA",
                 'description' => 'Confirmation sobre et professionnelle',
-                'variables' => ['client_nom', 'devis_numero', 'devis_montant', 'contact_nom', 'entreprise_nom', 'contact_telephone', 'contact_email']
-            ],
-            [
-                'name' => 'Envoi Devis Standard',
-                'category' => 'envoi_initial',
-                'sub_category' => 'standard_professionnel',
-                'subject' => 'Votre devis {numero_devis} - {objet_devis}',
-                'body' => 'Bonjour {prenom_client},
-
-J\'espère que vous allez bien.
-
-Veuillez trouver ci-joint votre devis {numero_devis} concernant {objet_devis} d\'un montant de {montant_ttc}.
-
-Ce devis est valable 30 jours à compter de la date d\'émission.
-
-N\'hésitez pas à me contacter si vous avez des questions ou si vous souhaitez discuter des détails.
-
-Cordialement,
-L\'équipe Madinia',
-                'description' => 'Modèle standard pour l\'envoi de devis',
-                'variables' => ['prenom_client', 'numero_devis', 'objet_devis', 'montant_ttc'],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Envoi Devis Professionnel',
-                'category' => 'envoi_initial',
-                'sub_category' => 'detaille_etapes',
-                'subject' => 'Proposition commerciale {numero_devis}',
-                'body' => 'Madame, Monsieur {nom_client},
-
-Nous avons le plaisir de vous adresser notre proposition commerciale {numero_devis} pour {objet_devis}.
-
-Le montant total s\'élève à {montant_ttc} TTC.
-
-Cette proposition est valable 30 jours et nous restons à votre disposition pour tout complément d\'information.
-
-Dans l\'attente de votre retour favorable, nous vous prions d\'agréer nos salutations distinguées.
-
-Madinia',
-                'description' => 'Modèle professionnel pour l\'envoi de devis',
-                'variables' => ['nom_client', 'numero_devis', 'objet_devis', 'montant_ttc'],
-                'is_active' => true
-            ],
-            [
-                'name' => 'Envoi Devis Simple',
-                'category' => 'envoi_initial',
-                'sub_category' => 'concis_direct',
-                'subject' => 'Votre devis {numero_devis}',
-                'body' => 'Bonjour {prenom_client},
-
-Ci-joint votre devis {numero_devis} pour {objet_devis}.
-
-Montant : {montant_ttc}
-
-Cordialement',
-                'description' => 'Modèle simple pour l\'envoi de devis',
-                'variables' => ['prenom_client', 'numero_devis', 'objet_devis', 'montant_ttc'],
-                'is_active' => true
+                'is_default' => true,
+                'variables' => ['client_nom', 'devis_numero', 'numero_commande']
             ]
         ];
 
         foreach ($templates as $template) {
+            EmailTemplate::updateOrCreate(
+                ['name' => $template['name'], 'category' => $template['category']],
+                $template
+            );
+        }
+
+        // Templates pour l'acceptation de devis
+        $templatesAcceptation = [
+            [
+                'name' => 'Confirmation acceptation - Standard',
+                'category' => 'acceptation_devis',
+                'sub_category' => 'confirmation',
+                'subject' => 'Confirmation d\'acceptation de votre devis {{devis_numero}}',
+                'body' => "Bonjour {{client_nom}},
+
+Nous avons le plaisir de vous confirmer que vous avez accepté le devis {{devis_numero}} d'un montant de {{devis_montant_ttc}}.
+
+Votre acceptation a été enregistrée et nous allons maintenant procéder aux étapes suivantes de votre projet.
+
+Notre équipe va vous contacter très prochainement pour planifier le démarrage des travaux.
+
+Nous vous remercions pour votre confiance.
+
+Cordialement,
+L'équipe {{entreprise_nom}}",
+                'description' => 'Email de confirmation standard pour l\'acceptation d\'un devis',
+                'is_default' => true,
+                'variables' => ['client_nom', 'devis_numero', 'devis_montant_ttc', 'entreprise_nom']
+            ],
+            [
+                'name' => 'Confirmation acceptation - Détaillée',
+                'category' => 'acceptation_devis',
+                'sub_category' => 'confirmation',
+                'subject' => '✅ Votre devis {{devis_numero}} a été accepté - Prochaines étapes',
+                'body' => "Bonjour {{client_nom}},
+
+🎉 Excellente nouvelle ! Nous avons bien reçu votre acceptation du devis {{devis_numero}}.
+
+📋 RÉCAPITULATIF DE VOTRE COMMANDE :
+• Numéro de devis : {{devis_numero}}
+• Objet : {{devis_objet}}
+• Montant TTC : {{devis_montant_ttc}}
+• Date d'acceptation : {{date_acceptation}}
+
+🚀 PROCHAINES ÉTAPES :
+1. Planification du projet avec notre équipe
+2. Établissement de la facture selon les conditions convenues
+3. Démarrage des travaux selon le planning établi
+
+Notre équipe va vous contacter dans les 48h pour organiser le lancement de votre projet.
+
+Merci pour votre confiance !
+
+Cordialement,
+L'équipe {{entreprise_nom}}",
+                'description' => 'Email de confirmation détaillé avec prochaines étapes',
+                'is_default' => false,
+                'variables' => ['client_nom', 'devis_numero', 'devis_objet', 'devis_montant_ttc', 'date_acceptation', 'entreprise_nom']
+            ]
+        ];
+
+        foreach ($templatesAcceptation as $template) {
             EmailTemplate::updateOrCreate(
                 ['name' => $template['name'], 'category' => $template['category']],
                 $template

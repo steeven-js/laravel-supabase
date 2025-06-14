@@ -198,6 +198,9 @@ class Devis extends Model
                 ['statut' => $ancienStatut],
                 ['statut' => 'accepte', 'date_acceptation' => $this->date_acceptation->format('Y-m-d H:i:s')]
             );
+
+            // Envoyer les emails de confirmation d'acceptation
+            $this->envoyerEmailsAcceptation();
         }
 
         return $result;
@@ -397,5 +400,54 @@ class Devis extends Model
         }
 
         return $facture;
+    }
+
+    /**
+     * Envoyer les emails de confirmation d'acceptation du devis.
+     */
+    private function envoyerEmailsAcceptation(): void
+    {
+        try {
+            // Charger les relations nécessaires
+            $this->load('client.entreprise');
+
+            // Envoyer l'email de confirmation au client
+            \Illuminate\Support\Facades\Mail::to($this->client->email)->send(
+                new \App\Mail\DevisAccepteMail($this, $this->client)
+            );
+
+            \Illuminate\Support\Facades\Log::info('Email de confirmation d\'acceptation envoyé au client', [
+                'devis_numero' => $this->numero_devis,
+                'client_email' => $this->client->email,
+                'client_nom' => $this->client->nom_complet
+            ]);
+
+            // Envoyer l'email de notification à l'admin
+            $adminEmail = config('mail.admin_email');
+            if ($adminEmail) {
+                \Illuminate\Support\Facades\Mail::to($adminEmail)->send(
+                    new \App\Mail\DevisAccepteAdminMail($this, $this->client)
+                );
+
+                \Illuminate\Support\Facades\Log::info('Email de notification d\'acceptation envoyé à l\'admin', [
+                    'devis_numero' => $this->numero_devis,
+                    'admin_email' => $adminEmail
+                ]);
+            } else {
+                \Illuminate\Support\Facades\Log::warning('Email admin non configuré, notification d\'acceptation non envoyée', [
+                    'devis_numero' => $this->numero_devis
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erreur lors de l\'envoi des emails d\'acceptation', [
+                'devis_numero' => $this->numero_devis,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Ne pas faire échouer l'acceptation du devis si l'envoi d'email échoue
+            // L'acceptation reste valide même si l'email n'est pas envoyé
+        }
     }
 }

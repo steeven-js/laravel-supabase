@@ -1,0 +1,311 @@
+{
+    "collection": "devis_email_templates",
+    "count": 14,
+    "data": [
+        {
+            "id": "27ZuNHGlDzEkyzfLcusb",
+            "content": "<p>Bonjour {{clientName}}, <br><br>C'est avec enthousiasme que nous vous présentons notre devis n° {{devisNumber}} pour votre projet. <br><br>Cette offre spéciale d'un montant de {{devisAmount}} est valable jusqu'au {{devisValidUntil}} et comprend tous les services détaillés dans le document joint. <br><br>Pour toute signature avant la date d'expiration, bénéficiez d'un suivi personnalisé pendant le premier mois de déploiement ! <br><br>N'hésitez pas à nous contacter pour échanger sur cette proposition. <br><br>Bien cordialement, <br><br>L'équipe Madin.IA</p>",
+            "subject": "Sans sujet",
+            "isDefault": false,
+            "createdAt": {
+                "seconds": 1745013008,
+                "nanoseconds": 968000000
+            },
+            "updatedAt": {
+                "seconds": 1745530767,
+                "nanoseconds": 236000000
+            },
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil"
+            ],
+            "name": "Promotionnel",
+            "type": "devis_send"
+        },
+        {
+            "id": "3uzilYDzUA4zgrHKTh2B",
+            "type": "devis_reminder",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous vous rappelons que notre devis n° {{devisNumber}} est toujours disponible et valable jusqu'au {{devisValidUntil}}. <br><br>Pour toute acceptation dans les 7 prochains jours, nous vous offrons une réduction de 5% sur le montant total de {{devisAmount}}. <br><br>Nous serions ravis de pouvoir démarrer cette collaboration avec vous. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "isDefault": false,
+            "name": "Rappel avec offre spéciale",
+            "subject": "Sans sujet",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisValidUntil",
+                "devisAmount"
+            ],
+            "createdAt": {
+                "seconds": 1745013010,
+                "nanoseconds": 622000000
+            },
+            "updatedAt": {
+                "seconds": 1745531006,
+                "nanoseconds": 594000000
+            }
+        },
+        {
+            "id": "4b1xn5SwvvXqYk0QzOBu",
+            "name": "Concis et direct",
+            "isDefault": false,
+            "createdAt": {
+                "seconds": 1745013009,
+                "nanoseconds": 455000000
+            },
+            "subject": "Sans sujet",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil"
+            ],
+            "type": "devis_send",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Veuillez trouver en pièce jointe notre devis n° {{devisNumber}} d'un montant de {{devisAmount}}, valable jusqu'au {{devisValidUntil}}. <br><br>Pour l'accepter, il vous suffit de nous le retourner signé ou de nous confirmer votre accord par retour de mail. <br><br>Cordialement, <br><br>Madin.IA</p>",
+            "updatedAt": {
+                "seconds": 1745530832,
+                "nanoseconds": 718000000
+            }
+        },
+        {
+            "id": "CT9dXhJ97Sym0NXfbKGu",
+            "type": "devis_send",
+            "isDefault": true,
+            "subject": "Sans sujet",
+            "createdAt": {
+                "seconds": 1745013009,
+                "nanoseconds": 843000000
+            },
+            "updatedAt": {
+                "seconds": 1745530870,
+                "nanoseconds": 883000000
+            },
+            "name": "Standard professionnel",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil",
+                "companyPhone"
+            ],
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous vous remercions pour votre confiance en Madin.IA. <br><br>Suite à notre échange, nous avons le plaisir de vous faire parvenir notre devis n° {{devisNumber}} d'un montant de {{devisAmount}}, valable jusqu'au {{devisValidUntil}}. <br><br>Vous trouverez tous les détails de notre proposition en pièce jointe. N'hésitez pas à nous contacter pour toute information complémentaire ou modification souhaitée. <br><br>Cordialement, <br><br>L'équipe Madin.IA <br><br>{{companyPhone}}</p>"
+        },
+        {
+            "id": "DSQFPvIXGLvbc2O3Jmze",
+            "updatedAt": {
+                "seconds": 1745531214,
+                "nanoseconds": 937000000
+            },
+            "type": "devis_followup",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous faisons suite à notre devis n° {{devisNumber}} d'un montant de {{devisAmount}} que nous vous avons envoyé précédemment. <br><br>Avez-vous pu prendre connaissance de cette proposition ? <br><br>Nous sommes disponibles pour discuter des modalités de ce devis ou pour répondre à vos questions. <br><br>Ce devis reste valable jusqu'au {{devisValidUntil}}. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "createdAt": {
+                "seconds": 1745013011,
+                "nanoseconds": 387000000
+            },
+            "subject": "Sans sujet",
+            "isDefault": true,
+            "name": "Suivi standard",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil"
+            ]
+        },
+        {
+            "id": "FdROoQ166Mp5kqypmloG",
+            "type": "devis_accepted",
+            "name": "Confirmation avec demande d'informations",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous vous remercions vivement pour l'acceptation de notre devis n° {{devisNumber}}. <br><br>Votre commande a été enregistrée avec succès sous la référence {{commandeNumber}}. <br><br>Afin de préparer au mieux le démarrage de votre projet, nous aurions besoin de quelques informations complémentaires :<br>- Vos disponibilités pour une réunion de cadrage dans les prochains jours <br>- Les coordonnées des personnes impliquées dans le projet de votre côté <br>- Vos préférences concernant la fréquence des points d'avancement <br><br>Nous vous invitons à nous communiquer ces informations par retour de mail. <br><br>Merci encore pour votre confiance. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "createdAt": {
+                "seconds": 1745013012,
+                "nanoseconds": 907000000
+            },
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "commandeNumber"
+            ],
+            "subject": "Sans sujet",
+            "updatedAt": {
+                "seconds": 1745531317,
+                "nanoseconds": 417000000
+            },
+            "isDefault": false
+        },
+        {
+            "id": "SCIUHjwEuu1zCGQolVGV",
+            "type": "devis_followup",
+            "variables": [
+                "clientName",
+                "devisNumber"
+            ],
+            "name": "Suivi avec ajustements possibles",
+            "isDefault": false,
+            "updatedAt": {
+                "seconds": 1745531263,
+                "nanoseconds": 440000000
+            },
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous souhaitons faire un suivi concernant notre devis n° {{devisNumber}} envoyé précédemment. <br><br>Si certains éléments de notre proposition ne correspondent pas exactement à vos attentes ou à votre budget actuel, nous serions ravis d'en discuter pour trouver des ajustements possibles. <br><br>Notre objectif est de vous proposer une solution adaptée à vos besoins spécifiques. <br><br>N'hésitez pas à nous faire part de vos retours. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "createdAt": {
+                "seconds": 1745013011,
+                "nanoseconds": 127000000
+            },
+            "subject": "Sans sujet"
+        },
+        {
+            "id": "SqOE39BIbvzP2s0qcxlL",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous vous informons que votre devis n° {{devisNumber}} d'un montant de {{devisAmount}} arrive bientôt à expiration ({{devisValidUntil}}). <br><br>Souhaitez-vous que nous procédions à sa mise à jour ou que nous prolongions sa validité ? <br><br>N'hésitez pas à nous contacter pour en discuter. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "type": "devis_reminder",
+            "subject": "Sans sujet",
+            "updatedAt": {
+                "seconds": 1745531111,
+                "nanoseconds": 560000000
+            },
+            "createdAt": {
+                "seconds": 1745013011,
+                "nanoseconds": 120000000
+            },
+            "name": "Rappel avec date d'expiration",
+            "isDefault": false,
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil"
+            ]
+        },
+        {
+            "id": "aW17fWcdENn6LkU5wtH2",
+            "updatedAt": {
+                "seconds": 1745531147,
+                "nanoseconds": 471000000
+            },
+            "createdAt": {
+                "seconds": 1745013011,
+                "nanoseconds": 892000000
+            },
+            "name": "Rappel standard",
+            "subject": "Sans sujet",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil"
+            ],
+            "isDefault": true,
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous souhaitons vous rappeler que notre devis n° {{devisNumber}} d'un montant de {{devisAmount}} est toujours en attente de votre décision. <br><br>Ce devis est valable jusqu'au {{devisValidUntil}}. <br><br>N'hésitez pas à nous contacter pour toute question ou pour nous faire part de votre décision. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "type": "devis_reminder"
+        },
+        {
+            "id": "bbC64h9NITpCnD5n9JEE",
+            "name": "Détaillé avec étapes",
+            "isDefault": false,
+            "content": "<p>Bonjour {{clientName}}, <br><br>Suite à notre analyse approfondie de vos besoins, nous vous adressons notre devis n° {{devisNumber}} d'un montant de {{devisAmount}}. <br><br>Notre proposition comprend :<br> - Une phase d'analyse et conception <br>- Le développement et l'implémentation <br>- Les tests et déploiement <br>- Le support post-lancement <br><br>Cette offre est valable jusqu'au {{devisValidUntil}}. <br><br>Nous restons à votre disposition pour discuter des modalités de mise en œuvre et répondre à vos questions. <br><br>Cordialement, <br><br>L'équipe Madin.IA <br><br>{{companyEmail}}</p>",
+            "updatedAt": {
+                "seconds": 1745530939,
+                "nanoseconds": 703000000
+            },
+            "subject": "Sans sujet",
+            "type": "devis_send",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil",
+                "companyEmail"
+            ],
+            "createdAt": {
+                "seconds": 1745013009,
+                "nanoseconds": 459000000
+            }
+        },
+        {
+            "id": "hWtF0XxxBllt99e5i6Bq",
+            "isDefault": false,
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "commandeNumber"
+            ],
+            "subject": "Sans sujet",
+            "type": "devis_accepted",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Excellente nouvelle ! Nous vous confirmons l'acceptation de notre devis n° {{devisNumber}} et vous remercions pour votre confiance.<br><br>Votre commande est maintenant enregistrée sous la référence {{commandeNumber}}. <br><br>Voici les prochaines étapes : <br>1. Un chef de projet va vous contacter dans les 48h pour planifier une réunion de lancement <br>2. Nous établirons ensemble un calendrier détaillé du projet <br>3. Le développement démarrera selon le planning convenu <br>4. Des points d'avancement réguliers seront organisés <br><br>N'hésitez pas à nous contacter si vous avez des questions. <br><br>Nous sommes impatients de démarrer ce projet avec vous ! <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "createdAt": {
+                "seconds": 1745013012,
+                "nanoseconds": 902000000
+            },
+            "name": "Confirmation avec étapes suivantes",
+            "updatedAt": {
+                "seconds": 1745531397,
+                "nanoseconds": 785000000
+            }
+        },
+        {
+            "id": "lOC3FwmoGS7iWQQyOcUm",
+            "type": "devis_accepted",
+            "createdAt": {
+                "seconds": 1745013013,
+                "nanoseconds": 191000000
+            },
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "commandeNumber"
+            ],
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous vous remercions d'avoir accepté notre devis n° {{devisNumber}}. <br><br>Votre commande a été enregistrée sous la référence {{commandeNumber}}. <br><br>Nous allons maintenant procéder aux étapes suivantes de votre projet conformément à notre proposition. <br><br>Notre équipe va vous contacter très prochainement pour planifier le démarrage des travaux. <br><br>Nous vous remercions pour votre confiance et nous réjouissons de cette collaboration. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "isDefault": true,
+            "name": "Confirmation standard",
+            "updatedAt": {
+                "seconds": 1745531582,
+                "nanoseconds": 495000000
+            },
+            "subject": "Sans sujet"
+        },
+        {
+            "id": "nDmXSwAzdcPgwPwpLf50",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount",
+                "devisValidUntil",
+                "companyPhone"
+            ],
+            "name": "Personnalisé et chaleureux",
+            "createdAt": {
+                "seconds": 1745013009,
+                "nanoseconds": 474000000
+            },
+            "updatedAt": {
+                "seconds": 1745530980,
+                "nanoseconds": 25000000
+            },
+            "type": "devis_send",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Nous sommes ravis de l'intérêt que vous portez à notre solution et vous remercions pour la confiance que vous nous accordez. <br><br>Comme promis, vous trouverez ci-joint notre devis n° {{devisNumber}} personnalisé selon vos besoins spécifiques, pour un montant de {{devisAmount}}. <br><br>Notre équipe est impatiente de collaborer avec vous sur ce projet et de vous accompagner dans sa réalisation. <br><br>Ce devis est valable jusqu'au {{devisValidUntil}}. <br><br>N'hésitez pas à nous appeler directement au {{companyPhone}} pour toute question. <br><br>Très cordialement, <br><br>L'équipe Madin.IA</p>",
+            "isDefault": false,
+            "subject": "Sans sujet"
+        },
+        {
+            "id": "smVu0kF2A6udfuu6nhn2",
+            "type": "devis_followup",
+            "content": "<p>Bonjour {{clientName}}, <br><br>Suite à l'envoi de notre devis n° {{devisNumber}} d'un montant de {{devisAmount}}, nous n'avons pas encore reçu de retour de votre part. <br><br>Afin de mieux répondre à vos attentes, nous serions intéressés par votre feedback sur notre proposition : <br>- Le devis répond-il à vos besoins actuels ? <br>- Les tarifs proposés sont-ils en adéquation avec votre budget ? <br>- Y a-t-il des éléments que vous souhaiteriez modifier ? <br><br>Nous restons à votre disposition pour échanger et adapter notre offre si nécessaire. <br><br>Cordialement, <br><br>L'équipe Madin.IA</p>",
+            "createdAt": {
+                "seconds": 1745013012,
+                "nanoseconds": 414000000
+            },
+            "subject": "Sans sujet",
+            "isDefault": false,
+            "updatedAt": {
+                "seconds": 1745531260,
+                "nanoseconds": 833000000
+            },
+            "name": "Suivi avec demande de feedback",
+            "variables": [
+                "clientName",
+                "devisNumber",
+                "devisAmount"
+            ]
+        }
+    ]
+}

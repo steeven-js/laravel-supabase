@@ -30,7 +30,7 @@ class MadiniaUpdateRequest extends FormRequest
             'site_web' => ['nullable', 'url', 'max:255'],
 
             // Adresse et informations légales
-            'siret' => ['nullable', 'string', 'max:14'],
+            'siret' => ['nullable', 'string'],
             'numero_nda' => ['nullable', 'string', 'max:50'],
             'pays' => ['required', 'string', 'max:100'],
             'adresse' => ['nullable', 'string', 'max:500'],
@@ -69,7 +69,6 @@ class MadiniaUpdateRequest extends FormRequest
             'site_web.url' => 'L\'URL du site web doit être valide.',
             'site_web.max' => 'L\'URL du site web ne peut pas dépasser 255 caractères.',
 
-            'siret.max' => 'Le numéro SIRET ne peut pas dépasser 14 caractères.',
             'numero_nda.max' => 'Le numéro NDA ne peut pas dépasser 50 caractères.',
             'pays.required' => 'Le pays est obligatoire.',
             'pays.max' => 'Le nom du pays ne peut pas dépasser 100 caractères.',

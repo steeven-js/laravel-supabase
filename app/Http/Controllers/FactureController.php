@@ -111,6 +111,9 @@ class FactureController extends Controller
     {
         $facture->load(['client.entreprise', 'devis']);
 
+        // Récupérer les informations de Madinia
+        $madinia = \App\Models\Madinia::getInstance();
+
         // Construire manuellement les données pour éviter les problèmes de sérialisation
         $factureFormatted = [
             'id' => $facture->id,
@@ -152,7 +155,8 @@ class FactureController extends Controller
         ];
 
         return Inertia::render('factures/show', [
-            'facture' => $factureFormatted
+            'facture' => $factureFormatted,
+            'madinia' => $madinia
         ]);
     }
 

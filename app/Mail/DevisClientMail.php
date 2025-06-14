@@ -175,6 +175,7 @@ class DevisClientMail extends Mailable
             'nom_client' => $this->client->prenom . ' ' . $this->client->nom,
             'prenom_client' => $this->client->prenom,
             'numero_devis' => $this->devis->numero_devis,
+            'numero_commande' => 'CMD-' . $this->devis->numero_devis,
             'objet_devis' => $this->devis->objet,
             'montant_ttc' => number_format($this->devis->montant_ttc, 2, ',', ' ') . ' €',
 

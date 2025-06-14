@@ -125,7 +125,7 @@ Route::post('devis/{devis}/update-pdf-react', [DevisController::class, 'updatePd
 
     // Routes pour les services
     Route::resource('services', ServiceController::class);
-    Route::patch('/services/{service}/toggle', [ServiceController::class, 'toggleStatus'])->name('services.toggle');
+    Route::patch('/services/{service}/toggle', [ServiceController::class, 'toggle'])->name('services.toggle');
     Route::post('/services/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('services.duplicate');
 
     // Routes pour l'entreprise Madinia
