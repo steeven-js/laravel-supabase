@@ -580,7 +580,7 @@ export default function DevisEdit({ devis, clients, services, madinia }: Props) 
                                                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                                                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qté</th>
                                                 <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Prix unit.</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">TVA</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">TVA</th>
                                                 <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Total</th>
                                                 <th className="px-3 py-3 w-12"></th>
                                             </tr>
@@ -656,7 +656,7 @@ export default function DevisEdit({ devis, clients, services, madinia }: Props) 
                                                             step="0.1"
                                                             value={ligne.taux_tva.toString()}
                                                             onChange={(e) => updateLigne(index, 'taux_tva', parseFloat(e.target.value) || 0)}
-                                                            className="text-right text-xs"
+                                                            className="text-right text-xs w-full min-w-[80px]"
                                                         />
                                                     </td>
                                                     <td className="px-3 py-3 text-right font-medium text-xs">
