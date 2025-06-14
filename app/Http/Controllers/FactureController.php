@@ -159,9 +159,13 @@ class FactureController extends Controller
             ] : null
         ];
 
+        // Vérifier le statut du PDF
+        $pdfStatus = $this->getPdfStatusData($facture);
+
         return Inertia::render('factures/show', [
             'facture' => $factureFormatted,
-            'madinia' => $madinia
+            'madinia' => $madinia,
+            'pdfStatus' => $pdfStatus
         ]);
     }
 
@@ -636,6 +640,152 @@ class FactureController extends Controller
 
             return redirect()->back()
                 ->with('error', '❌ Erreur lors de la régénération du PDF.');
+        }
+    }
+
+    /**
+     * S'assure que le PDF existe et est à jour
+     */
+    public function ensurePdf(Facture $facture)
+    {
+        try {
+            $needsRegeneration = false;
+            $message = '';
+
+            // Vérifier si le PDF existe
+            if (!$this->facturePdfService->pdfExiste($facture)) {
+                $needsRegeneration = true;
+                $message = 'PDF manquant';
+            } else {
+                // Vérifier si le PDF est à jour
+                $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+                if ($cheminPdf && file_exists($cheminPdf)) {
+                    $dateModifPdf = filemtime($cheminPdf);
+                    $dateModifFacture = $facture->updated_at->timestamp;
+
+                    if ($dateModifFacture > $dateModifPdf) {
+                        $needsRegeneration = true;
+                        $message = 'PDF obsolète';
+                    }
+                }
+            }
+
+            // Générer si nécessaire
+            if ($needsRegeneration) {
+                $nomFichier = $this->facturePdfService->genererEtSauvegarder($facture);
+                $facture->pdf_file = $nomFichier;
+                $facture->save();
+
+                Log::info('PDF généré automatiquement pour aperçu', [
+                    'facture_id' => $facture->id,
+                    'raison' => $message,
+                    'fichier' => $nomFichier
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ready',
+                'regenerated' => $needsRegeneration,
+                'message' => $needsRegeneration ? "PDF mis à jour ($message)" : 'PDF à jour'
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la vérification/génération PDF pour aperçu', [
+                'facture_id' => $facture->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Erreur lors de la vérification du PDF'
+            ], 500);
+        }
+    }
+
+    /**
+     * Retourne le statut du PDF (existe, à jour, taille, etc.)
+     */
+    public function getPdfStatus(Facture $facture)
+    {
+        try {
+            $status = [
+                'exists' => false,
+                'up_to_date' => false,
+                'local_size' => 0,
+                'supabase_url' => null,
+                'last_modified' => null,
+            ];
+
+            // Vérifier existence locale
+            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                $status['exists'] = true;
+                $status['local_size'] = filesize($cheminPdf);
+                $status['last_modified'] = date('Y-m-d H:i:s', filemtime($cheminPdf));
+
+                // Vérifier si à jour
+                $dateModifPdf = filemtime($cheminPdf);
+                $dateModifFacture = $facture->updated_at->timestamp;
+                $status['up_to_date'] = $dateModifFacture <= $dateModifPdf;
+            }
+
+            // URL Supabase
+            $status['supabase_url'] = $this->facturePdfService->getUrlSupabasePdf($facture);
+
+            return response()->json($status);
+
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la récupération du statut PDF', [
+                'facture_id' => $facture->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'error' => 'Erreur lors de la récupération du statut'
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupère les données de statut PDF pour les pages show
+     */
+    private function getPdfStatusData(Facture $facture): array
+    {
+        try {
+            $status = [
+                'exists' => false,
+                'up_to_date' => false,
+                'local_size' => 0,
+                'last_modified' => null,
+            ];
+
+            // Vérifier existence locale
+            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                $status['exists'] = true;
+                $status['local_size'] = filesize($cheminPdf);
+                $status['last_modified'] = date('Y-m-d H:i:s', filemtime($cheminPdf));
+
+                // Vérifier si à jour
+                $dateModifPdf = filemtime($cheminPdf);
+                $dateModifFacture = $facture->updated_at->timestamp;
+                $status['up_to_date'] = $dateModifFacture <= $dateModifPdf;
+            }
+
+            return $status;
+
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la récupération du statut PDF pour show', [
+                'facture_id' => $facture->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'exists' => false,
+                'up_to_date' => false,
+                'local_size' => 0,
+                'last_modified' => null,
+            ];
         }
     }
 }

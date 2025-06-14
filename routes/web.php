@@ -94,10 +94,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('devis/{devis}/confirmer-transformation', [DevisController::class, 'confirmerTransformationFacture'])->name('devis.confirmer-transformation');
 
     // PDF devis
-Route::get('devis/{devis}/pdf', [DevisController::class, 'voirPdf'])->name('devis.pdf');
-Route::get('devis/{devis}/telecharger-pdf', [DevisController::class, 'telechargerPdf'])->name('devis.telecharger-pdf');
-Route::post('devis/{devis}/regenerer-pdf', [DevisController::class, 'regenererPdf'])->name('devis.regenerer-pdf');
-Route::post('devis/{devis}/update-pdf-react', [DevisController::class, 'updatePdfFromReact'])->name('devis.update-pdf-react');
+    Route::get('devis/{devis}/pdf', [DevisController::class, 'voirPdf'])->name('devis.pdf');
+    Route::get('devis/{devis}/telecharger-pdf', [DevisController::class, 'telechargerPdf'])->name('devis.telecharger-pdf');
+    Route::post('devis/{devis}/regenerer-pdf', [DevisController::class, 'regenererPdf'])->name('devis.regenerer-pdf');
+    Route::post('devis/{devis}/update-pdf-react', [DevisController::class, 'updatePdfFromReact'])->name('devis.update-pdf-react');
+    // Nouveaux endpoints pour gestion intelligente
+    Route::post('devis/{devis}/ensure-pdf', [DevisController::class, 'ensurePdf'])->name('devis.ensure-pdf');
+    Route::get('devis/{devis}/pdf-status', [DevisController::class, 'getPdfStatus'])->name('devis.pdf-status');
 
     // Routes pour les factures
     Route::resource('factures', FactureController::class)->parameters(['factures' => 'facture']);
@@ -113,6 +116,12 @@ Route::post('devis/{devis}/update-pdf-react', [DevisController::class, 'updatePd
     Route::get('factures/{facture}/pdf', [FactureController::class, 'voirPdf'])->name('factures.pdf');
     Route::get('factures/{facture}/telecharger-pdf', [FactureController::class, 'telechargerPdf'])->name('factures.telecharger-pdf');
     Route::post('factures/{facture}/regenerer-pdf', [FactureController::class, 'regenererPdf'])->name('factures.regenerer-pdf');
+    // Nouveaux endpoints pour gestion intelligente
+    Route::post('factures/{facture}/ensure-pdf', [FactureController::class, 'ensurePdf'])->name('factures.ensure-pdf');
+    Route::get('factures/{facture}/pdf-status', [FactureController::class, 'getPdfStatus'])->name('factures.pdf-status');
+    // Nouveaux endpoints pour gestion intelligente
+    Route::post('factures/{facture}/ensure-pdf', [FactureController::class, 'ensurePdf'])->name('factures.ensure-pdf');
+    Route::get('factures/{facture}/pdf-status', [FactureController::class, 'getPdfStatus'])->name('factures.pdf-status');
 
     // Routes pour le profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

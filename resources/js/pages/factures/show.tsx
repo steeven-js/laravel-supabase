@@ -26,7 +26,7 @@ import {
     Calendar,
     X
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import FacturePdfPreview from '@/components/pdf/FacturePdfPreview';
@@ -92,6 +92,7 @@ interface Madinia {
 interface Props {
     facture: Facture;
     madinia?: Madinia;
+    pdfStatus?: any;
 }
 
 const getStatusStyles = (statut: string) => {
@@ -158,8 +159,28 @@ const breadcrumbs = (facture: Facture): BreadcrumbItem[] => [
     },
 ];
 
-export default function FactureShow({ facture, madinia }: Props) {
+export default function FactureShow({ facture, madinia, pdfStatus: initialPdfStatus }: Props) {
     const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+    const [pdfStatus, setPdfStatus] = useState<any>(initialPdfStatus || null);
+
+    // Charger le statut du PDF au montage du composant si pas fourni initialement
+    useEffect(() => {
+        if (!initialPdfStatus) {
+            const fetchPdfStatus = async () => {
+                try {
+                    const response = await fetch(`/factures/${facture.id}/pdf-status`);
+                    if (response.ok) {
+                        const status = await response.json();
+                        setPdfStatus(status);
+                    }
+                } catch (error) {
+                    console.warn('Erreur lors de la récupération du statut PDF:', error);
+                }
+            };
+
+            fetchPdfStatus();
+        }
+    }, [facture.id, initialPdfStatus]);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -232,16 +253,59 @@ export default function FactureShow({ facture, madinia }: Props) {
         { value: 'annulee', label: 'Annulée', icon: '❌' },
     ];
 
-    const handlePreviewPdf = () => {
-        // Vérifications de sécurité approfondies
+        const handlePreviewPdf = () => {
+        // Vérifications de sécurité
         if (!facture || !facture.numero_facture || !facture.client) {
             console.error('Données de la facture manquantes');
             alert('Données de la facture incomplètes. Impossible de générer l\'aperçu.');
             return;
         }
 
-        // Ouvrir le modal
+        // Ouvrir l'aperçu directement
         setIsPdfModalOpen(true);
+    };
+
+    const handleSavePdf = async () => {
+        // Vérifications de sécurité approfondies
+        if (!facture || !facture.numero_facture || !facture.client) {
+            console.error('Données de la facture manquantes');
+            toast.error('Données de la facture incomplètes.');
+            return;
+        }
+
+        try {
+            toast.loading('Vérification du PDF...');
+
+            // Vérifier/générer le PDF en arrière-plan
+            const response = await fetch(`/factures/${facture.id}/ensure-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.regenerated) {
+                    toast.success(`PDF mis à jour : ${result.message}`);
+                    // Mettre à jour le statut local
+                    setPdfStatus({
+                        exists: true,
+                        up_to_date: true,
+                        local_size: 0,
+                        last_modified: new Date().toISOString()
+                    });
+                } else {
+                    toast.success('PDF déjà à jour');
+                }
+            } else {
+                toast.error('Erreur lors de la vérification du PDF');
+            }
+        } catch (error) {
+            console.error('Erreur lors de la sauvegarde du PDF:', error);
+            toast.error('Erreur lors de la sauvegarde du PDF');
+        }
     };
 
     // Préparer les données sécurisées pour le PDF
@@ -412,7 +476,7 @@ export default function FactureShow({ facture, madinia }: Props) {
                                 )}
                             </div>
 
-                            {/* Actions PDF */}
+                                                        {/* Actions PDF */}
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button
                                     variant="outline"
@@ -422,6 +486,30 @@ export default function FactureShow({ facture, madinia }: Props) {
                                 >
                                     <Eye className="mr-2 h-4 w-4" />
                                     Aperçu PDF
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 px-4 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 relative"
+                                    onClick={handleSavePdf}
+                                >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Sauvegarder PDF
+                                    {pdfStatus && (
+                                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                                            pdfStatus.exists && pdfStatus.up_to_date
+                                                ? 'bg-green-500'
+                                                : pdfStatus.exists && !pdfStatus.up_to_date
+                                                ? 'bg-orange-500'
+                                                : 'bg-red-500'
+                                        }`} title={
+                                            pdfStatus.exists && pdfStatus.up_to_date
+                                                ? 'PDF à jour'
+                                                : pdfStatus.exists && !pdfStatus.up_to_date
+                                                ? 'PDF obsolète'
+                                                : 'PDF manquant'
+                                        }></div>
+                                    )}
                                 </Button>
                                 {renderDownload}
                             </div>

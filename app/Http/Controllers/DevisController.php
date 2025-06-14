@@ -282,9 +282,13 @@ class DevisController extends Controller
             ] : null
         ];
 
+        // Vérifier le statut du PDF
+        $pdfStatus = $this->getPdfStatusData($devis);
+
         return Inertia::render('devis/show', [
             'devis' => $devisFormatted,
             'historique' => $historique,
+            'pdfStatus' => $pdfStatus,
             'madinia' => [
                 'id' => $madinia->id,
                 'name' => $madinia->name,
@@ -1177,8 +1181,111 @@ class DevisController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return redirect()->back()
-                ->with('error', '❌ Erreur lors de la régénération du PDF.');
+                    return redirect()->back()
+            ->with('error', '❌ Erreur lors de la régénération du PDF.');
+        }
+    }
+
+    /**
+     * S'assure que le PDF existe et est à jour
+     */
+    public function ensurePdf(Devis $devis)
+    {
+        try {
+            $needsRegeneration = false;
+            $message = '';
+
+            // Vérifier si le PDF existe
+            if (!$this->devisPdfService->pdfExiste($devis)) {
+                $needsRegeneration = true;
+                $message = 'PDF manquant';
+            } else {
+                // Vérifier si le PDF est à jour
+                $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+                if ($cheminPdf && file_exists($cheminPdf)) {
+                    $dateModifPdf = filemtime($cheminPdf);
+                    $dateModifDevis = $devis->updated_at->timestamp;
+
+                    if ($dateModifDevis > $dateModifPdf) {
+                        $needsRegeneration = true;
+                        $message = 'PDF obsolète';
+                    }
+                }
+            }
+
+            // Générer si nécessaire
+            if ($needsRegeneration) {
+                $nomFichier = $this->devisPdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichier;
+                $devis->save();
+
+                Log::info('PDF généré automatiquement pour aperçu', [
+                    'devis_id' => $devis->id,
+                    'raison' => $message,
+                    'fichier' => $nomFichier
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ready',
+                'regenerated' => $needsRegeneration,
+                'message' => $needsRegeneration ? "PDF mis à jour ($message)" : 'PDF à jour'
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la vérification/génération PDF pour aperçu', [
+                'devis_id' => $devis->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Erreur lors de la vérification du PDF'
+            ], 500);
+        }
+    }
+
+    /**
+     * Retourne le statut du PDF (existe, à jour, taille, etc.)
+     */
+    public function getPdfStatus(Devis $devis)
+    {
+        try {
+            $status = [
+                'exists' => false,
+                'up_to_date' => false,
+                'local_size' => 0,
+                'supabase_url' => null,
+                'last_modified' => null,
+            ];
+
+            // Vérifier existence locale
+            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                $status['exists'] = true;
+                $status['local_size'] = filesize($cheminPdf);
+                $status['last_modified'] = date('Y-m-d H:i:s', filemtime($cheminPdf));
+
+                // Vérifier si à jour
+                $dateModifPdf = filemtime($cheminPdf);
+                $dateModifDevis = $devis->updated_at->timestamp;
+                $status['up_to_date'] = $dateModifDevis <= $dateModifPdf;
+            }
+
+            // URL Supabase
+            $status['supabase_url'] = $this->devisPdfService->getUrlSupabasePdf($devis);
+
+            return response()->json($status);
+
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la récupération du statut PDF', [
+                'devis_id' => $devis->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'error' => 'Erreur lors de la récupération du statut'
+            ], 500);
         }
     }
 
@@ -1285,6 +1392,49 @@ class DevisController extends Controller
             return "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$chemin}";
         } else {
             throw new \Exception('Erreur upload Supabase: ' . $response->body());
+        }
+    }
+
+    /**
+     * Récupère les données de statut PDF pour les pages show
+     */
+    private function getPdfStatusData(Devis $devis): array
+    {
+        try {
+            $status = [
+                'exists' => false,
+                'up_to_date' => false,
+                'local_size' => 0,
+                'last_modified' => null,
+            ];
+
+            // Vérifier existence locale
+            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+            if ($cheminPdf && file_exists($cheminPdf)) {
+                $status['exists'] = true;
+                $status['local_size'] = filesize($cheminPdf);
+                $status['last_modified'] = date('Y-m-d H:i:s', filemtime($cheminPdf));
+
+                // Vérifier si à jour
+                $dateModifPdf = filemtime($cheminPdf);
+                $dateModifDevis = $devis->updated_at->timestamp;
+                $status['up_to_date'] = $dateModifDevis <= $dateModifPdf;
+            }
+
+            return $status;
+
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la récupération du statut PDF pour show', [
+                'devis_id' => $devis->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'exists' => false,
+                'up_to_date' => false,
+                'local_size' => 0,
+                'last_modified' => null,
+            ];
         }
     }
 }
