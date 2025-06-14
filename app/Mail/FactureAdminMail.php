@@ -38,12 +38,16 @@ class FactureAdminMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        $adminEmail = config('mail.admin_email', 'admin@example.com');
+        // Charger l'administrateur assigné à la facture
+        $this->facture->load('administrateur');
+
+        // Utiliser l'email de l'administrateur assigné ou l'email admin par défaut
+        $destinataireEmail = $this->facture->administrateur?->email ?? config('mail.admin_email', 'admin@example.com');
 
         return new Envelope(
             subject: "Nouvelle facture créée : {$this->facture->numero_facture}",
             to: [
-                $adminEmail
+                $destinataireEmail
             ],
         );
     }

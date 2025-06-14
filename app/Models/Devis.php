@@ -15,8 +15,8 @@ class Devis extends Model
      */
     protected $fillable = [
         'numero_devis',
-        'emetteur',
         'client_id',
+        'administrateur_id',
         'date_devis',
         'date_validite',
         'statut',
@@ -75,11 +75,11 @@ class Devis extends Model
     }
 
     /**
-     * Relation avec l'administrateur émetteur du devis.
+     * Relation avec l'administrateur assigné au devis.
      */
     public function administrateur(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'emetteur', 'email');
+        return $this->belongsTo(User::class, 'administrateur_id');
     }
 
     /**

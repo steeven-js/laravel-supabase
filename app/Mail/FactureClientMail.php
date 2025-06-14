@@ -42,12 +42,25 @@ class FactureClientMail extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
-        return new Envelope(
+        // Charger l'administrateur assigné à la facture
+        $this->facture->load('administrateur');
+
+        $envelope = new Envelope(
             subject: "Votre facture {$this->facture->numero_facture} - {$this->devis->objet}",
             to: [
                 $this->client->email
             ],
         );
+
+        // Utiliser l'email de l'administrateur assigné comme expéditeur si disponible
+        if ($this->facture->administrateur) {
+            $envelope->from(
+                $this->facture->administrateur->email,
+                $this->facture->administrateur->name
+            );
+        }
+
+        return $envelope;
     }
 
     /**

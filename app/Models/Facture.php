@@ -17,6 +17,7 @@ class Facture extends Model
         'numero_facture',
         'devis_id',
         'client_id',
+        'administrateur_id',
         'date_facture',
         'date_echeance',
         'statut',
@@ -68,6 +69,14 @@ class Facture extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    /**
+     * Relation avec l'administrateur assigné.
+     */
+    public function administrateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'administrateur_id');
     }
 
     /**
@@ -162,10 +171,14 @@ class Facture extends Model
      */
     public static function creerDepuisDevis(Devis $devis): self
     {
+        // Charger l'administrateur du devis si nécessaire
+        $devis->load('administrateur');
+
         $facture = new self([
             'numero_facture' => self::genererNumeroFacture(),
             'devis_id' => $devis->id,
             'client_id' => $devis->client_id,
+            'administrateur_id' => $devis->administrateur?->id,
             'date_facture' => now()->toDateString(),
             'date_echeance' => now()->addDays(30)->toDateString(), // 30 jours par défaut
             'statut' => 'brouillon',

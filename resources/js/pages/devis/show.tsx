@@ -52,7 +52,7 @@ interface LigneDevis {
 interface Devis {
     id: number;
     numero_devis: string;
-    emetteur?: string;
+    administrateur_id?: number;
     objet: string;
     statut: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire';
     statut_envoi: 'non_envoye' | 'envoye' | 'echec_envoi';

@@ -109,7 +109,7 @@ class FactureController extends Controller
      */
     public function show(Facture $facture)
     {
-        $facture->load(['client.entreprise', 'devis']);
+        $facture->load(['client.entreprise', 'devis', 'administrateur']);
 
         // Récupérer les informations de Madinia
         $madinia = \App\Models\Madinia::getInstance();
@@ -151,6 +151,11 @@ class FactureController extends Controller
             'devis' => $facture->devis ? [
                 'id' => $facture->devis->id,
                 'numero_devis' => $facture->devis->numero_devis,
+            ] : null,
+            'administrateur' => $facture->administrateur ? [
+                'id' => $facture->administrateur->id,
+                'name' => $facture->administrateur->name,
+                'email' => $facture->administrateur->email,
             ] : null
         ];
 
@@ -459,6 +464,9 @@ class FactureController extends Controller
     private function envoyerEmailClientFacture(Facture $facture, ?string $messagePersonnalise)
     {
         try {
+            // Charger les relations nécessaires
+            $facture->load('client.entreprise', 'devis', 'administrateur');
+
             // Créer un devis fictif pour la compatibilité avec FactureClientMail
             $devis = $facture->devis ?? new \App\Models\Devis([
                 'numero_devis' => 'N/A',
@@ -493,6 +501,9 @@ class FactureController extends Controller
     private function envoyerEmailAdminFacture(Facture $facture)
     {
         try {
+            // Charger les relations nécessaires
+            $facture->load('client.entreprise', 'devis', 'administrateur');
+
             $adminEmail = config('mail.admin_email');
 
             if (!$adminEmail) {

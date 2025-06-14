@@ -64,8 +64,8 @@ const useStyles = () =>
                     alignItems: 'flex-end',
                 },
                 statusBadge: {
-                    backgroundColor: '#FFF3CD',
-                    color: '#856404',
+                    backgroundColor: '#D1FAE5',
+                    color: '#065F46',
                     padding: '4px 8px',
                     fontSize: 10,
                     fontWeight: 700,
@@ -73,7 +73,7 @@ const useStyles = () =>
                     textAlign: 'center',
                     minWidth: 80,
                 },
-                devisNumber: {
+                factureNumber: {
                     fontSize: 16,
                     fontWeight: 700,
                     color: '#000000',
@@ -115,7 +115,7 @@ const useStyles = () =>
                     marginBottom: 20,
                 },
                 dateBox: {
-                    width: '48%',
+                    width: '32%',
                     backgroundColor: '#F8F9FA',
                     padding: 10,
                     borderRadius: 4,
@@ -130,6 +130,7 @@ const useStyles = () =>
                     fontSize: 9,
                     color: '#333333',
                 },
+
                 // Table
                 tableSection: {
                     marginBottom: 20,
@@ -238,6 +239,27 @@ const useStyles = () =>
                     fontWeight: 700,
                     color: '#000000',
                 },
+                // Payment and Notes sections
+                paymentNotesSection: {
+                    marginBottom: 20,
+                },
+                sectionBox: {
+                    backgroundColor: '#EFF6FF',
+                    padding: 10,
+                    borderRadius: 4,
+                    marginBottom: 10,
+                },
+                sectionTitle: {
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: '#1E40AF',
+                    marginBottom: 4,
+                },
+                sectionText: {
+                    fontSize: 8,
+                    color: '#1E40AF',
+                    lineHeight: 1.4,
+                },
                 // Footer
                 footer: {
                     position: 'absolute',
@@ -253,10 +275,13 @@ const useStyles = () =>
                     justifyContent: 'space-between',
                 },
                 footerLeft: {
-                    width: '65%',
+                    width: '32%',
+                },
+                footerCenter: {
+                    width: '32%',
                 },
                 footerRight: {
-                    width: '30%',
+                    width: '32%',
                     textAlign: 'right',
                 },
                 footerTitle: {
@@ -274,32 +299,20 @@ const useStyles = () =>
         []
     );
 
-interface DevisPdfPreviewProps {
-    devis: {
-        numero_devis: string;
+interface FacturePdfPreviewProps {
+    facture: {
+        numero_facture: string;
         objet: string;
         statut: string;
-        date_devis: string;
-        date_validite: string;
+        date_facture: string;
+        date_echeance: string;
+        date_paiement?: string;
         montant_ht: number;
         taux_tva: number;
         montant_ttc: number;
+        description?: string;
+        conditions_paiement?: string;
         notes?: string;
-        lignes?: Array<{
-            id: number;
-            quantite: number;
-            prix_unitaire_ht: number;
-            taux_tva: number;
-            montant_ht: number;
-            montant_tva: number;
-            montant_ttc: number;
-            ordre: number;
-            description_personnalisee?: string;
-            service?: {
-                nom: string;
-                description: string;
-            };
-        }>;
         client: {
             nom: string;
             prenom: string;
@@ -316,7 +329,11 @@ interface DevisPdfPreviewProps {
                 code_postal?: string;
             };
         };
+        devis?: {
+            numero_devis: string;
+        };
         administrateur?: {
+            id: number;
             name: string;
             email: string;
         };
@@ -333,38 +350,39 @@ interface DevisPdfPreviewProps {
         nom_compte_bancaire?: string;
         numero_compte?: string;
         iban_bic_swift?: string;
+        site_web?: string;
     };
 }
 
-export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
+export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) {
     const styles = useStyles();
 
     // Vérifications de sécurité approfondies
-    if (!devis) {
+    if (!facture) {
         return (
             <Document>
                 <Page size="A4" style={styles.page}>
                     <View style={{ padding: 20 }}>
-                        <Text>Erreur : Objet devis manquant</Text>
+                        <Text>Erreur : Objet facture manquant</Text>
                     </View>
                 </Page>
             </Document>
         );
     }
 
-    if (!devis.numero_devis) {
+    if (!facture.numero_facture) {
         return (
             <Document>
                 <Page size="A4" style={styles.page}>
                     <View style={{ padding: 20 }}>
-                        <Text>Erreur : Numéro de devis manquant</Text>
+                        <Text>Erreur : Numéro de facture manquant</Text>
                     </View>
                 </Page>
             </Document>
         );
     }
 
-    if (!devis.client) {
+    if (!facture.client) {
         return (
             <Document>
                 <Page size="A4" style={styles.page}>
@@ -379,10 +397,10 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
     const formatStatut = (statut: string): string => {
         const statuts = {
             brouillon: 'Brouillon',
-            envoye: 'Envoyé',
-            accepte: 'Accepté',
-            refuse: 'Refusé',
-            expire: 'Expiré',
+            envoyee: 'Envoyée',
+            payee: 'Payée',
+            en_retard: 'En retard',
+            annulee: 'Annulée',
         };
         return statuts[statut as keyof typeof statuts] || statut;
     };
@@ -396,9 +414,9 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
 
             <View style={styles.statusSection}>
                 <View style={styles.statusBadge}>
-                    <Text>{formatStatut(devis.statut)}</Text>
+                    <Text>{formatStatut(facture.statut)}</Text>
                 </View>
-                <Text style={styles.devisNumber}>{devis.numero_devis}</Text>
+                <Text style={styles.factureNumber}>{facture.numero_facture}</Text>
             </View>
         </View>
     );
@@ -406,47 +424,45 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
     const renderInfo = (
         <View style={styles.infoSection}>
             <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>Émetteur</Text>
+                <Text style={styles.infoTitle}>Facture de</Text>
                 <Text style={styles.infoName}>{madinia?.name || 'Madin.IA'}</Text>
                 {madinia?.adresse && <Text style={styles.infoText}>{madinia.adresse}</Text>}
+                {madinia?.pays && <Text style={styles.infoText}>{madinia.pays}</Text>}
                 {madinia?.telephone && (
                     <Text style={styles.infoText}>Tél: {madinia.telephone}</Text>
                 )}
                 <Text style={styles.infoText}>
-                    Email: {devis.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+                    Email: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
                 </Text>
+                {facture.administrateur && (
+                    <Text style={[styles.infoText, { fontSize: 8, marginTop: 4, backgroundColor: '#F3F4F6', padding: 2 }]}>
+                        Contact: {facture.administrateur.name}
+                    </Text>
+                )}
                 {madinia?.siret && (
                     <Text style={styles.infoText}>SIRET: {madinia.siret}</Text>
-                )}
-                {devis.administrateur && (
-                    <>
-                        <Text style={[styles.infoText, { marginTop: 4 }]}>
-                            Contact: {devis.administrateur.name}
-                        </Text>
-                        <Text style={styles.infoText}>Web: https://madinia.fr</Text>
-                    </>
                 )}
             </View>
 
             <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>Client</Text>
+                <Text style={styles.infoTitle}>Facturé à</Text>
                 <Text style={styles.infoName}>
-                    {(devis.client?.prenom || '')} {(devis.client?.nom || '')}
+                    {(facture.client?.prenom || '')} {(facture.client?.nom || '')}
                 </Text>
-                {devis.client?.entreprise && (
+                {facture.client?.entreprise && (
                     <Text style={styles.infoText}>
-                        {devis.client.entreprise.nom_commercial || devis.client.entreprise.nom || ''}
+                        {facture.client.entreprise.nom_commercial || facture.client.entreprise.nom || ''}
                     </Text>
                 )}
-                {devis.client?.adresse && <Text style={styles.infoText}>{devis.client.adresse}</Text>}
-                {(devis.client?.code_postal || devis.client?.ville) && (
+                {facture.client?.adresse && <Text style={styles.infoText}>{facture.client.adresse}</Text>}
+                {(facture.client?.code_postal || facture.client?.ville) && (
                     <Text style={styles.infoText}>
-                        {devis.client.code_postal || ''} {devis.client.ville || ''}
+                        {facture.client.code_postal || ''} {facture.client.ville || ''}
                     </Text>
                 )}
-                <Text style={styles.infoText}>Email: {devis.client?.email || ''}</Text>
-                {devis.client?.telephone && (
-                    <Text style={styles.infoText}>Tél: {devis.client.telephone}</Text>
+                <Text style={styles.infoText}>Email: {facture.client?.email || ''}</Text>
+                {facture.client?.telephone && (
+                    <Text style={styles.infoText}>Tél: {facture.client.telephone}</Text>
                 )}
             </View>
         </View>
@@ -455,19 +471,25 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
     const renderDates = (
         <View style={styles.dateSection}>
             <View style={styles.dateBox}>
-                <Text style={styles.dateTitle}>Date d'émission</Text>
-                <Text style={styles.dateText}>{fDateSimple(devis.date_devis)}</Text>
+                <Text style={styles.dateTitle}>Date de facture</Text>
+                <Text style={styles.dateText}>{fDateSimple(facture.date_facture)}</Text>
             </View>
             <View style={styles.dateBox}>
                 <Text style={styles.dateTitle}>Date d'échéance</Text>
-                <Text style={styles.dateText}>{fDateSimple(devis.date_validite)}</Text>
+                <Text style={styles.dateText}>{fDateSimple(facture.date_echeance)}</Text>
             </View>
+            {facture.date_paiement && (
+                <View style={styles.dateBox}>
+                    <Text style={styles.dateTitle}>Date de paiement</Text>
+                    <Text style={styles.dateText}>{fDateSimple(facture.date_paiement)}</Text>
+                </View>
+            )}
         </View>
     );
 
     const renderTable = (
         <View style={styles.tableSection}>
-            <Text style={styles.tableTitle}>Détails du devis</Text>
+            <Text style={styles.tableTitle}>Détails de la facture</Text>
             <View style={styles.table}>
                 {/* En-tête du tableau */}
                 <View style={styles.tableHeader}>
@@ -486,48 +508,19 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                     </Text>
                 </View>
 
-                {/* Lignes du tableau */}
-                {(devis.lignes && devis.lignes.length > 0) ? devis.lignes.map((ligne, index) => (
-                    <View
-                        key={ligne.id || index}
-                        style={[
-                            styles.tableRow,
-                            index === (devis.lignes?.length || 0) - 1 ? styles.tableRowLast : {},
-                        ]}
-                    >
-                        <Text style={styles.cellNum}>{index + 1}</Text>
-                        <View style={styles.cellDescription}>
-                            <Text style={styles.descriptionTitle}>
-                                {ligne.service?.nom || `Phase ${index + 1} - Service personnalisé`}
-                            </Text>
-                            <Text style={styles.descriptionDetail}>
-                                {ligne.description_personnalisee ||
-                                    ligne.service?.description ||
-                                    'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'}
-                            </Text>
-                        </View>
-                        <Text style={styles.cellQuantity}>
-                            {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
-                        </Text>
-                        <Text style={styles.cellPrice}>
-                            {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
-                        </Text>
-                        <Text style={styles.cellTotal}>
-                            {fCurrencyPDF(ligne.montant_ht || 0)}
+                {/* Ligne unique pour la facture */}
+                <View style={[styles.tableRow, styles.tableRowLast]}>
+                    <Text style={styles.cellNum}>1</Text>
+                    <View style={styles.cellDescription}>
+                        <Text style={styles.descriptionTitle}>Prestation de service</Text>
+                        <Text style={styles.descriptionDetail}>
+                            {facture.description || 'Service personnalisé'}
                         </Text>
                     </View>
-                )) : (
-                    <View style={styles.tableRow}>
-                        <Text style={styles.cellNum}>1</Text>
-                        <View style={styles.cellDescription}>
-                            <Text style={styles.descriptionTitle}>Service personnalisé</Text>
-                            <Text style={styles.descriptionDetail}>Prestation de service</Text>
-                        </View>
-                        <Text style={styles.cellQuantity}>1 heure</Text>
-                        <Text style={styles.cellPrice}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
-                        <Text style={styles.cellTotal}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
-                    </View>
-                )}
+                    <Text style={styles.cellQuantity}>1</Text>
+                    <Text style={styles.cellPrice}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
+                    <Text style={styles.cellTotal}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
+                </View>
             </View>
         </View>
     );
@@ -537,84 +530,55 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
             <View style={styles.summaryTable}>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Sous-total HT</Text>
-                    <Text style={styles.summaryValue}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
+                    <Text style={styles.summaryValue}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>
-                        TVA ({(Number(devis.taux_tva) || 0).toFixed(1)}%)
+                        TVA ({(Number(facture.taux_tva) || 0).toFixed(1)}%)
                     </Text>
                     <Text style={styles.summaryValue}>
-                        {fCurrencyPDF((devis.montant_ttc || 0) - (devis.montant_ht || 0))}
+                        {fCurrencyPDF((facture.montant_ttc || 0) - (facture.montant_ht || 0))}
                     </Text>
                 </View>
                 <View style={[styles.summaryRow, styles.summaryRowLast]}>
                     <Text style={styles.summaryTotal}>Total TTC</Text>
-                    <Text style={styles.summaryTotal}>{fCurrencyPDF(devis.montant_ttc || 0)}</Text>
+                    <Text style={styles.summaryTotal}>{fCurrencyPDF(facture.montant_ttc || 0)}</Text>
                 </View>
             </View>
         </View>
     );
 
+    const renderPaymentAndNotes = (
+        <View style={styles.paymentNotesSection}>
+            {facture.conditions_paiement && (
+                <View style={styles.sectionBox}>
+                    <Text style={styles.sectionTitle}>CONDITIONS DE PAIEMENT</Text>
+                    <Text style={styles.sectionText}>{facture.conditions_paiement}</Text>
+                </View>
+            )}
+            {facture.notes && (
+                <View style={styles.sectionBox}>
+                    <Text style={styles.sectionTitle}>NOTES</Text>
+                    <Text style={styles.sectionText}>{facture.notes}</Text>
+                </View>
+            )}
+        </View>
+    );
+
     const renderFooter = (
         <View style={styles.footer}>
-            <View style={styles.footerContent}>
-                <View style={styles.footerLeft}>
-                    <Text style={styles.footerTitle}>INFORMATIONS LÉGALES</Text>
-                    {madinia?.name && (
-                        <Text style={styles.footerText}>
-                            {madinia.name}
-                        </Text>
-                    )}
-                    {madinia?.adresse && (
-                        <Text style={styles.footerText}>
-                            {madinia.adresse}
-                        </Text>
-                    )}
-                    {madinia?.pays && (
-                        <Text style={styles.footerText}>
-                            {madinia.pays}
-                        </Text>
-                    )}
-                    {madinia?.siret && (
-                        <Text style={styles.footerText}>
-                            SIRET: {madinia.siret}
-                        </Text>
-                    )}
-                    {madinia?.numero_nda && (
-                        <Text style={styles.footerText}>
-                            N° DA: {madinia.numero_nda}
-                        </Text>
-                    )}
-                    {devis.notes && (
-                        <Text style={[styles.footerText, { marginTop: 4 }]}>{devis.notes}</Text>
-                    )}
-                </View>
-                <View style={styles.footerRight}>
-                    <Text style={styles.footerTitle}>COORDONNÉES BANCAIRES</Text>
-                    {madinia?.nom_banque && (
-                        <Text style={styles.footerText}>
-                            {madinia.nom_banque}
-                        </Text>
-                    )}
-                    {madinia?.nom_compte_bancaire && (
-                        <Text style={styles.footerText}>
-                            Titulaire: {madinia.nom_compte_bancaire}
-                        </Text>
-                    )}
-                    {madinia?.numero_compte && (
-                        <Text style={styles.footerText}>
-                            N° Compte: {madinia.numero_compte}
-                        </Text>
-                    )}
-                    {madinia?.iban_bic_swift && (
-                        <Text style={styles.footerText}>
-                            IBAN/BIC: {madinia.iban_bic_swift}
-                        </Text>
-                    )}
-                    <Text style={[styles.footerText, { marginTop: 4 }]}>
-                        Contact: {devis.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+            <View style={{ textAlign: 'center' }}>
+                <Text style={[styles.footerText, { fontSize: 9, fontWeight: 700, marginBottom: 2 }]}>
+                    {madinia?.name || 'Madin.IA'}
+                </Text>
+                <Text style={styles.footerText}>
+                    Email: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+                </Text>
+                {madinia?.site_web && (
+                    <Text style={styles.footerText}>
+                        Web: {madinia.site_web.replace(/^https?:\/\//, '')}
                     </Text>
-                </View>
+                )}
             </View>
         </View>
     );
@@ -627,10 +591,12 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                 {renderDates}
                 {renderTable}
                 {renderSummary}
+                {renderPaymentAndNotes}
                 {renderFooter}
             </Page>
         </Document>
     );
 }
 
-export default DevisPdfPreview;
+export default FacturePdfPreview;
+

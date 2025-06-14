@@ -8,6 +8,24 @@ et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.
 ## [0.3.0] - 2025-01-23
 
 ### Ajouté
+- **Implémentation complète de l'aperçu PDF pour les factures** :
+  - Nouveau composant `FacturePdfPreview` avec design professionnel
+  - Modal d'aperçu PDF intégré avec PDFViewer
+  - Bouton de téléchargement PDF avec état de chargement
+  - Gestion sécurisée des données facture pour le rendu PDF
+
+- **Gestion des administrateurs assignés aux factures** :
+  - Ajout du champ `administrateur_id` dans la table factures 
+  - Affichage du nom et email de l'administrateur assigné dans "Facture de"
+  - Remplacement automatique de l'email Madinia par celui de l'admin assigné
+  - Encadré bleu de mise en évidence de l'administrateur responsable
+
+- **Amélioration de l'interface factures** :
+  - Réorganisation des dates : date de facture à gauche, date d'échéance à droite
+  - Layout à 2 colonnes pour un affichage équilibré des dates principales
+  - Date de paiement dans un encadré vert séparé (quand applicable)
+  - Harmonisation du style avec celui des devis
+
 - **Amélioration du composant PDF des devis** :
   - Rendu PDF avec fond transparent pour l'aperçu
   - Affichage de l'email de l'administrateur assigné au lieu de l'email Madinia
@@ -21,14 +39,29 @@ et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.
   - Actions groupées logiquement avec hauteurs et espacements uniformes
   - Design responsive optimisé mobile/desktop
 
+### Modifié
+- **Structure PDF factures** :
+  - Simplification du footer PDF avec informations essentielles
+  - Suppression de la section "Objet de la facture" du PDF pour plus de clarté
+  - Réorganisation des coordonnées bancaires dans le footer
+
+- **Affichage des informations administrateur** :
+  - Email de l'admin prioritaire sur l'email Madinia dans les contacts principaux
+  - Fallback vers l'email Madinia si aucun administrateur assigné
+
 ### Corrigé
 - **Erreurs de rendu PDF** : Correction du bug `toFixed is not a function` avec conversion explicite des types
-- **Données PDF sécurisées** : Amélioration de `getSafeDevisData()` avec conversion Number() robuste
-- **Interface TypeScript** : Ajout des propriétés manquantes dans l'interface Madinia (nom_compte_bancaire, numero_compte)
+- **Données PDF sécurisées** : Amélioration de `getSafeFactureData()` et `getSafeDevisData()` avec conversion Number() robuste
+- **Interface TypeScript** : Ajout des propriétés manquantes dans l'interface Madinia et Facture
 
 ### Technique
+- **Nouveaux composants React** :
+  - `FacturePdfPreview` : Composant PDF dédié aux factures
+  - Modal d'aperçu PDF réutilisable avec contrôles utilisateur
+  - Fonctions de sécurisation des données pour le rendu PDF
+
 - **Optimisation des conversions de données** : Remplacement de parseFloat() par Number() pour plus de robustesse
-- **Amélioration du composant DevisPdfPreview** : Meilleure gestion des données nulles/undefined
+- **Amélioration des composants PDF** : Meilleure gestion des données nulles/undefined
 - **Code plus maintenable** : Structure UI/UX harmonisée avec classes Tailwind cohérentes
 
 ## [0.2.8] - 2025-06-13

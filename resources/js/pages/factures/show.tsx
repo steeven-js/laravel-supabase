@@ -23,10 +23,13 @@ import {
     FileText,
     Settings,
     User,
-    Calendar
+    Calendar,
+    X
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
+import FacturePdfPreview from '@/components/pdf/FacturePdfPreview';
 
 interface Facture {
     id: number;
@@ -46,6 +49,11 @@ interface Facture {
     devis?: {
         id: number;
         numero_devis: string;
+    };
+    administrateur?: {
+        id: number;
+        name: string;
+        email: string;
     };
     objet: string;
     description?: string;
@@ -151,7 +159,7 @@ const breadcrumbs = (facture: Facture): BreadcrumbItem[] => [
 ];
 
 export default function FactureShow({ facture, madinia }: Props) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'documents'>('overview');
+    const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -223,6 +231,71 @@ export default function FactureShow({ facture, madinia }: Props) {
         { value: 'en_retard', label: 'En retard', icon: '⚠️' },
         { value: 'annulee', label: 'Annulée', icon: '❌' },
     ];
+
+    const handlePreviewPdf = () => {
+        // Vérifications de sécurité approfondies
+        if (!facture || !facture.numero_facture || !facture.client) {
+            console.error('Données de la facture manquantes');
+            alert('Données de la facture incomplètes. Impossible de générer l\'aperçu.');
+            return;
+        }
+
+        // Ouvrir le modal
+        setIsPdfModalOpen(true);
+    };
+
+    // Préparer les données sécurisées pour le PDF
+    const getSafeFactureData = () => {
+        return {
+            ...facture,
+            // Convertir les strings en numbers pour les montants
+            montant_ht: Number(facture.montant_ht) || 0,
+            montant_ttc: Number(facture.montant_ttc) || 0,
+            taux_tva: Number(facture.taux_tva) || 0,
+            statut: facture.statut || 'brouillon',
+            date_facture: facture.date_facture || new Date().toISOString(),
+            date_echeance: facture.date_echeance || new Date().toISOString(),
+            client: {
+                ...facture.client,
+                nom: facture.client.nom || '',
+                prenom: facture.client.prenom || '',
+                email: facture.client.email || ''
+            }
+        };
+    };
+
+    const getSafeMadiniaData = () => {
+        return madinia || {
+            name: 'Madin.IA',
+            email: 'contact@madinia.fr'
+        };
+    };
+
+    const renderDownload = (
+        <PDFDownloadLink
+            document={
+                facture ? <FacturePdfPreview facture={facture} madinia={madinia} /> : <span />
+            }
+            fileName={`${facture?.numero_facture || 'facture'}.pdf`}
+            style={{ textDecoration: 'none' }}
+        >
+            {({ loading }) => (
+                <Button variant="outline" size="sm" disabled={loading}>
+                    {loading ? (
+                        <>
+                            <Clock className="mr-2 h-4 w-4 animate-spin" />
+                            Génération...
+                        </>
+                    ) : (
+                        <>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Télécharger PDF
+                        </>
+                    )}
+                </Button>
+            )}
+        </PDFDownloadLink>
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(facture)}>
@@ -345,19 +418,12 @@ export default function FactureShow({ facture, madinia }: Props) {
                                     variant="outline"
                                     size="sm"
                                     className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                                    asChild
+                                    onClick={handlePreviewPdf}
                                 >
-                                    <Link href={`/factures/${facture.id}/pdf`} target="_blank">
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        Aperçu PDF
-                                    </Link>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Aperçu PDF
                                 </Button>
-                                <Button variant="outline" size="sm" className="h-10 px-4" asChild>
-                                    <Link href={`/factures/${facture.id}/telecharger-pdf`}>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Télécharger PDF
-                                    </Link>
-                                </Button>
+                                {renderDownload}
                             </div>
                         </div>
                     </CardContent>
@@ -541,10 +607,28 @@ export default function FactureShow({ facture, madinia }: Props) {
                                                 <span className="text-gray-600">{madinia.telephone}</span>
                                             </div>
                                         )}
-                                        {madinia?.email && (
+                                        {facture.administrateur ? (
+                                            <div className="flex items-center gap-2">
+                                                <Mail className="h-4 w-4 text-gray-400" />
+                                                <span className="text-gray-600">{facture.administrateur.email}</span>
+                                            </div>
+                                        ) : madinia?.email && (
                                             <div className="flex items-center gap-2">
                                                 <Mail className="h-4 w-4 text-gray-400" />
                                                 <span className="text-gray-600">{madinia.email}</span>
+                                            </div>
+                                        )}
+                                        {facture.administrateur && (
+                                            <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 rounded-md">
+                                                <Mail className="h-4 w-4 text-blue-500" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-blue-900">
+                                                        {facture.administrateur.name}
+                                                    </span>
+                                                    <span className="text-xs text-blue-600">
+                                                        {facture.administrateur.email}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -583,24 +667,24 @@ export default function FactureShow({ facture, madinia }: Props) {
                         </div>
 
                         {/* Date information */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-gray-50 p-4 rounded-lg">
+                        <div className="grid grid-cols-2 gap-6 mb-8 bg-gray-50 p-4 rounded-lg">
                             <div>
                                 <p className="text-sm text-gray-600">Date de facture</p>
                                 <p className="font-semibold">{formatDateShort(facture.date_facture)}</p>
                             </div>
-                            <div>
+                            <div className="text-right">
                                 <p className="text-sm text-gray-600">Date d'échéance</p>
                                 <p className={`font-semibold ${isRetard() ? 'text-red-600' : ''}`}>
                                     {formatDateShort(facture.date_echeance)}
                                 </p>
                             </div>
-                            {facture.date_paiement && (
-                                <div>
-                                    <p className="text-sm text-gray-600">Date de paiement</p>
-                                    <p className="font-semibold text-green-600">{formatDateShort(facture.date_paiement)}</p>
-                                </div>
-                            )}
                         </div>
+                        {facture.date_paiement && (
+                            <div className="mb-8 bg-green-50 p-4 rounded-lg text-center">
+                                <p className="text-sm text-gray-600">Date de paiement</p>
+                                <p className="font-semibold text-green-600">{formatDateShort(facture.date_paiement)}</p>
+                            </div>
+                        )}
 
                         {/* Object */}
                         <div className="mb-8">
@@ -734,11 +818,11 @@ export default function FactureShow({ facture, madinia }: Props) {
                                         {madinia?.nom_banque && (
                                             <p>{madinia.nom_banque}</p>
                                         )}
-                                        {madinia?.iban_bic_swift && (
-                                            <p>IBAN/BIC : {madinia.iban_bic_swift}</p>
-                                        )}
                                         {madinia?.nom_compte_bancaire && (
                                             <p>{madinia.nom_compte_bancaire}</p>
+                                        )}
+                                        {madinia?.iban_bic_swift && (
+                                            <p>IBAN/BIC : {madinia.iban_bic_swift}</p>
                                         )}
                                         {!madinia?.nom_banque && !madinia?.iban_bic_swift && (
                                             <p className="text-gray-500">Non renseigné</p>
@@ -786,6 +870,43 @@ export default function FactureShow({ facture, madinia }: Props) {
                     </Card>
                 )}
             </div>
+
+            {/* Modal d'aperçu PDF */}
+            {isPdfModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg w-full h-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl">
+                        {/* Header du modal */}
+                        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Aperçu de la facture {facture.numero_facture}
+                            </h3>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsPdfModalOpen(false)}
+                                className="h-8 w-8 p-0"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        {/* Contenu du modal - PDFViewer */}
+                        <div className="flex-1 overflow-hidden">
+                            <PDFViewer
+                                width="100%"
+                                height="100%"
+                                style={{ border: 'none' }}
+                                showToolbar={true}
+                            >
+                                <FacturePdfPreview
+                                    facture={getSafeFactureData()}
+                                    madinia={getSafeMadiniaData()}
+                                />
+                            </PDFViewer>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }

@@ -110,7 +110,7 @@ export default function DevisCreate({ clients, services, administrateurs, numero
 
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
-        emetteur: '',
+        administrateur_id: '',
         objet: '',
         description: '',
         date_devis: new Date().toISOString().split('T')[0],
@@ -264,14 +264,14 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                     </div>
 
                                     <div>
-                                        <Label htmlFor="emetteur">Administrateur émetteur *</Label>
-                                        <Select value={data.emetteur || ''} onValueChange={(value) => setData('emetteur', value)}>
+                                        <Label htmlFor="administrateur_id">Administrateur assigné *</Label>
+                                        <Select value={data.administrateur_id || ''} onValueChange={(value) => setData('administrateur_id', value)}>
                                             <SelectTrigger className="w-full mt-1">
                                                 <SelectValue placeholder="Sélectionner un administrateur" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {administrateurs.map((admin) => (
-                                                    <SelectItem key={admin.id} value={admin.email}>
+                                                    <SelectItem key={admin.id} value={admin.id.toString()}>
                                                         <div className="flex flex-col">
                                                             <span className="font-medium text-left">{admin.name}</span>
                                                             <span className="text-xs text-gray-500">{admin.email}</span>
@@ -280,8 +280,8 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {errors.emetteur && (
-                                            <p className="text-sm text-red-500 mt-1">{errors.emetteur}</p>
+                                        {errors.administrateur_id && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.administrateur_id}</p>
                                         )}
                                     </div>
 
@@ -306,8 +306,8 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                                 <div className="flex items-center gap-2">
                                                     <Mail className="h-3 w-3 text-gray-400" />
                                                     <span className="text-gray-600 text-sm">
-                                                        {data.emetteur ? (() => {
-                                                            const admin = administrateurs.find(a => a.email === data.emetteur);
+                                                        {data.administrateur_id ? (() => {
+                                                            const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
                                                             return admin ? admin.email : 'd.brault@madin-ia.com';
                                                         })() : 'd.brault@madin-ia.com'}
                                                     </span>
@@ -320,10 +320,10 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                             )}
                                         </div>
 
-                                        {data.emetteur && (
+                                        {data.administrateur_id && (
                                             <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                                                 {(() => {
-                                                    const admin = administrateurs.find(a => a.email === data.emetteur);
+                                                    const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
                                                     return admin ? (
                                                         <>
                                                             <p className="font-medium text-gray-900">{admin.name}</p>

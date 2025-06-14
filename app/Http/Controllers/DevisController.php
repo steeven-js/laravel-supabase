@@ -102,7 +102,7 @@ class DevisController extends Controller
         try {
             $validated = $request->validate([
                 'client_id' => 'required|exists:clients,id',
-                'emetteur' => 'required|email|exists:users,email',
+                'administrateur_id' => 'required|exists:users,id',
                 'date_devis' => 'required|date',
                 'date_validite' => 'required|date|after:date_devis',
                 'objet' => 'required|string|max:255',
@@ -212,7 +212,7 @@ class DevisController extends Controller
         $devisFormatted = [
             'id' => $devis->id,
             'numero_devis' => $devis->numero_devis,
-            'emetteur' => $devis->emetteur,
+            'administrateur_id' => $devis->administrateur_id,
             'client_id' => $devis->client_id,
             'objet' => $devis->objet,
             'statut' => $devis->statut,
@@ -319,7 +319,7 @@ class DevisController extends Controller
         $devisFormatted = [
             'id' => $devis->id,
             'numero_devis' => $devis->numero_devis,
-            'emetteur' => $devis->emetteur,
+            'administrateur_id' => $devis->administrateur_id,
             'client_id' => $devis->client_id,
             'objet' => $devis->objet,
             'statut' => $devis->statut,
@@ -403,7 +403,7 @@ class DevisController extends Controller
         try {
             $validated = $request->validate([
                 'numero_devis' => 'required|string|unique:devis,numero_devis,' . $devis->id,
-                'emetteur' => 'required|email|exists:users,email',
+                'administrateur_id' => 'required|exists:users,id',
                 'client_id' => 'required|exists:clients,id',
                 'date_devis' => 'required|date',
                 'date_validite' => 'required|date|after:date_devis',
