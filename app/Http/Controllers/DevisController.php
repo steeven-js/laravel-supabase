@@ -7,8 +7,10 @@ use App\Models\Devis;
 use App\Models\Facture;
 use App\Services\DevisPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Exception;
@@ -69,10 +71,12 @@ class DevisController extends Controller
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
         $services = \App\Models\Service::actif()->orderBy('nom')->get();
         $madinia = \App\Models\Madinia::getInstance();
+        $administrateurs = \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get();
 
         return Inertia::render('devis/create', [
             'clients' => $clients,
             'services' => $services,
+            'administrateurs' => $administrateurs,
             'numero_devis' => Devis::genererNumeroDevis(),
             'madinia' => $madinia ? [
                 'name' => $madinia->name,
@@ -81,6 +85,11 @@ class DevisController extends Controller
                 'adresse' => $madinia->adresse,
                 'pays' => $madinia->pays,
                 'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
             ] : null,
         ]);
     }
@@ -93,6 +102,7 @@ class DevisController extends Controller
         try {
             $validated = $request->validate([
                 'client_id' => 'required|exists:clients,id',
+                'emetteur' => 'required|email|exists:users,email',
                 'date_devis' => 'required|date',
                 'date_validite' => 'required|date|after:date_devis',
                 'objet' => 'required|string|max:255',
@@ -168,7 +178,7 @@ class DevisController extends Controller
      */
     public function show(Devis $devis)
     {
-        $devis->load(['client.entreprise', 'facture', 'lignes.service']);
+        $devis->load(['client.entreprise', 'facture', 'lignes.service', 'administrateur']);
 
         // Récupérer l'historique des actions avec les utilisateurs
         $historique = $devis->historique()
@@ -202,6 +212,7 @@ class DevisController extends Controller
         $devisFormatted = [
             'id' => $devis->id,
             'numero_devis' => $devis->numero_devis,
+            'emetteur' => $devis->emetteur,
             'client_id' => $devis->client_id,
             'objet' => $devis->objet,
             'statut' => $devis->statut,
@@ -221,6 +232,11 @@ class DevisController extends Controller
             'peut_etre_transforme_en_facture' => $devis->peutEtreTransformeEnFacture(),
             'peut_etre_envoye' => $devis->peutEtreEnvoye(),
             'pdf_url_supabase' => $this->devisPdfService->getUrlSupabasePdf($devis),
+            'administrateur' => $devis->administrateur ? [
+                'id' => $devis->administrateur->id,
+                'name' => $devis->administrateur->name,
+                'email' => $devis->administrateur->email,
+            ] : null,
             'lignes' => $devis->lignes->map(function ($ligne) {
                 return [
                     'id' => $ligne->id,
@@ -280,6 +296,10 @@ class DevisController extends Controller
                 'pays' => $madinia->pays,
                 'adresse' => $madinia->adresse,
                 'description' => $madinia->description,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
             ]
         ]);
     }
@@ -292,12 +312,14 @@ class DevisController extends Controller
         $devis->load(['client.entreprise', 'lignes.service']);
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
         $services = \App\Models\Service::actif()->orderBy('nom')->get();
+        $administrateurs = \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get();
         $madinia = \App\Models\Madinia::getInstance();
 
         // Construire manuellement les données pour éviter les problèmes de sérialisation
         $devisFormatted = [
             'id' => $devis->id,
             'numero_devis' => $devis->numero_devis,
+            'emetteur' => $devis->emetteur,
             'client_id' => $devis->client_id,
             'objet' => $devis->objet,
             'statut' => $devis->statut,
@@ -356,6 +378,7 @@ class DevisController extends Controller
             'devis' => $devisFormatted,
             'clients' => $clients,
             'services' => $services,
+            'administrateurs' => $administrateurs,
             'madinia' => $madinia ? [
                 'name' => $madinia->name,
                 'telephone' => $madinia->telephone,
@@ -363,6 +386,11 @@ class DevisController extends Controller
                 'adresse' => $madinia->adresse,
                 'pays' => $madinia->pays,
                 'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
             ] : null,
         ]);
     }
@@ -375,6 +403,7 @@ class DevisController extends Controller
         try {
             $validated = $request->validate([
                 'numero_devis' => 'required|string|unique:devis,numero_devis,' . $devis->id,
+                'emetteur' => 'required|email|exists:users,email',
                 'client_id' => 'required|exists:clients,id',
                 'date_devis' => 'required|date',
                 'date_validite' => 'required|date|after:date_devis',
@@ -1150,6 +1179,112 @@ class DevisController extends Controller
 
             return redirect()->back()
                 ->with('error', '❌ Erreur lors de la régénération du PDF.');
+        }
+    }
+
+    /**
+     * Met à jour le PDF d'un devis avec le fichier généré depuis React PDF
+     */
+    public function updatePdfFromReact(Request $request, Devis $devis)
+    {
+        try {
+            $request->validate([
+                'pdf' => 'required|file|mimes:pdf|max:10240', // Max 10MB
+            ]);
+
+            $pdfFile = $request->file('pdf');
+
+            Log::info('Début mise à jour PDF depuis React', [
+                'devis_id' => $devis->id,
+                'numero_devis' => $devis->numero_devis,
+                'file_size' => $pdfFile->getSize(),
+            ]);
+
+            // Générer le nom de fichier
+            $timestamp = now()->format('Y-m-d_H-i-s');
+            $nomFichier = "devis_{$devis->numero_devis}_{$timestamp}.pdf";
+
+            // 1. Sauvegarder dans le stockage local Laravel
+            $pdfFile->storeAs('public/devis', $nomFichier);
+
+            Log::info('PDF sauvegardé localement', [
+                'devis_id' => $devis->id,
+                'nom_fichier' => $nomFichier,
+            ]);
+
+            // 2. Uploader vers Supabase Storage si configuré
+            $urlSupabase = null;
+            try {
+                $urlSupabase = $this->uploaderVersSupabase($pdfFile, $nomFichier);
+
+                Log::info('PDF uploadé vers Supabase', [
+                    'devis_id' => $devis->id,
+                    'url_supabase' => $urlSupabase,
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Erreur upload Supabase (non bloquant)', [
+                    'devis_id' => $devis->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue même si Supabase échoue
+            }
+
+            // 3. Mettre à jour la BDD
+            $devis->update([
+                'pdf_file' => $nomFichier,
+                'pdf_url' => $urlSupabase ?: Storage::url("public/devis/{$nomFichier}"),
+            ]);
+
+            Log::info('PDF mis à jour avec succès depuis React', [
+                'devis_id' => $devis->id,
+                'pdf_file' => $nomFichier,
+                'pdf_url' => $devis->pdf_url,
+            ]);
+
+            return redirect()->back()
+                ->with('success', '✅ PDF généré et sauvegardé avec succès !');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur mise à jour PDF depuis React', [
+                'devis_id' => $devis->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de la mise à jour du PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Upload le PDF vers Supabase Storage
+     */
+    private function uploaderVersSupabase($pdfFile, string $nomFichier): ?string
+    {
+        // Configuration Supabase
+        $supabaseUrl = config('services.supabase.url');
+        $supabaseKey = config('services.supabase.key');
+        $bucketName = config('services.supabase.storage_bucket', 'documents');
+
+        if (!$supabaseUrl || !$supabaseKey) {
+            throw new \Exception('Configuration Supabase manquante');
+        }
+
+        $chemin = "devis/{$nomFichier}";
+        $contenuPdf = $pdfFile->getContent();
+
+        // Upload vers Supabase
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$supabaseKey}",
+            'Content-Type' => 'application/pdf',
+        ])->withBody($contenuPdf, 'application/pdf')
+        ->post("{$supabaseUrl}/storage/v1/object/{$bucketName}/{$chemin}");
+
+        if ($response->successful()) {
+            // URL publique du fichier
+            return "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$chemin}";
+        } else {
+            throw new \Exception('Erreur upload Supabase: ' . $response->body());
         }
     }
 }

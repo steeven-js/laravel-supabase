@@ -507,11 +507,21 @@
                 @if($madinia && $madinia->telephone)
                     <div class="contact-line">📞 {{ $madinia->telephone }}</div>
                 @endif
-                @if($madinia && $madinia->email)
-                    <div class="contact-line">✉ {{ $madinia->email }}</div>
-                @endif
+                <div class="contact-line">✉ {{ $administrateur ? $administrateur->email : 'd.brault@madin-ia.com' }}</div>
                 @if($madinia && $madinia->siret)
                     <div class="siret-line">SIRET: {{ $madinia->siret }}</div>
+                @endif
+
+                @if($administrateur)
+                    <div style="margin-top: 10px; padding: 8px; background: #f9fafb; border-radius: 4px; font-size: 10px;">
+                        <div style="font-weight: 600; color: #111827; margin-bottom: 2px;">{{ $administrateur->name }}</div>
+                        <div style="color: #6b7280;">✉ {{ $administrateur->email }}</div>
+                    </div>
+                @else
+                    <div style="margin-top: 10px; padding: 8px; background: #f9fafb; border-radius: 4px; font-size: 10px;">
+                        <div style="font-weight: 600; color: #111827; margin-bottom: 2px;">David Brault</div>
+                        <div style="color: #6b7280;">✉ d.brault@madin-ia.com</div>
+                    </div>
                 @endif
             </div>
 
@@ -706,7 +716,7 @@
         <!-- Footer with support and legal info -->
         <div class="footer-section">
             <div class="footer-content">
-                <p>Nous apprécions votre collaboration. Si vous avez besoin de nous ajouter la TVA ou des notes supplémentaires, faites-le nous savoir !</p>
+                <p>Ce devis est valable {{ $devis->date_validite ? \Carbon\Carbon::parse($devis->date_validite)->diffInDays() : 30 }} jours à compter de la date d'émission. Pour toute modification ou demande d'information complémentaire, n'hésitez pas à nous contacter.</p>
                 <p>Vous avez une question ? {{ $madinia->email ?? 'support@madinia.com' }}</p>
             </div>
 

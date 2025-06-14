@@ -69,6 +69,12 @@ interface Service {
     qte_defaut: number;
 }
 
+interface Administrateur {
+    id: number;
+    name: string;
+    email: string;
+}
+
 interface LigneDevis {
     id?: number;
     service_id?: number;
@@ -86,6 +92,7 @@ interface LigneDevis {
 interface Props {
     clients: Client[];
     services: Service[];
+    administrateurs: Administrateur[];
     numero_devis: string;
     madinia?: {
         name: string;
@@ -97,12 +104,13 @@ interface Props {
     };
 }
 
-export default function DevisCreate({ clients, services, numero_devis, madinia }: Props) {
+export default function DevisCreate({ clients, services, administrateurs, numero_devis, madinia }: Props) {
     const [lignes, setLignes] = useState<LigneDevis[]>([]);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
+        emetteur: '',
         objet: '',
         description: '',
         date_devis: new Date().toISOString().split('T')[0],
@@ -254,33 +262,86 @@ export default function DevisCreate({ clients, services, numero_devis, madinia }
                                         <Edit3 className="h-4 w-4 text-gray-400" />
                                         <h3 className="text-sm font-semibold text-gray-700">Devis de</h3>
                                     </div>
-                                    <div className="space-y-2">
-                                        <p className="font-semibold text-gray-900">
-                                            {madinia?.name || 'Madin.IA'}
-                                        </p>
-                                        {madinia?.adresse && (
-                                            <p className="text-gray-600 text-sm">{madinia.adresse}</p>
+
+                                    <div>
+                                        <Label htmlFor="emetteur">Administrateur émetteur *</Label>
+                                        <Select value={data.emetteur || ''} onValueChange={(value) => setData('emetteur', value)}>
+                                            <SelectTrigger className="w-full mt-1">
+                                                <SelectValue placeholder="Sélectionner un administrateur" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {administrateurs.map((admin) => (
+                                                    <SelectItem key={admin.id} value={admin.email}>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-left">{admin.name}</span>
+                                                            <span className="text-xs text-gray-500">{admin.email}</span>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.emetteur && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.emetteur}</p>
                                         )}
-                                        {madinia?.pays && (
-                                            <p className="text-gray-600 text-sm">{madinia.pays}</p>
-                                        )}
-                                        <div className="flex flex-col gap-1 mt-3">
-                                            {madinia?.telephone && (
-                                                <div className="flex items-center gap-2">
-                                                    <Phone className="h-3 w-3 text-gray-400" />
-                                                    <span className="text-gray-600 text-sm">{madinia.telephone}</span>
-                                                </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="font-semibold text-gray-900">
+                                                {madinia?.name || 'Madin.IA'}
+                                            </p>
+                                            {madinia?.adresse && (
+                                                <p className="text-gray-600 text-sm">{madinia.adresse}</p>
                                             )}
-                                            {madinia?.email && (
+                                            {madinia?.pays && (
+                                                <p className="text-gray-600 text-sm">{madinia.pays}</p>
+                                            )}
+                                            <div className="flex flex-col gap-1 mt-3">
+                                                {madinia?.telephone && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Phone className="h-3 w-3 text-gray-400" />
+                                                        <span className="text-gray-600 text-sm">{madinia.telephone}</span>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-2">
                                                     <Mail className="h-3 w-3 text-gray-400" />
-                                                    <span className="text-gray-600 text-sm">{madinia.email}</span>
+                                                    <span className="text-gray-600 text-sm">
+                                                        {data.emetteur ? (() => {
+                                                            const admin = administrateurs.find(a => a.email === data.emetteur);
+                                                            return admin ? admin.email : 'd.brault@madin-ia.com';
+                                                        })() : 'd.brault@madin-ia.com'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {madinia?.siret && (
+                                                <div className="text-xs text-gray-500 mt-2">
+                                                    SIRET: {madinia.siret}
                                                 </div>
                                             )}
                                         </div>
-                                        {madinia?.siret && (
-                                            <div className="text-xs text-gray-500 mt-2">
-                                                SIRET: {madinia.siret}
+
+                                        {data.emetteur && (
+                                            <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
+                                                {(() => {
+                                                    const admin = administrateurs.find(a => a.email === data.emetteur);
+                                                    return admin ? (
+                                                        <>
+                                                            <p className="font-medium text-gray-900">{admin.name}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <Mail className="h-3 w-3 text-gray-400" />
+                                                                <span className="text-gray-600">{admin.email}</span>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <p className="font-medium text-gray-900">David Brault</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <Mail className="h-3 w-3 text-gray-400" />
+                                                                <span className="text-gray-600">d.brault@madin-ia.com</span>
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
                                         )}
                                     </div>

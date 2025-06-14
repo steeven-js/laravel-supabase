@@ -15,6 +15,7 @@ class Devis extends Model
      */
     protected $fillable = [
         'numero_devis',
+        'emetteur',
         'client_id',
         'date_devis',
         'date_validite',
@@ -52,11 +53,33 @@ class Devis extends Model
     ];
 
     /**
+     * Boot du modèle - génère automatiquement le numéro de devis.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($devis) {
+            if (empty($devis->numero_devis)) {
+                $devis->numero_devis = static::genererNumeroDevis();
+            }
+        });
+    }
+
+    /**
      * Relation avec le client.
      */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    /**
+     * Relation avec l'administrateur émetteur du devis.
+     */
+    public function administrateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'emetteur', 'email');
     }
 
     /**
@@ -134,23 +157,26 @@ class Devis extends Model
     }
 
     /**
-     * Générer un numéro de devis automatique.
+     * Générer un numéro de devis automatique au format DV-25-001.
      */
     public static function genererNumeroDevis(): string
     {
-        $annee = date('Y');
-        $dernierNumero = static::where('numero_devis', 'LIKE', "DEV-{$annee}-%")
+        $annee = substr(date('Y'), -2); // Récupère les 2 derniers chiffres de l'année (ex: 25 pour 2025)
+
+        // Chercher le dernier numéro de l'année courante
+        $dernierNumero = static::where('numero_devis', 'LIKE', "DV-{$annee}-%")
                               ->orderBy('numero_devis', 'desc')
                               ->first();
 
         if ($dernierNumero) {
-            $dernierNum = (int) substr($dernierNumero->numero_devis, -4);
+            // Extraire le numéro séquentiel du dernier devis (ex: 001 dans DV-25-001)
+            $dernierNum = (int) substr($dernierNumero->numero_devis, -3);
             $nouveauNum = $dernierNum + 1;
         } else {
             $nouveauNum = 1;
         }
 
-        return sprintf('DEV-%s-%04d', $annee, $nouveauNum);
+        return sprintf('DV-%s-%03d', $annee, $nouveauNum);
     }
 
     /**

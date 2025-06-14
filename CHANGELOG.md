@@ -5,7 +5,33 @@ Toutes les modifications notables de ce projet seront documentées dans ce fichi
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2025-06-13
+## [0.3.0] - 2025-01-23
+
+### Ajouté
+- **Amélioration du composant PDF des devis** :
+  - Rendu PDF avec fond transparent pour l'aperçu
+  - Affichage de l'email de l'administrateur assigné au lieu de l'email Madinia
+  - Informations légales complètes de Madinia dans le pied de page (SIRET, N° DA, coordonnées bancaires)
+  - Gestion robuste des types de données numériques (correction erreur toFixed)
+
+- **Interface utilisateur harmonisée** :
+  - Refonte complète de la section d'actions du devis avec Card container
+  - Statuts organisés avec padding uniforme et style cohérent
+  - Indicateur visuel d'assignation administrateur avec point coloré
+  - Actions groupées logiquement avec hauteurs et espacements uniformes
+  - Design responsive optimisé mobile/desktop
+
+### Corrigé
+- **Erreurs de rendu PDF** : Correction du bug `toFixed is not a function` avec conversion explicite des types
+- **Données PDF sécurisées** : Amélioration de `getSafeDevisData()` avec conversion Number() robuste
+- **Interface TypeScript** : Ajout des propriétés manquantes dans l'interface Madinia (nom_compte_bancaire, numero_compte)
+
+### Technique
+- **Optimisation des conversions de données** : Remplacement de parseFloat() par Number() pour plus de robustesse
+- **Amélioration du composant DevisPdfPreview** : Meilleure gestion des données nulles/undefined
+- **Code plus maintenable** : Structure UI/UX harmonisée avec classes Tailwind cohérentes
+
+## [0.2.8] - 2025-06-13
 
 ### Ajouté
 - **Migration Firebase vers Supabase** : Import complet des données Firebase

@@ -97,6 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('devis/{devis}/pdf', [DevisController::class, 'voirPdf'])->name('devis.pdf');
 Route::get('devis/{devis}/telecharger-pdf', [DevisController::class, 'telechargerPdf'])->name('devis.telecharger-pdf');
 Route::post('devis/{devis}/regenerer-pdf', [DevisController::class, 'regenererPdf'])->name('devis.regenerer-pdf');
+Route::post('devis/{devis}/update-pdf-react', [DevisController::class, 'updatePdfFromReact'])->name('devis.update-pdf-react');
 
     // Routes pour les factures
     Route::resource('factures', FactureController::class)->parameters(['factures' => 'facture']);

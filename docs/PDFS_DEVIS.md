@@ -13,6 +13,12 @@ Le système de génération de PDFs pour les devis offre une **double sauvegarde
 - **Modification d'un devis** : PDF mis à jour automatiquement
 - **Suppression d'un devis** : PDF supprimé des deux emplacements
 
+### ✅ Aperçu PDF React (Nouveau v0.3.0)
+- **Aperçu transparent** : Rendu avec fond transparent pour intégration UI
+- **Modal intégré** : Visualisation directe dans l'interface admin
+- **Données sécurisées** : Conversion robuste des types numériques
+- **Email administrateur** : Affichage prioritaire du contact assigné
+
 ### ✅ Envoi par email
 - PDF inclus en **pièce jointe**
 - Lien vers le PDF Supabase dans l'email
@@ -22,6 +28,7 @@ Le système de génération de PDFs pour les devis offre une **double sauvegarde
 - **Voir en ligne** : `/devis/{id}/pdf`
 - **Télécharger** : `/devis/{id}/telecharger-pdf`
 - **Régénérer** : `/devis/{id}/regenerer-pdf` (POST)
+- **Aperçu React** : Modal avec PDFViewer intégré
 
 ## Architecture technique
 

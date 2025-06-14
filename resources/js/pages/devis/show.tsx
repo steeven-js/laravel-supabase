@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     ArrowLeft,
     Edit,
@@ -18,13 +19,16 @@ import {
     Mail,
     MailCheck,
     MailX,
-    Download,
     Eye,
     Phone,
     Printer,
     Send,
-    Settings
+    Settings,
+    X
 } from 'lucide-react';
+import { PDFDownloadLink, pdf, Document, Page, Text, PDFViewer } from '@react-pdf/renderer';
+import DevisPdfPreview from '@/components/pdf/DevisPdfPreview';
+import { Tooltip } from '@/components/ui/tooltip';
 
 interface LigneDevis {
     id: number;
@@ -48,6 +52,7 @@ interface LigneDevis {
 interface Devis {
     id: number;
     numero_devis: string;
+    emetteur?: string;
     objet: string;
     statut: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire';
     statut_envoi: 'non_envoye' | 'envoye' | 'echec_envoi';
@@ -68,6 +73,11 @@ interface Devis {
     facture?: {
         id: number;
         numero_facture: string;
+    };
+    administrateur?: {
+        id: number;
+        name: string;
+        email: string;
     };
     client: {
         id: number;
@@ -149,21 +159,6 @@ const getStatusStyles = (statut: string) => {
     }
 };
 
-const getStatusIcon = (statut: string) => {
-    switch (statut) {
-        case 'accepte':
-            return <CheckCircle className="h-4 w-4" />;
-        case 'envoye':
-            return <Clock className="h-4 w-4" />;
-        case 'refuse':
-            return <XCircle className="h-4 w-4" />;
-        case 'expire':
-            return <AlertCircle className="h-4 w-4" />;
-        default:
-            return <FileText className="h-4 w-4" />;
-    }
-};
-
 const formatStatut = (statut: string) => {
     switch (statut) {
         case 'brouillon':
@@ -228,12 +223,14 @@ const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
         href: '/devis',
     },
     {
-        title: devis.numero_devis,
+        title: devis.administrateur ? `${devis.numero_devis} - ${devis.administrateur.name}` : devis.numero_devis,
         href: `/devis/${devis.id}`,
     },
 ];
 
 export default function DevisShow({ devis, historique, madinia }: Props) {
+    const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
             style: 'currency',
@@ -324,7 +321,80 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
         });
     };
 
+    const handlePreviewPdf = () => {
+        // Vérifications de sécurité approfondies
+        if (!devis || !devis.numero_devis || !devis.client) {
+            console.error('Données du devis manquantes');
+            alert('Données du devis incomplètes. Impossible de générer l\'aperçu.');
+            return;
+        }
 
+        // Ouvrir le modal
+        setIsPdfModalOpen(true);
+    };
+
+    // Préparer les données sécurisées pour le PDF
+    const getSafeDevisData = () => {
+        return {
+            ...devis,
+            // Convertir les strings en numbers pour les montants
+            montant_ht: Number(devis.montant_ht) || 0,
+            montant_ttc: Number(devis.montant_ttc) || 0,
+            taux_tva: Number(devis.taux_tva) || 0,
+            statut: devis.statut || 'brouillon',
+            date_devis: devis.date_devis || new Date().toISOString(),
+            date_validite: devis.date_validite || new Date().toISOString(),
+            // Traiter les lignes avec conversion des montants
+            lignes: (devis.lignes || []).map(ligne => ({
+                ...ligne,
+                quantite: Number(ligne.quantite) || 1,
+                prix_unitaire_ht: Number(ligne.prix_unitaire_ht) || 0,
+                montant_ht: Number(ligne.montant_ht) || 0,
+                montant_ttc: Number(ligne.montant_ttc) || 0,
+                montant_tva: Number(ligne.montant_tva) || 0,
+                taux_tva: Number(ligne.taux_tva) || 0,
+            })),
+            client: {
+                ...devis.client,
+                nom: devis.client.nom || '',
+                prenom: devis.client.prenom || '',
+                email: devis.client.email || ''
+            }
+        };
+    };
+
+    const getSafeMadiniaData = () => {
+        return madinia || {
+            name: 'Madin.IA',
+            email: 'contact@madinia.fr'
+        };
+    };
+
+    const renderDownload = (
+        <PDFDownloadLink
+            document={
+                devis ? <DevisPdfPreview devis={devis} madinia={madinia} /> : <span />
+            }
+            fileName={`${devis?.numero_devis || 'devis'}.pdf`}
+            style={{ textDecoration: 'none' }}
+        >
+            {({ loading }) => (
+                <Button variant="outline" size="sm" disabled={loading}>
+                    {loading ? (
+                        <>
+                            <Clock className="mr-2 h-4 w-4 animate-spin" />
+                            Génération...
+                        </>
+                    ) : (
+                        <>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Télécharger PDF
+                        </>
+                    )}
+                </Button>
+            )}
+        </PDFDownloadLink>
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(devis)}>
@@ -341,35 +411,36 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                     </Button>
                 </div>
 
-                {/* Header avec actions */}
-                <div className="w-full max-w-5xl mx-auto">
-                    {/* Navigation et titre */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-xl font-semibold text-gray-900">
-                                Devis {devis.numero_devis}
-                            </h1>
-                        </div>
+                {/* Header avec actions - Version harmonisée */}
+                <Card className="w-full max-w-5xl mx-auto bg-white shadow-sm border border-gray-200">
+                    <CardContent className="p-6">
+                        {/* Titre et informations principales */}
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
+                            <div className="flex-1">
+                                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                    Devis {devis.numero_devis}
+                                </h1>
+                                {devis.administrateur && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span>Assigné à <strong>{devis.administrateur.name}</strong></span>
+                                    </div>
+                                )}
+                            </div>
 
-                        {/* Statuts */}
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-3">
-                                {/* Sélecteur de statut professionnel */}
-                                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                            {/* Statuts organisés */}
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {/* Statut principal */}
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-6 h-6 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
-                                            <Settings className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                                        </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Modifier le statut
+                                        <Settings className="h-4 w-4 text-amber-600" />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Statut du devis
                                         </span>
                                     </div>
                                     <Select value={devis.statut} onValueChange={handleStatutChange}>
-                                        <SelectTrigger className="w-52 h-11 border border-gray-300 dark:border-gray-600 hover:border-amber-400 dark:hover:border-amber-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-colors">
-                                            <div className="flex items-center gap-2">
-                                                <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                                <SelectValue placeholder="Sélectionner un statut" />
-                                            </div>
+                                        <SelectTrigger className="w-full h-10 border-gray-300 hover:border-amber-400 bg-white transition-colors">
+                                            <SelectValue placeholder="Sélectionner un statut" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {statutOptions.map((option) => (
@@ -383,85 +454,67 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
-                            {/* Badge de statut d'envoi avec légende */}
-                            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                                        <Mail className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+
+                                {/* Statut d'envoi */}
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Mail className="h-4 w-4 text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Statut d'envoi
+                                        </span>
                                     </div>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Statut d'envoi
-                                    </span>
+                                    <div className="flex items-center justify-center h-10">
+                                        <Badge className={`${getStatusEnvoiStyles(devis.statut_envoi)} px-3 py-2 text-xs font-medium`}>
+                                            <span className="flex items-center gap-2">
+                                                {getStatusEnvoiIcon(devis.statut_envoi)}
+                                                {formatStatutEnvoi(devis.statut_envoi)}
+                                            </span>
+                                        </Badge>
+                                    </div>
                                 </div>
-                                <Badge className={`${getStatusEnvoiStyles(devis.statut_envoi)} px-3 py-1`}>
-                                    <span className="flex items-center gap-1">
-                                        {getStatusEnvoiIcon(devis.statut_envoi)}
-                                        {formatStatutEnvoi(devis.statut_envoi)}
-                                    </span>
-                                </Badge>
                             </div>
                         </div>
 
+                        <Separator className="my-6" />
 
-                    </div>
-
-                    {/* Actions groupées */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Actions principales */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Button asChild className="flex-1 sm:flex-none">
-                                <Link href={`/devis/${devis.id}/edit`}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Modifier
-                                </Link>
-                            </Button>
-                            {devis.peut_etre_envoye && (
-                                <Button className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none" asChild>
-                                    <Link href={`/devis/${devis.id}/envoyer-email`}>
-                                        <Send className="mr-2 h-4 w-4" />
-                                        {devis.statut_envoi === 'envoye' ? 'Renvoyer' : 'Envoyer'}
+                        {/* Actions organisées */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            {/* Actions principales */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button asChild className="h-10 px-4">
+                                    <Link href={`/devis/${devis.id}/edit`}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Modifier
                                     </Link>
                                 </Button>
-                            )}
-                        </div>
+                                {devis.peut_etre_envoye && (
+                                    <Button className="bg-green-600 hover:bg-green-700 h-10 px-4" asChild>
+                                        <Link href={`/devis/${devis.id}/envoyer-email`}>
+                                            <Send className="mr-2 h-4 w-4" />
+                                            {devis.statut_envoi === 'envoye' ? 'Renvoyer' : 'Envoyer'}
+                                        </Link>
+                                    </Button>
+                                )}
+                            </div>
 
-                        {/* Actions PDF */}
-                        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                                <Printer className="mr-2 h-4 w-4" />
-                                <span className="hidden sm:inline">Imprimer</span>
-                                <span className="sm:hidden">Print</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 sm:flex-none"
-                                onClick={() => {
-                                    if (devis.pdf_url_supabase) {
-                                        window.open(devis.pdf_url_supabase, '_blank', 'noopener,noreferrer');
-                                    } else {
-                                        // Fallback vers l'URL locale si Supabase n'est pas disponible
-                                        window.open(`/devis/${devis.id}/pdf`, '_blank', 'noopener,noreferrer');
-                                    }
-                                }}
-                            >
-                                <Eye className="mr-2 h-4 w-4" />
-                                <span className="hidden sm:inline">Voir PDF</span>
-                                <span className="sm:hidden">PDF</span>
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" asChild>
-                                <Link href={`/devis/${devis.id}/telecharger-pdf`}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">Télécharger</span>
-                                    <span className="sm:hidden">DL</span>
-                                </Link>
-                            </Button>
+                            {/* Actions PDF */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                    onClick={handlePreviewPdf}
+                                >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Aperçu PDF
+                                </Button>
+                                {renderDownload}
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
-                                {/* Header de statut uniforme pour tous les devis */}
+                {/* Header de statut uniforme pour tous les devis */}
                 <Card className="w-full max-w-5xl mx-auto">
                     <CardContent className="p-8">
                         {devis.facture ? (
@@ -506,7 +559,13 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                 <div>
                                     <h3 className="font-semibold text-lg mb-1 text-blue-700">📧 Devis envoyé</h3>
                                     <p className="text-sm text-gray-600">
-                                        Le devis a été envoyé au client et attend sa validation
+                                        Le devis a été envoyé au client le {devis.date_envoi_client ? new Date(devis.date_envoi_client).toLocaleDateString('fr-FR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }) : 'N/A'} et attend sa validation
                                     </p>
                                 </div>
                             </div>
@@ -606,6 +665,19 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                                             <div className="flex items-center gap-2">
                                                 <Mail className="h-4 w-4 text-gray-400" />
                                                 <span className="text-gray-600">{madinia.email}</span>
+                                            </div>
+                                        )}
+                                        {devis.administrateur && (
+                                            <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 rounded-md">
+                                                <Mail className="h-4 w-4 text-blue-500" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-blue-900">
+                                                        {devis.administrateur.name}
+                                                    </span>
+                                                    <span className="text-xs text-blue-600">
+                                                        {devis.administrateur.email}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -765,7 +837,7 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                         <div className="border-t pt-6">
                             <div className="text-center mb-4">
                                 <p className="text-sm text-gray-600 mb-2">
-                                    Nous apprécions votre collaboration. Si vous avez besoin de nous ajouter la TVA ou des notes supplémentaires, faites-le nous savoir !
+                                    Ce devis est valable jusqu'au {new Date(devis.date_validite).toLocaleDateString('fr-FR')}. Pour toute modification ou demande d'information complémentaire, n'hésitez pas à nous contacter.
                                 </p>
                                 <div className="flex justify-center items-center gap-4 text-sm text-gray-500">
                                     <span>Vous avez une question ?</span>
@@ -882,6 +954,43 @@ export default function DevisShow({ devis, historique, madinia }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Modal d'aperçu PDF */}
+            {isPdfModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg w-full h-full max-w-7xl max-h-[95vh] flex flex-col shadow-2xl">
+                        {/* Header du modal */}
+                        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Aperçu du devis {devis.numero_devis}
+                            </h3>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsPdfModalOpen(false)}
+                                className="h-8 w-8 p-0"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        {/* Contenu du modal - PDFViewer */}
+                        <div className="flex-1 overflow-hidden">
+                            <PDFViewer
+                                width="100%"
+                                height="100%"
+                                style={{ border: 'none' }}
+                                showToolbar={true}
+                            >
+                                <DevisPdfPreview
+                                    devis={getSafeDevisData()}
+                                    madinia={getSafeMadiniaData()}
+                                />
+                            </PDFViewer>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }
