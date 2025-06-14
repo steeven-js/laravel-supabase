@@ -290,6 +290,11 @@ export default function DevisEdit({ devis, clients, services, madinia }: Props) 
         }).format(price);
     };
 
+    const truncateText = (text: string, maxLength: number = 40) => {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    };
+
     const { sousTotal, totalTva, total } = calculateTotals();
 
     return (
@@ -592,13 +597,22 @@ export default function DevisEdit({ devis, clients, services, madinia }: Props) 
                                                             onValueChange={(value) => updateLigne(index, 'service_id', value)}
                                                         >
                                                             <SelectTrigger className="w-full text-xs">
-                                                                <SelectValue placeholder="Sélectionner..." />
+                                                                {ligne.service_id ? (
+                                                                    <span className="text-xs font-medium">
+                                                                        {(() => {
+                                                                            const selectedService = services.find(s => s.id === ligne.service_id);
+                                                                            return selectedService ? truncateText(selectedService.nom, 45) : 'Service non trouvé';
+                                                                        })()}
+                                                                    </span>
+                                                                ) : (
+                                                                    <SelectValue placeholder="Sélectionner..." />
+                                                                )}
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {services.map((service) => (
                                                                     <SelectItem key={service.id} value={service.id.toString()}>
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-xs font-medium">{service.nom}</span>
+                                                                        <div className="flex flex-col py-1">
+                                                                            <span className="text-sm font-medium">{service.nom}</span>
                                                                             <span className="text-xs text-gray-500">{service.code}</span>
                                                                         </div>
                                                                     </SelectItem>
