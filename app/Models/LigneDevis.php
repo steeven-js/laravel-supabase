@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use App\Traits\TestModeAware;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LigneDevis extends Model
 {
-    use HasFactory, TestModeAware;
+    use HasFactory;
 
     protected $table = 'lignes_devis';
 
@@ -41,7 +40,7 @@ class LigneDevis extends Model
      */
     public function devis(): BelongsTo
     {
-        return $this->belongsTo(Devis::class, 'devis_id', 'id');
+        return $this->belongsTo(Devis::class);
     }
 
     /**

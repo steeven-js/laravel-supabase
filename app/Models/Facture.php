@@ -3,18 +3,12 @@
 namespace App\Models;
 
 use App\Traits\HasHistorique;
-use App\Traits\TestModeAware;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Facture extends Model
 {
-    use HasHistorique, TestModeAware;
-
-    /**
-     * Le nom de la table associée au modèle.
-     */
-    protected $table = 'factures';
+    use HasHistorique;
 
     /**
      * Les attributs qui peuvent être assignés en masse.
@@ -84,7 +78,7 @@ class Facture extends Model
      */
     public function devis(): BelongsTo
     {
-        return $this->belongsTo(Devis::class, 'devis_id', 'id');
+        return $this->belongsTo(Devis::class);
     }
 
     /**
@@ -108,7 +102,7 @@ class Facture extends Model
      */
     public function lignes()
     {
-        return $this->hasMany(LigneFacture::class, 'facture_id', 'id')->ordered();
+        return $this->hasMany(LigneFacture::class)->ordered();
     }
 
     /**

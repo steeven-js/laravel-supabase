@@ -3,18 +3,12 @@
 namespace App\Models;
 
 use App\Traits\HasHistorique;
-use App\Traits\TestModeAware;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Devis extends Model
 {
-    use HasHistorique, TestModeAware;
-
-    /**
-     * Le nom de la table associée au modèle.
-     */
-    protected $table = 'devis';
+    use HasHistorique;
 
     /**
      * Les attributs qui peuvent être assignés en masse.
@@ -101,8 +95,7 @@ class Devis extends Model
      */
     public function lignes()
     {
-        $ligneDevis = new LigneDevis();
-        return $this->hasMany(LigneDevis::class, 'devis_id', 'id')->ordered();
+        return $this->hasMany(LigneDevis::class)->ordered();
     }
 
     /**
