@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor, Package, Building, Mail } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor, Package, Building, Mail, Shield } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -65,17 +65,28 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     const { props } = usePage();
-    const isLocal = (props as any).app_env === 'local';
+    const auth = (props as any).auth;
+    const user = auth?.user;
+    const isSuperAdmin = user?.role === 'superadmin';
 
-    // Ajouter le lien de monitoring si on est en mode local
-    const navigationItems = isLocal ? [
-        ...mainNavItems,
-        {
-            title: 'Monitoring & Tests',
-            href: '/monitoring',
-            icon: Monitor,
-        }
-    ] : mainNavItems;
+    // Éléments de navigation avec éléments conditionnels pour super admin
+    let navigationItems = [...mainNavItems];
+
+    // Ajouter les éléments super admin si l'utilisateur est super admin
+    if (isSuperAdmin) {
+        navigationItems.push(
+            {
+                title: 'Liste des Admins',
+                href: '/admin/users/admins',
+                icon: Shield,
+            },
+            {
+                title: 'Monitoring & Tests',
+                href: '/monitoring',
+                icon: Monitor,
+            }
+        );
+    }
 
     return (
         <Sidebar collapsible="icon" variant="inset">

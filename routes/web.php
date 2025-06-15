@@ -11,6 +11,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Settings\MadiniaController;
 use App\Http\Controllers\Settings\ProfileController;
 
@@ -177,6 +178,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('api/historique')->name('api.historique.')->group(function () {
         Route::get('/{type}/{id}', [App\Http\Controllers\HistoriqueController::class, 'apiHistoriqueEntite'])->name('entite');
     });
+
+    // Routes d'administration - Protégées par middleware superadmin (accès réservé aux Super Admins)
+    Route::middleware(['superadmin'])->prefix('admin')->name('admin.')->group(function () {
+        // Dashboard admin
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+        // Gestion des utilisateurs
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::get('/users/create', [AdminController::class, 'createUser'])->name('users.create');
+        Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+
+        // Liste des administrateurs - DOIT être avant les routes avec paramètres
+        Route::get('/users/admins', [AdminController::class, 'admins'])->name('users.admins');
+
+        // Routes avec paramètres ID - APRÈS les routes fixes
+        Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');
+        Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
+        Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
+
+        // API pour mise à jour des rôles (AJAX)
+        Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
+    });
 });
 
 // Routes de développement (seulement en mode local)
@@ -198,13 +222,9 @@ if (app()->environment('local')) {
 
     // Route pour prévisualiser l'email Markdown (développement uniquement)
     Route::get('preview-email', function () {
-        $monitoringController = new MonitoringController();
-        $diagnostics = $monitoringController->getDiagnostics();
-        return new \App\Mail\TestEmailMark($diagnostics, 'preview@example.com');
-    })->middleware(['auth', 'verified']);
+        return new App\Mail\DevisEmail(App\Models\Devis::first(), 'Test sujet', 'Ceci est un test de contenu d\'email.', App\Models\User::first());
+    });
 }
-
-
 
 // Inclusion des autres fichiers de routes
 require __DIR__ . '/settings.php';

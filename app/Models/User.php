@@ -27,6 +27,7 @@ class User extends Authenticatable
         'code_postal',
         'pays',
         'avatar',
+        'role',
     ];
 
     /**
@@ -50,6 +51,54 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Check if user is superadmin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    /**
+     * Check if user is admin (tous les utilisateurs sont admin maintenant).
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'superadmin']);
+    }
+
+    /**
+     * Check if user has specific role.
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Get users with admin role or higher (tous les utilisateurs maintenant).
+     */
+    public static function getAdmins()
+    {
+        return self::whereIn('role', ['admin', 'superadmin'])->get();
+    }
+
+    /**
+     * Scope for admin users only (tous les utilisateurs maintenant).
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->whereIn('role', ['admin', 'superadmin']);
+    }
+
+    /**
+     * Scope for superadmin users only.
+     */
+    public function scopeSuperAdmins($query)
+    {
+        return $query->where('role', 'superadmin');
     }
 
     /**
@@ -88,5 +137,18 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): ?string
     {
         return $this->avatar ? asset('storage/' . $this->avatar) : null;
+    }
+
+    /**
+     * Get role display name in French.
+     */
+    public function getRoleDisplayAttribute(): string
+    {
+        $roles = [
+            'admin' => 'Administrateur',
+            'superadmin' => 'Super Administrateur'
+        ];
+
+        return $roles[$this->role] ?? 'Administrateur';
     }
 }
