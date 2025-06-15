@@ -179,7 +179,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{type}/{id}', [App\Http\Controllers\HistoriqueController::class, 'apiHistoriqueEntite'])->name('entite');
     });
 
-    // Routes d'administration - Protégées par middleware superadmin (accès réservé aux Super Admins)
+        // Routes d'administration - Protégées par middleware superadmin (accès réservé aux Super Admins)
     Route::middleware(['superadmin'])->prefix('admin')->name('admin.')->group(function () {
         // Dashboard admin
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
@@ -200,6 +200,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // API pour mise à jour des rôles (AJAX)
         Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
+
+        // Routes de monitoring - Réservées aux Super Admins
+        Route::prefix('monitoring')->name('monitoring.')->group(function () {
+            Route::get('/', [MonitoringController::class, 'index'])->name('index');
+            Route::post('test-email', [MonitoringController::class, 'testEmail'])->name('test-email');
+            Route::post('test-database', [MonitoringController::class, 'testDatabase'])->name('test-database');
+            Route::post('clear-cache', [MonitoringController::class, 'clearCache'])->name('clear-cache');
+        });
     });
 });
 
@@ -212,13 +220,7 @@ if (app()->environment('local')) {
         Route::get('stats', [App\Http\Controllers\DevDataController::class, 'stats'])->name('stats');
     });
 
-    // Routes de monitoring (seulement en mode local)
-    Route::middleware(['auth', 'verified'])->prefix('monitoring')->name('monitoring.')->group(function () {
-        Route::get('/', [MonitoringController::class, 'index'])->name('index');
-        Route::post('test-email', [MonitoringController::class, 'testEmail'])->name('test-email');
-        Route::post('test-database', [MonitoringController::class, 'testDatabase'])->name('test-database');
-        Route::post('clear-cache', [MonitoringController::class, 'clearCache'])->name('clear-cache');
-    });
+
 
     // Route pour prévisualiser l'email Markdown (développement uniquement)
     Route::get('preview-email', function () {

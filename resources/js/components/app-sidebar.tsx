@@ -82,7 +82,7 @@ export function AppSidebar() {
             },
             {
                 title: 'Monitoring & Tests',
-                href: '/monitoring',
+                href: '/admin/monitoring',
                 icon: Monitor,
             }
         );

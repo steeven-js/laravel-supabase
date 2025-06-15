@@ -13,14 +13,23 @@ use Inertia\Inertia;
 class AdminController extends Controller
 {
     /**
+     * Check if current user is super admin.
+     */
+    private function requireSuperAdmin(): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Accès réservé aux Super Administrateurs.');
+        }
+    }
+
+    /**
      * Display the admin dashboard (Super Admin uniquement).
      */
     public function index()
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         $totalUsers = User::count();
         $totalAdmins = User::where('role', 'admin')->count();
@@ -40,10 +49,7 @@ class AdminController extends Controller
      */
     public function users()
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         $users = User::orderBy('created_at', 'desc')->paginate(20);
 
@@ -57,10 +63,7 @@ class AdminController extends Controller
      */
     public function createUser()
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         return Inertia::render('admin/users/create');
     }
@@ -70,10 +73,7 @@ class AdminController extends Controller
      */
     public function storeUser(Request $request)
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -114,10 +114,7 @@ class AdminController extends Controller
      */
     public function showUser(User $user)
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         return Inertia::render('admin/users/show', [
             'user' => $user
@@ -129,10 +126,7 @@ class AdminController extends Controller
      */
     public function editUser(User $user)
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         return Inertia::render('admin/users/edit', [
             'user' => $user
@@ -144,10 +138,7 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, User $user)
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -193,12 +184,11 @@ class AdminController extends Controller
      */
     public function destroyUser(User $user)
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         // Empêcher la suppression du dernier super admin
+        /** @var User $currentUser */
+        $currentUser = Auth::user();
         if ($user->isSuperAdmin() && User::where('role', 'superadmin')->count() === 1) {
             return redirect()->back()
                 ->with('error', 'Impossible de supprimer le dernier Super Administrateur.');
@@ -215,10 +205,7 @@ class AdminController extends Controller
      */
     public function admins()
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            abort(403, 'Accès réservé aux Super Administrateurs.');
-        }
+        $this->requireSuperAdmin();
 
         $admins = User::admins()->orderBy('created_at', 'desc')->paginate(20);
 
@@ -232,10 +219,7 @@ class AdminController extends Controller
      */
     public function updateRole(Request $request, User $user)
     {
-        // Vérifier que l'utilisateur est super admin
-        if (!Auth::user()->isSuperAdmin()) {
-            return response()->json(['error' => 'Accès réservé aux Super Administrateurs.'], 403);
-        }
+        $this->requireSuperAdmin();
 
         $validator = Validator::make($request->all(), [
             'role' => 'required|in:admin,superadmin',
