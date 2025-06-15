@@ -119,6 +119,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('factures/{facture}/telecharger-pdf', [FactureController::class, 'telechargerPdf'])->name('factures.telecharger-pdf');
     Route::post('factures/{facture}/regenerer-pdf', [FactureController::class, 'regenererPdf'])->name('factures.regenerer-pdf');
     Route::get('factures/{facture}/sync-pdf', [FactureController::class, 'syncSupabase'])->name('factures.sync-pdf');
+    Route::get('factures/{facture}/sync-supabase', [FactureController::class, 'syncSupabase'])->name('factures.sync-supabase');
     Route::post('factures/{facture}/save-react-pdf', [FactureController::class, 'saveReactPdf'])->name('factures.save-react-pdf');
 
     // Routes pour le profil utilisateur

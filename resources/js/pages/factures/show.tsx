@@ -394,28 +394,10 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
     };
 
     const handleSyncSupabase = () => {
-        toast.loading('Synchronisation vers Supabase...');
-
-        try {
-            router.visit(`/factures/${facture.id}/sync-pdf`, {
-                method: 'get',
-                preserveScroll: true,
-                onSuccess: () => {
-                    toast.success('PDF synchronisé vers Supabase avec succès');
-                },
-                onError: (errors) => {
-                    console.error('Erreur lors de la synchronisation:', errors);
-                    toast.error('Erreur lors de la synchronisation vers Supabase');
-                },
-                onFinish: () => {
-                    toast.dismiss();
-                }
-            });
-        } catch (error) {
-            console.error('Erreur lors de la synchronisation:', error);
-            toast.error('Erreur lors de la synchronisation vers Supabase');
-            toast.dismiss();
-        }
+        router.visit(`/factures/${facture.id}/sync-supabase`, {
+            method: 'get',
+            preserveScroll: true,
+        });
     };
 
     return (

@@ -903,100 +903,47 @@ class FactureController extends Controller
     }
 
     /**
-     * Synchronise le PDF de la facture vers Supabase en utilisant React PDF
+     * Synchronise le PDF de la facture vers Supabase
      */
     public function syncSupabase(Facture $facture)
     {
         try {
-            $facture->load(['client.entreprise', 'devis', 'administrateur']);
-
-            Log::info('Début synchronisation PDF React vers Supabase', [
+            Log::info('Début synchronisation PDF vers Supabase', [
                 'facture_id' => $facture->id,
                 'numero_facture' => $facture->numero_facture
             ]);
 
-            // Récupérer les informations Madinia
-            $madinia = \App\Models\Madinia::getInstance();
+            // Vérifier si le PDF existe localement
+            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
 
-            // Construire les données formatées pour React PDF
-            $factureData = [
-                'numero_facture' => $facture->numero_facture,
-                'objet' => $facture->objet,
-                'statut' => $facture->statut,
-                'date_facture' => $facture->date_facture?->format('Y-m-d') ?? '',
-                'date_echeance' => $facture->date_echeance?->format('Y-m-d') ?? '',
-                'date_paiement' => $facture->date_paiement?->format('Y-m-d'),
-                'montant_ht' => (float) $facture->montant_ht,
-                'taux_tva' => (float) $facture->taux_tva,
-                'montant_ttc' => (float) $facture->montant_ttc,
-                'description' => $facture->description,
-                'conditions_paiement' => $facture->conditions_paiement,
-                'notes' => $facture->notes,
-                'lignes' => $facture->lignes ? $facture->lignes->map(function ($ligne) {
-                    return [
-                        'id' => $ligne->id,
-                        'quantite' => (float) $ligne->quantite,
-                        'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
-                        'taux_tva' => (float) $ligne->taux_tva,
-                        'montant_ht' => (float) $ligne->montant_ht,
-                        'montant_tva' => (float) $ligne->montant_tva,
-                        'montant_ttc' => (float) $ligne->montant_ttc,
-                        'ordre' => $ligne->ordre,
-                        'description_personnalisee' => $ligne->description_personnalisee,
-                        'service' => $ligne->service ? [
-                            'nom' => $ligne->service->nom,
-                            'description' => $ligne->service->description,
-                        ] : null
-                    ];
-                })->toArray() : [],
-                'client' => $facture->client ? [
-                    'nom' => $facture->client->nom,
-                    'prenom' => $facture->client->prenom,
-                    'email' => $facture->client->email,
-                    'telephone' => $facture->client->telephone,
-                    'adresse' => $facture->client->adresse,
-                    'ville' => $facture->client->ville,
-                    'code_postal' => $facture->client->code_postal,
-                    'entreprise' => $facture->client->entreprise ? [
-                        'nom' => $facture->client->entreprise->nom,
-                        'nom_commercial' => $facture->client->entreprise->nom_commercial,
-                        'adresse' => $facture->client->entreprise->adresse,
-                        'ville' => $facture->client->entreprise->ville,
-                        'code_postal' => $facture->client->entreprise->code_postal,
-                    ] : null
-                ] : null,
-                'administrateur' => $facture->administrateur ? [
-                    'id' => $facture->administrateur->id,
-                    'name' => $facture->administrateur->name,
-                    'email' => $facture->administrateur->email,
-                ] : null,
-                'devis' => $facture->devis ? [
-                    'numero_devis' => $facture->devis->numero_devis,
-                ] : null,
-            ];
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                return redirect()->route('factures.show', $facture->id)
+                    ->with('error', '❌ PDF local introuvable. Veuillez d\'abord générer le PDF.');
+            }
 
-            $madiniaData = $madinia ? [
-                'name' => $madinia->name,
-                'telephone' => $madinia->telephone,
-                'email' => $madinia->email,
-                'adresse' => $madinia->adresse,
-                'pays' => $madinia->pays,
-                'siret' => $madinia->siret,
-                'numero_nda' => $madinia->numero_nda,
-                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
-                'nom_banque' => $madinia->nom_banque,
-                'numero_compte' => $madinia->numero_compte,
-                'iban_bic_swift' => $madinia->iban_bic_swift,
-            ] : null;
+            // Lire le contenu du PDF local
+            $pdfContent = file_get_contents($cheminPdf);
+            $nomFichier = "facture_{$facture->numero_facture}_{$facture->id}.pdf";
 
-            // Retourner les données pour que le frontend génère et sauvegarde le PDF
-            return Inertia::render('factures/sync-pdf', [
-                'facture' => $factureData,
-                'madinia' => $madiniaData,
-                'saveRoute' => route('factures.save-react-pdf', $facture->id),
-                'backRoute' => route('factures.show', $facture->id),
-                'autoGenerate' => true, // Flag pour génération automatique
-            ]);
+            // Synchroniser vers Supabase
+            $urlSupabase = $this->sauvegarderPdfSupabase($pdfContent, $nomFichier, 'factures');
+
+            if ($urlSupabase) {
+                // Mettre à jour l'URL Supabase en base
+                $facture->update(['pdf_url' => $urlSupabase]);
+
+                Log::info('PDF synchronisé vers Supabase avec succès', [
+                    'facture_id' => $facture->id,
+                    'numero_facture' => $facture->numero_facture,
+                    'url_supabase' => $urlSupabase
+                ]);
+
+                return redirect()->route('factures.show', $facture->id)
+                    ->with('success', '✅ PDF synchronisé vers Supabase avec succès !');
+            } else {
+                return redirect()->route('factures.show', $facture->id)
+                    ->with('error', '❌ Erreur lors de la synchronisation vers Supabase');
+            }
 
         } catch (Exception $e) {
             Log::error('Exception lors de la synchronisation PDF vers Supabase', [
@@ -1005,7 +952,8 @@ class FactureController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Erreur lors de la synchronisation vers Supabase');
+            return redirect()->route('factures.show', $facture->id)
+                ->with('error', '❌ Erreur lors de la synchronisation : ' . $e->getMessage());
         }
     }
 }
