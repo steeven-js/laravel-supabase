@@ -8,6 +8,7 @@ use App\Services\FacturePdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Exception;
@@ -126,9 +127,9 @@ class FactureController extends Controller
             'date_facture' => $facture->date_facture?->format('Y-m-d') ?? '',
             'date_echeance' => $facture->date_echeance?->format('Y-m-d') ?? '',
             'date_paiement' => $facture->date_paiement?->format('Y-m-d') ?? null,
-            'montant_ht' => $facture->montant_ht,
-            'taux_tva' => $facture->taux_tva,
-            'montant_ttc' => $facture->montant_ttc,
+            'montant_ht' => (float) $facture->montant_ht,
+            'taux_tva' => (float) $facture->taux_tva,
+            'montant_ttc' => (float) $facture->montant_ttc,
             'conditions_paiement' => $facture->conditions_paiement,
             'notes' => $facture->notes,
             'mode_paiement' => $facture->mode_paiement,
@@ -187,9 +188,9 @@ class FactureController extends Controller
             'statut' => $facture->statut,
             'date_facture' => $facture->date_facture?->format('Y-m-d') ?? '',
             'date_echeance' => $facture->date_echeance?->format('Y-m-d') ?? '',
-            'montant_ht' => $facture->montant_ht,
-            'taux_tva' => $facture->taux_tva,
-            'montant_ttc' => $facture->montant_ttc,
+            'montant_ht' => (float) $facture->montant_ht,
+            'taux_tva' => (float) $facture->taux_tva,
+            'montant_ttc' => (float) $facture->montant_ttc,
             'notes' => $facture->notes,
             'description' => $facture->description,
             'conditions_paiement' => $facture->conditions_paiement,
@@ -246,7 +247,7 @@ class FactureController extends Controller
             $facture->calculerMontants();
             $facture->save();
 
-            // Mettre à jour le PDF après modification
+            // Mettre à jour le PDF après modification - TOUJOURS régénérer
             try {
                 $nomFichierPdf = $this->facturePdfService->mettreAJour($facture);
                 $facture->pdf_file = $nomFichierPdf;
@@ -261,6 +262,7 @@ class FactureController extends Controller
                     'facture_id' => $facture->id,
                     'error' => $e->getMessage()
                 ]);
+                // Ne pas bloquer la sauvegarde de la facture si le PDF échoue
             }
 
             return redirect()->route('factures.index')
@@ -471,6 +473,31 @@ class FactureController extends Controller
             // Charger les relations nécessaires
             $facture->load('client.entreprise', 'devis', 'administrateur');
 
+            // S'assurer que le PDF existe avant l'envoi de l'email
+            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+
+            if (!$cheminPdf || !file_exists($cheminPdf)) {
+                Log::info('PDF non trouvé, génération en cours...', [
+                    'facture_numero' => $facture->numero_facture,
+                    'chemin_attendu' => $cheminPdf,
+                ]);
+
+                $nomFichierPdf = $this->facturePdfService->genererEtSauvegarder($facture);
+                $facture->pdf_file = $nomFichierPdf;
+                $facture->save();
+
+                Log::info('PDF généré pour l\'envoi email', [
+                    'facture_numero' => $facture->numero_facture,
+                    'fichier_pdf' => $nomFichierPdf,
+                ]);
+            } else {
+                Log::info('PDF existant trouvé', [
+                    'facture_numero' => $facture->numero_facture,
+                    'chemin_pdf' => $cheminPdf,
+                    'taille_fichier' => filesize($cheminPdf) . ' bytes',
+                ]);
+            }
+
             // Créer un devis fictif pour la compatibilité avec FactureClientMail
             $devis = $facture->devis ?? new \App\Models\Devis([
                 'numero_devis' => 'N/A',
@@ -615,23 +642,15 @@ class FactureController extends Controller
     }
 
     /**
-     * Régénère le PDF de la facture
+     * Régénère le PDF d'une facture
      */
     public function regenererPdf(Facture $facture)
     {
         try {
-            $nomFichier = $this->facturePdfService->mettreAJour($facture);
-            $facture->pdf_file = $nomFichier;
-            $facture->save();
-
-            Log::info('PDF régénéré manuellement', [
-                'facture_numero' => $facture->numero_facture,
-                'fichier' => $nomFichier
-            ]);
-
-            return redirect()->back()
-                ->with('success', '✅ PDF de la facture ' . $facture->numero_facture . ' régénéré avec succès !');
-
+            // Redirection vers une page React pour générer le PDF
+            return redirect()->route('factures.show', $facture->id)
+                ->with('generate_pdf', true)
+                ->with('info', '💡 Utilisez le bouton "Sauvegarder PDF" pour générer le PDF avec react-pdf/renderer');
         } catch (Exception $e) {
             Log::error('Erreur régénération PDF facture', [
                 'facture_numero' => $facture->numero_facture,
@@ -649,46 +668,11 @@ class FactureController extends Controller
     public function ensurePdf(Facture $facture)
     {
         try {
-            $needsRegeneration = false;
-            $message = '';
-
-            // Vérifier si le PDF existe
-            if (!$this->facturePdfService->pdfExiste($facture)) {
-                $needsRegeneration = true;
-                $message = 'PDF manquant';
-            } else {
-                // Vérifier si le PDF est à jour
-                $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
-                if ($cheminPdf && file_exists($cheminPdf)) {
-                    $dateModifPdf = filemtime($cheminPdf);
-                    $dateModifFacture = $facture->updated_at->timestamp;
-
-                    if ($dateModifFacture > $dateModifPdf) {
-                        $needsRegeneration = true;
-                        $message = 'PDF obsolète';
-                    }
-                }
-            }
-
-            // Générer si nécessaire
-            if ($needsRegeneration) {
-                $nomFichier = $this->facturePdfService->genererEtSauvegarder($facture);
-                $facture->pdf_file = $nomFichier;
-                $facture->save();
-
-                Log::info('PDF généré automatiquement pour aperçu', [
-                    'facture_id' => $facture->id,
-                    'raison' => $message,
-                    'fichier' => $nomFichier
-                ]);
-            }
-
+            // Toujours rediriger vers la génération React
             return response()->json([
-                'status' => 'ready',
-                'regenerated' => $needsRegeneration,
-                'message' => $needsRegeneration ? "PDF mis à jour ($message)" : 'PDF à jour'
+                'status' => 'redirect_to_react',
+                'message' => 'Utilisez le bouton "Sauvegarder PDF" pour générer avec react-pdf/renderer'
             ]);
-
         } catch (Exception $e) {
             Log::error('Erreur lors de la vérification/génération PDF pour aperçu', [
                 'facture_id' => $facture->id,
@@ -747,6 +731,135 @@ class FactureController extends Controller
     }
 
     /**
+     * Sauvegarde un PDF généré par React PDF Renderer
+     */
+    public function saveReactPdf(Request $request, Facture $facture)
+    {
+        try {
+            $request->validate([
+                'pdf_blob' => 'required|string', // Base64 du PDF
+                'filename' => 'required|string',
+            ]);
+
+            Log::info('Début sauvegarde PDF React', [
+                'facture_id' => $facture->id,
+                'numero_facture' => $facture->numero_facture,
+                'filename' => $request->filename,
+            ]);
+
+            // Décoder le blob PDF
+            $pdfContent = base64_decode($request->pdf_blob);
+
+            if ($pdfContent === false) {
+                throw new \Exception('Impossible de décoder le contenu PDF');
+            }
+
+            // Générer le nom de fichier
+            $nomFichier = "facture_{$facture->numero_facture}_{$facture->id}.pdf";
+
+            // 1. Sauvegarder localement
+            $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'factures');
+
+            // 2. Sauvegarder sur Supabase
+            $urlSupabase = $this->sauvegarderPdfSupabase($pdfContent, $nomFichier, 'factures');
+
+            // 3. Mettre à jour la base de données
+            $facture->update([
+                'pdf_file' => $nomFichier,
+                'pdf_url' => $urlSupabase,
+            ]);
+
+            Log::info('PDF React sauvegardé avec succès', [
+                'facture_id' => $facture->id,
+                'nom_fichier' => $nomFichier,
+                'url_supabase' => $urlSupabase,
+                'taille' => strlen($pdfContent) . ' bytes',
+            ]);
+
+            return redirect()->back()->with('success', '✅ PDF généré et sauvegardé avec succès !');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur sauvegarde PDF React', [
+                'facture_id' => $facture->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->with('error', '❌ Erreur lors de la sauvegarde du PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sauvegarde un PDF localement
+     */
+    private function sauvegarderPdfLocal(string $pdfContent, string $nomFichier, string $type): void
+    {
+        // Créer le dossier s'il n'existe pas
+        $dossier = "pdfs/{$type}";
+        if (!Storage::disk('public')->exists($dossier)) {
+            Storage::disk('public')->makeDirectory($dossier);
+        }
+
+        // Sauvegarder le PDF
+        Storage::disk('public')->put("{$dossier}/{$nomFichier}", $pdfContent);
+
+        Log::info('PDF sauvegardé localement', [
+            'fichier' => $nomFichier,
+            'chemin' => $dossier,
+            'taille' => strlen($pdfContent) . ' bytes'
+        ]);
+    }
+
+    /**
+     * Sauvegarde un PDF sur Supabase Storage
+     */
+    private function sauvegarderPdfSupabase(string $pdfContent, string $nomFichier, string $type): ?string
+    {
+        try {
+            $supabaseUrl = config('supabase.url');
+            $serviceKey = config('supabase.service_role_key');
+            $bucketName = config('supabase.storage_bucket', 'pdfs');
+
+            if (!$supabaseUrl || !$serviceKey) {
+                Log::warning('Configuration Supabase manquante pour upload PDF');
+                return null;
+            }
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => "Bearer {$serviceKey}",
+                'Content-Type' => 'application/pdf',
+            ])->withBody($pdfContent, 'application/pdf')
+            ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/{$type}/{$nomFichier}");
+
+            if ($response->successful()) {
+                $urlPublique = "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$type}/{$nomFichier}";
+
+                Log::info('PDF sauvegardé sur Supabase', [
+                    'fichier' => $nomFichier,
+                    'bucket' => $bucketName,
+                    'taille' => strlen($pdfContent) . ' bytes',
+                    'url' => $urlPublique
+                ]);
+
+                return $urlPublique;
+            } else {
+                Log::error('Erreur sauvegarde PDF Supabase', [
+                    'fichier' => $nomFichier,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception sauvegarde PDF Supabase', [
+                'fichier' => $nomFichier,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Récupère les données de statut PDF pour les pages show
      */
     private function getPdfStatusData(Facture $facture): array
@@ -786,6 +899,113 @@ class FactureController extends Controller
                 'local_size' => 0,
                 'last_modified' => null,
             ];
+        }
+    }
+
+    /**
+     * Synchronise le PDF de la facture vers Supabase en utilisant React PDF
+     */
+    public function syncSupabase(Facture $facture)
+    {
+        try {
+            $facture->load(['client.entreprise', 'devis', 'administrateur']);
+
+            Log::info('Début synchronisation PDF React vers Supabase', [
+                'facture_id' => $facture->id,
+                'numero_facture' => $facture->numero_facture
+            ]);
+
+            // Récupérer les informations Madinia
+            $madinia = \App\Models\Madinia::getInstance();
+
+            // Construire les données formatées pour React PDF
+            $factureData = [
+                'numero_facture' => $facture->numero_facture,
+                'objet' => $facture->objet,
+                'statut' => $facture->statut,
+                'date_facture' => $facture->date_facture?->format('Y-m-d') ?? '',
+                'date_echeance' => $facture->date_echeance?->format('Y-m-d') ?? '',
+                'date_paiement' => $facture->date_paiement?->format('Y-m-d'),
+                'montant_ht' => (float) $facture->montant_ht,
+                'taux_tva' => (float) $facture->taux_tva,
+                'montant_ttc' => (float) $facture->montant_ttc,
+                'description' => $facture->description,
+                'conditions_paiement' => $facture->conditions_paiement,
+                'notes' => $facture->notes,
+                'lignes' => $facture->lignes ? $facture->lignes->map(function ($ligne) {
+                    return [
+                        'id' => $ligne->id,
+                        'quantite' => (float) $ligne->quantite,
+                        'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
+                        'taux_tva' => (float) $ligne->taux_tva,
+                        'montant_ht' => (float) $ligne->montant_ht,
+                        'montant_tva' => (float) $ligne->montant_tva,
+                        'montant_ttc' => (float) $ligne->montant_ttc,
+                        'ordre' => $ligne->ordre,
+                        'description_personnalisee' => $ligne->description_personnalisee,
+                        'service' => $ligne->service ? [
+                            'nom' => $ligne->service->nom,
+                            'description' => $ligne->service->description,
+                        ] : null
+                    ];
+                })->toArray() : [],
+                'client' => $facture->client ? [
+                    'nom' => $facture->client->nom,
+                    'prenom' => $facture->client->prenom,
+                    'email' => $facture->client->email,
+                    'telephone' => $facture->client->telephone,
+                    'adresse' => $facture->client->adresse,
+                    'ville' => $facture->client->ville,
+                    'code_postal' => $facture->client->code_postal,
+                    'entreprise' => $facture->client->entreprise ? [
+                        'nom' => $facture->client->entreprise->nom,
+                        'nom_commercial' => $facture->client->entreprise->nom_commercial,
+                        'adresse' => $facture->client->entreprise->adresse,
+                        'ville' => $facture->client->entreprise->ville,
+                        'code_postal' => $facture->client->entreprise->code_postal,
+                    ] : null
+                ] : null,
+                'administrateur' => $facture->administrateur ? [
+                    'id' => $facture->administrateur->id,
+                    'name' => $facture->administrateur->name,
+                    'email' => $facture->administrateur->email,
+                ] : null,
+                'devis' => $facture->devis ? [
+                    'numero_devis' => $facture->devis->numero_devis,
+                ] : null,
+            ];
+
+            $madiniaData = $madinia ? [
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'adresse' => $madinia->adresse,
+                'pays' => $madinia->pays,
+                'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
+            ] : null;
+
+            // Retourner les données pour que le frontend génère et sauvegarde le PDF
+            return Inertia::render('factures/sync-pdf', [
+                'facture' => $factureData,
+                'madinia' => $madiniaData,
+                'saveRoute' => route('factures.save-react-pdf', $facture->id),
+                'backRoute' => route('factures.show', $facture->id),
+                'autoGenerate' => true, // Flag pour génération automatique
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Exception lors de la synchronisation PDF vers Supabase', [
+                'facture_id' => $facture->id,
+                'numero_facture' => $facture->numero_facture,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Erreur lors de la synchronisation vers Supabase');
         }
     }
 }

@@ -56,6 +56,24 @@ class Facture extends Model
     ];
 
     /**
+     * Bootstrap the model and its events.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Calculer automatiquement les montants avant la sauvegarde
+        static::saving(function ($facture) {
+            // Seulement si les montants ne sont pas déjà calculés manuellement
+            if ($facture->isDirty(['montant_ht', 'taux_tva']) ||
+                $facture->montant_tva == 0 ||
+                $facture->montant_ttc == 0) {
+                $facture->calculerMontants();
+            }
+        });
+    }
+
+    /**
      * Relation avec le devis d'origine.
      */
     public function devis(): BelongsTo
@@ -130,19 +148,30 @@ class Facture extends Model
     }
 
     /**
-     * Calculer automatiquement les montants à partir des lignes.
+     * Calculer automatiquement les montants à partir des lignes ou des champs directs.
      */
     public function calculerMontants(): void
     {
-        $this->load('lignes');
+        // Si la facture a des lignes, calculer à partir des lignes
+        if ($this->lignes()->exists()) {
+            $this->load('lignes');
 
-        $this->montant_ht = $this->lignes->sum('montant_ht');
-        $this->montant_tva = $this->lignes->sum('montant_tva');
-        $this->montant_ttc = $this->lignes->sum('montant_ttc');
+            $this->montant_ht = $this->lignes->sum('montant_ht');
+            $this->montant_tva = $this->lignes->sum('montant_tva');
+            $this->montant_ttc = $this->lignes->sum('montant_ttc');
 
-        // Calculer le taux de TVA moyen pondéré si il y a des lignes
-        if ($this->montant_ht > 0) {
-            $this->taux_tva = ($this->montant_tva / $this->montant_ht) * 100;
+            // Calculer le taux de TVA moyen pondéré si il y a des lignes
+            if ($this->montant_ht > 0) {
+                $this->taux_tva = ($this->montant_tva / $this->montant_ht) * 100;
+            }
+        } else {
+            // Sinon, calculer à partir des champs directs (facture simple)
+            $montantHT = (float) $this->montant_ht;
+            $tauxTVA = (float) $this->taux_tva;
+
+            // Calculer la TVA et le TTC
+            $this->montant_tva = round($montantHT * ($tauxTVA / 100), 2);
+            $this->montant_ttc = round($montantHT + $this->montant_tva, 2);
         }
     }
 
@@ -366,8 +395,10 @@ class Facture extends Model
      */
     public function peutEtreEnvoyee(): bool
     {
-        return in_array($this->statut, ['brouillon', 'envoyee']) &&
-               in_array($this->statut_envoi, ['non_envoyee', 'echec_envoi']);
+        // Une facture peut être envoyée si :
+        // - Elle n'est pas payée, annulée ou archivée
+        // - Peu importe le statut d'envoi (permet le renvoi)
+        return in_array($this->statut, ['brouillon', 'envoyee']) && !$this->archive;
     }
 
     /**

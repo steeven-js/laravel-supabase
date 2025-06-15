@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Devis;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -12,45 +11,17 @@ use Exception;
 class DevisPdfService
 {
     /**
-     * Génère le PDF d'un devis et le sauvegarde (double sauvegarde: local + Supabase)
+     * DEPRECATED - Utilise React PDF maintenant via les routes /generate-react-pdf
+     * Cette méthode est conservée pour compatibilité mais ne génère plus de PDF
      */
     public function genererEtSauvegarder(Devis $devis): string
     {
-        try {
-            // Charger les relations nécessaires
-            $devis->load(['client.entreprise']);
+        Log::warning('DEPRECATED: genererEtSauvegarder() - Utilisez React PDF via les routes /generate-react-pdf', [
+            'devis_numero' => $devis->numero_devis
+        ]);
 
-            // Générer le PDF
-            $pdf = $this->genererPdf($devis);
-
-            // Définir le nom du fichier
-            $nomFichier = $this->getNomFichier($devis);
-
-            // Sauvegarder localement
-            $this->sauvegarderLocal($pdf, $nomFichier);
-
-            // Sauvegarder sur Supabase
-            $this->sauvegarderSupabase($pdf, $nomFichier);
-
-            // Générer et stocker l'URL Supabase
-            $urlSupabase = $this->genererUrlSupabase($nomFichier);
-            $devis->pdf_url = $urlSupabase;
-            $devis->save();
-
-            Log::info('PDF devis généré et sauvegardé (local + Supabase)', [
-                'devis_numero' => $devis->numero_devis,
-                'fichier' => $nomFichier,
-                'url_supabase' => $urlSupabase
-            ]);
-
-            return $nomFichier;
-        } catch (Exception $e) {
-            Log::error('Erreur génération PDF devis', [
-                'devis_numero' => $devis->numero_devis,
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
-        }
+        // Retourner un nom de fichier par défaut pour éviter les erreurs
+        return $this->getNomFichier($devis);
     }
 
     /**
@@ -240,33 +211,7 @@ class DevisPdfService
         }
     }
 
-    /**
-     * Génère le PDF à partir du template
-     */
-    private function genererPdf(Devis $devis)
-    {
-        // Charger les relations nécessaires
-        $devis->load(['lignes.service', 'administrateur']);
 
-        // Récupérer les informations Madinia
-        $madinia = \App\Models\Madinia::getInstance();
-
-        return Pdf::loadView('pdfs.devis', [
-            'devis' => $devis,
-            'client' => $devis->client,
-            'entreprise' => $devis->client->entreprise,
-            'madinia' => $madinia,
-            'lignes' => $devis->lignes,
-            'administrateur' => $devis->administrateur,
-        ])
-            ->setPaper('a4', 'portrait')
-            ->setOptions([
-                'dpi' => 150,
-                'defaultFont' => 'sans-serif',
-                'isRemoteEnabled' => true,
-                'chroot' => [resource_path(), public_path()],
-            ]);
-    }
 
     /**
      * Sauvegarde le PDF localement

@@ -81,8 +81,19 @@ export default function EnvoyerEmailFacture({ facture }: Props) {
     const [etapeActuelle, setEtapeActuelle] = useState(1);
     const totalEtapes = 3;
 
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('fr-FR', {
+            style: 'currency',
+            currency: 'EUR'
+        }).format(price);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('fr-FR');
+    };
+
     const { data, setData, post, processing, errors } = useForm({
-        message_client: `Bonjour ${facture.client.prenom},\n\nVeuillez trouver ci-joint votre facture ${facture.numero_facture} pour ${facture.objet}.\n\nMerci de procéder au règlement dans les délais indiqués.\n\nCordialement`,
+        message_client: `Bonjour ${facture.client.prenom},\n\nVeuillez trouver ci-joint votre facture ${facture.numero_facture} d'un montant de ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(facture.montant_ttc)} pour : ${facture.objet}.\n\nDate d'échéance : ${new Date(facture.date_echeance).toLocaleDateString('fr-FR')}\n\nMerci de procéder au règlement dans les délais indiqués.\n\nCordialement`,
         envoyer_copie_admin: true as boolean,
     });
 
@@ -122,17 +133,6 @@ export default function EnvoyerEmailFacture({ facture }: Props) {
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         toast.success('Copié dans le presse-papiers');
-    };
-
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'EUR'
-        }).format(price);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('fr-FR');
     };
 
     const getStatutStyle = (statut: string) => {

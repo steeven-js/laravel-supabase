@@ -24,7 +24,9 @@ import {
     Settings,
     User,
     Calendar,
-    X
+    X,
+    RefreshCw,
+    Cloud
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -87,6 +89,12 @@ interface Madinia {
     nom_banque?: string;
     numero_compte?: string;
     iban_bic_swift?: string;
+}
+
+interface PdfResult {
+    status: string;
+    regenerated: boolean;
+    message: string;
 }
 
 interface Props {
@@ -253,7 +261,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
         { value: 'annulee', label: 'Annulée', icon: '❌' },
     ];
 
-        const handlePreviewPdf = () => {
+    const handlePreviewPdf = () => {
         // Vérifications de sécurité
         if (!facture || !facture.numero_facture || !facture.client) {
             console.error('Données de la facture manquantes');
@@ -273,38 +281,32 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
             return;
         }
 
+        toast.loading('Vérification du PDF...');
+
         try {
-            toast.loading('Vérification du PDF...');
-
-            // Vérifier/générer le PDF en arrière-plan
-            const response = await fetch(`/factures/${facture.id}/ensure-pdf`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                }
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.regenerated) {
-                    toast.success(`PDF mis à jour : ${result.message}`);
-                    // Mettre à jour le statut local
+            router.post(`/factures/${facture.id}/ensure-pdf`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Le message de succès sera affiché automatiquement par Laravel
                     setPdfStatus({
                         exists: true,
                         up_to_date: true,
                         local_size: 0,
                         last_modified: new Date().toISOString()
                     });
-                } else {
-                    toast.success('PDF déjà à jour');
+                },
+                onError: (errors) => {
+                    console.error('Erreur lors de la vérification du PDF:', errors);
+                    toast.error('Erreur lors de la vérification du PDF');
+                },
+                onFinish: () => {
+                    toast.dismiss();
                 }
-            } else {
-                toast.error('Erreur lors de la vérification du PDF');
-            }
-        } catch (error) {
+            });
+        } catch (error: unknown) {
             console.error('Erreur lors de la sauvegarde du PDF:', error);
-            toast.error('Erreur lors de la sauvegarde du PDF');
+            toast.error('Erreur de connexion');
+            toast.dismiss();
         }
     };
 
@@ -361,13 +363,68 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
         </PDFDownloadLink>
     );
 
+    const handleRegeneratePdf = () => {
+        toast.loading('Régénération du PDF...');
+
+        try {
+            router.post(`/factures/${facture.id}/regenerer-pdf`, {}, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Le message de succès sera affiché automatiquement par Laravel
+                    setPdfStatus({
+                        exists: true,
+                        up_to_date: true,
+                        local_size: 0,
+                        last_modified: new Date().toISOString()
+                    });
+                },
+                onError: (errors) => {
+                    console.error('Erreur lors de la régénération du PDF:', errors);
+                    toast.error('Erreur lors de la régénération du PDF');
+                },
+                onFinish: () => {
+                    toast.dismiss();
+                }
+            });
+        } catch (error: unknown) {
+            console.error('Erreur lors de la régénération du PDF:', error);
+            toast.error('Erreur de connexion');
+            toast.dismiss();
+        }
+    };
+
+    const handleSyncSupabase = () => {
+        toast.loading('Synchronisation vers Supabase...');
+
+        try {
+            router.visit(`/factures/${facture.id}/sync-pdf`, {
+                method: 'get',
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('PDF synchronisé vers Supabase avec succès');
+                },
+                onError: (errors) => {
+                    console.error('Erreur lors de la synchronisation:', errors);
+                    toast.error('Erreur lors de la synchronisation vers Supabase');
+                },
+                onFinish: () => {
+                    toast.dismiss();
+                }
+            });
+        } catch (error) {
+            console.error('Erreur lors de la synchronisation:', error);
+            toast.error('Erreur lors de la synchronisation vers Supabase');
+            toast.dismiss();
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs(facture)}>
             <Head title={`Facture ${facture.numero_facture}`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 {/* Bouton retour */}
-                <div>
+                <div className="px-4">
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/factures">
                             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -476,42 +533,67 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                                 )}
                             </div>
 
-                                                        {/* Actions PDF */}
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                                    onClick={handlePreviewPdf}
-                                >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Aperçu PDF
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-10 px-4 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 relative"
-                                    onClick={handleSavePdf}
-                                >
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Sauvegarder PDF
-                                    {pdfStatus && (
-                                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-                                            pdfStatus.exists && pdfStatus.up_to_date
-                                                ? 'bg-green-500'
-                                                : pdfStatus.exists && !pdfStatus.up_to_date
-                                                ? 'bg-orange-500'
-                                                : 'bg-red-500'
-                                        }`} title={
-                                            pdfStatus.exists && pdfStatus.up_to_date
-                                                ? 'PDF à jour'
-                                                : pdfStatus.exists && !pdfStatus.up_to_date
-                                                ? 'PDF obsolète'
-                                                : 'PDF manquant'
-                                        }></div>
-                                    )}
-                                </Button>
-                                {renderDownload}
+                            {/* Actions PDF */}
+                            <div className="flex flex-col gap-2 min-w-0">
+                                {/* Première ligne - Actions principales */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 px-4 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 relative"
+                                        onClick={handleSavePdf}
+                                    >
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Sauvegarder PDF
+                                        {pdfStatus && (
+                                            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                                                pdfStatus.exists && pdfStatus.up_to_date
+                                                    ? 'bg-green-500'
+                                                    : pdfStatus.exists && !pdfStatus.up_to_date
+                                                    ? 'bg-orange-500'
+                                                    : 'bg-red-500'
+                                            }`} title={
+                                                pdfStatus.exists && pdfStatus.up_to_date
+                                                    ? 'PDF à jour'
+                                                    : pdfStatus.exists && !pdfStatus.up_to_date
+                                                    ? 'PDF obsolète'
+                                                    : 'PDF manquant'
+                                            }></div>
+                                        )}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                        onClick={handlePreviewPdf}
+                                    >
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        Aperçu PDF
+                                    </Button>
+                                    {renderDownload}
+                                </div>
+
+                                {/* Seconde ligne - Actions avancées */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 px-3 text-xs bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                                        onClick={handleRegeneratePdf}
+                                    >
+                                        <RefreshCw className="mr-1 h-3 w-3" />
+                                        Régénérer
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 px-3 text-xs bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                                        onClick={handleSyncSupabase}
+                                    >
+                                        <Cloud className="mr-1 h-3 w-3" />
+                                        Sync Supabase
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

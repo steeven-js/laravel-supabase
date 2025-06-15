@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Devis;
 use App\Models\Facture;
 use App\Models\Client;
+use App\Services\FacturePdfService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -12,8 +13,9 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
-class FactureClientMail extends Mailable implements ShouldQueue
+class FactureClientMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -21,6 +23,7 @@ class FactureClientMail extends Mailable implements ShouldQueue
     public Facture $facture;
     public Client $client;
     public ?string $messagePersonnalise;
+    protected FacturePdfService $pdfService;
 
     /**
      * Create a new message instance.
@@ -35,6 +38,7 @@ class FactureClientMail extends Mailable implements ShouldQueue
         $this->facture = $facture;
         $this->client = $client;
         $this->messagePersonnalise = $messagePersonnalise;
+        $this->pdfService = app(FacturePdfService::class);
     }
 
     /**
@@ -75,6 +79,8 @@ class FactureClientMail extends Mailable implements ShouldQueue
                 'facture' => $this->facture,
                 'client' => $this->client,
                 'messagePersonnalise' => $this->messagePersonnalise,
+                'urlPdfSupabase' => $this->pdfService->getUrlSupabasePdf($this->facture),
+                'urlPdfLocal' => $this->pdfService->getUrlPdf($this->facture),
             ],
         );
     }
@@ -88,15 +94,18 @@ class FactureClientMail extends Mailable implements ShouldQueue
     {
         $attachments = [];
 
-        // Ajouter la facture PDF en pièce jointe si elle existe
-        if ($this->facture->pdf_file) {
-            $cheminPdf = storage_path("app/pdfs/factures/{$this->facture->pdf_file}");
+        // Ajouter le PDF en pièce jointe si disponible
+        $cheminPdf = $this->pdfService->getCheminPdf($this->facture);
 
-            if (file_exists($cheminPdf)) {
-                $attachments[] = Attachment::fromPath($cheminPdf)
-                    ->as("Facture_{$this->facture->numero_facture}.pdf")
-                    ->withMime('application/pdf');
-            }
+        if ($cheminPdf && file_exists($cheminPdf)) {
+            $attachments[] = Attachment::fromPath($cheminPdf)
+                ->as("Facture_{$this->facture->numero_facture}.pdf")
+                ->withMime('application/pdf');
+        } else {
+            Log::warning('PDF de facture non trouvé pour pièce jointe email', [
+                'facture_numero' => $this->facture->numero_facture,
+                'chemin_attendu' => $cheminPdf,
+            ]);
         }
 
         return $attachments;

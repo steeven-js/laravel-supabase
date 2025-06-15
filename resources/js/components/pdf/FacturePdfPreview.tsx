@@ -64,8 +64,8 @@ const useStyles = () =>
                     alignItems: 'flex-end',
                 },
                 statusBadge: {
-                    backgroundColor: '#D1FAE5',
-                    color: '#065F46',
+                    backgroundColor: '#FFF3CD',
+                    color: '#856404',
                     padding: '4px 8px',
                     fontSize: 10,
                     fontWeight: 700,
@@ -115,7 +115,7 @@ const useStyles = () =>
                     marginBottom: 20,
                 },
                 dateBox: {
-                    width: '32%',
+                    width: '48%',
                     backgroundColor: '#F8F9FA',
                     padding: 10,
                     borderRadius: 4,
@@ -130,7 +130,6 @@ const useStyles = () =>
                     fontSize: 9,
                     color: '#333333',
                 },
-
                 // Table
                 tableSection: {
                     marginBottom: 20,
@@ -239,27 +238,6 @@ const useStyles = () =>
                     fontWeight: 700,
                     color: '#000000',
                 },
-                // Payment and Notes sections
-                paymentNotesSection: {
-                    marginBottom: 20,
-                },
-                sectionBox: {
-                    backgroundColor: '#EFF6FF',
-                    padding: 10,
-                    borderRadius: 4,
-                    marginBottom: 10,
-                },
-                sectionTitle: {
-                    fontSize: 9,
-                    fontWeight: 700,
-                    color: '#1E40AF',
-                    marginBottom: 4,
-                },
-                sectionText: {
-                    fontSize: 8,
-                    color: '#1E40AF',
-                    lineHeight: 1.4,
-                },
                 // Footer
                 footer: {
                     position: 'absolute',
@@ -275,13 +253,10 @@ const useStyles = () =>
                     justifyContent: 'space-between',
                 },
                 footerLeft: {
-                    width: '32%',
-                },
-                footerCenter: {
-                    width: '32%',
+                    width: '65%',
                 },
                 footerRight: {
-                    width: '32%',
+                    width: '30%',
                     textAlign: 'right',
                 },
                 footerTitle: {
@@ -313,6 +288,21 @@ interface FacturePdfPreviewProps {
         description?: string;
         conditions_paiement?: string;
         notes?: string;
+        lignes?: Array<{
+            id: number;
+            quantite: number;
+            prix_unitaire_ht: number;
+            taux_tva: number;
+            montant_ht: number;
+            montant_tva: number;
+            montant_ttc: number;
+            ordre: number;
+            description_personnalisee?: string;
+            service?: {
+                nom: string;
+                description: string;
+            };
+        }>;
         client: {
             nom: string;
             prenom: string;
@@ -350,7 +340,6 @@ interface FacturePdfPreviewProps {
         nom_compte_bancaire?: string;
         numero_compte?: string;
         iban_bic_swift?: string;
-        site_web?: string;
     };
 }
 
@@ -424,28 +413,30 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
     const renderInfo = (
         <View style={styles.infoSection}>
             <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>Facture de</Text>
+                <Text style={styles.infoTitle}>Émetteur</Text>
                 <Text style={styles.infoName}>{madinia?.name || 'Madin.IA'}</Text>
                 {madinia?.adresse && <Text style={styles.infoText}>{madinia.adresse}</Text>}
-                {madinia?.pays && <Text style={styles.infoText}>{madinia.pays}</Text>}
                 {madinia?.telephone && (
                     <Text style={styles.infoText}>Tél: {madinia.telephone}</Text>
                 )}
                 <Text style={styles.infoText}>
                     Email: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
                 </Text>
-                {facture.administrateur && (
-                    <Text style={[styles.infoText, { fontSize: 8, marginTop: 4, backgroundColor: '#F3F4F6', padding: 2 }]}>
-                        Contact: {facture.administrateur.name}
-                    </Text>
-                )}
                 {madinia?.siret && (
                     <Text style={styles.infoText}>SIRET: {madinia.siret}</Text>
+                )}
+                {facture.administrateur && (
+                    <>
+                        <Text style={[styles.infoText, { marginTop: 4 }]}>
+                            Contact: {facture.administrateur.name}
+                        </Text>
+                        <Text style={styles.infoText}>Web: https://madinia.fr</Text>
+                    </>
                 )}
             </View>
 
             <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>Facturé à</Text>
+                <Text style={styles.infoTitle}>Client</Text>
                 <Text style={styles.infoName}>
                     {(facture.client?.prenom || '')} {(facture.client?.nom || '')}
                 </Text>
@@ -471,19 +462,13 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
     const renderDates = (
         <View style={styles.dateSection}>
             <View style={styles.dateBox}>
-                <Text style={styles.dateTitle}>Date de facture</Text>
+                <Text style={styles.dateTitle}>Date d'émission</Text>
                 <Text style={styles.dateText}>{fDateSimple(facture.date_facture)}</Text>
             </View>
             <View style={styles.dateBox}>
                 <Text style={styles.dateTitle}>Date d'échéance</Text>
                 <Text style={styles.dateText}>{fDateSimple(facture.date_echeance)}</Text>
             </View>
-            {facture.date_paiement && (
-                <View style={styles.dateBox}>
-                    <Text style={styles.dateTitle}>Date de paiement</Text>
-                    <Text style={styles.dateText}>{fDateSimple(facture.date_paiement)}</Text>
-                </View>
-            )}
         </View>
     );
 
@@ -508,19 +493,50 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
                     </Text>
                 </View>
 
-                {/* Ligne unique pour la facture */}
-                <View style={[styles.tableRow, styles.tableRowLast]}>
-                    <Text style={styles.cellNum}>1</Text>
-                    <View style={styles.cellDescription}>
-                        <Text style={styles.descriptionTitle}>Prestation de service</Text>
-                        <Text style={styles.descriptionDetail}>
-                            {facture.description || 'Service personnalisé'}
+                {/* Lignes du tableau */}
+                {(facture.lignes && facture.lignes.length > 0) ? facture.lignes.map((ligne, index) => (
+                    <View
+                        key={ligne.id || index}
+                        style={[
+                            styles.tableRow,
+                            index === (facture.lignes?.length || 0) - 1 ? styles.tableRowLast : {},
+                        ]}
+                    >
+                        <Text style={styles.cellNum}>{index + 1}</Text>
+                        <View style={styles.cellDescription}>
+                            <Text style={styles.descriptionTitle}>
+                                {ligne.service?.nom || `Phase ${index + 1} - Service personnalisé`}
+                            </Text>
+                            <Text style={styles.descriptionDetail}>
+                                {ligne.description_personnalisee ||
+                                    ligne.service?.description ||
+                                    'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'}
+                            </Text>
+                        </View>
+                        <Text style={styles.cellQuantity}>
+                            {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
+                        </Text>
+                        <Text style={styles.cellPrice}>
+                            {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
+                        </Text>
+                        <Text style={styles.cellTotal}>
+                            {fCurrencyPDF(ligne.montant_ht || 0)}
                         </Text>
                     </View>
-                    <Text style={styles.cellQuantity}>1</Text>
-                    <Text style={styles.cellPrice}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
-                    <Text style={styles.cellTotal}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
-                </View>
+                )) : (
+                    <View style={styles.tableRow}>
+                        <Text style={styles.cellNum}>1</Text>
+                        <View style={styles.cellDescription}>
+                            <Text style={styles.descriptionTitle}>Service personnalisé</Text>
+                            <Text style={styles.descriptionDetail}>
+                                {facture.description || 'Prestation de service'}
+                            </Text>
+                        </View>
+                        <Text style={styles.cellQuantity}>1 heure</Text>
+                        <Text style={styles.cellPrice}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
+                        <Text style={styles.cellTotal}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
+                    </View>
+                )}
             </View>
         </View>
     );
@@ -548,37 +564,66 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
         </View>
     );
 
-    const renderPaymentAndNotes = (
-        <View style={styles.paymentNotesSection}>
-            {facture.conditions_paiement && (
-                <View style={styles.sectionBox}>
-                    <Text style={styles.sectionTitle}>CONDITIONS DE PAIEMENT</Text>
-                    <Text style={styles.sectionText}>{facture.conditions_paiement}</Text>
-                </View>
-            )}
-            {facture.notes && (
-                <View style={styles.sectionBox}>
-                    <Text style={styles.sectionTitle}>NOTES</Text>
-                    <Text style={styles.sectionText}>{facture.notes}</Text>
-                </View>
-            )}
-        </View>
-    );
-
     const renderFooter = (
         <View style={styles.footer}>
-            <View style={{ textAlign: 'center' }}>
-                <Text style={[styles.footerText, { fontSize: 9, fontWeight: 700, marginBottom: 2 }]}>
-                    {madinia?.name || 'Madin.IA'}
-                </Text>
-                <Text style={styles.footerText}>
-                    Email: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
-                </Text>
-                {madinia?.site_web && (
-                    <Text style={styles.footerText}>
-                        Web: {madinia.site_web.replace(/^https?:\/\//, '')}
+            <View style={styles.footerContent}>
+                <View style={styles.footerLeft}>
+                    <Text style={styles.footerTitle}>INFORMATIONS LÉGALES</Text>
+                    {madinia?.name && (
+                        <Text style={styles.footerText}>
+                            {madinia.name}
+                        </Text>
+                    )}
+                    {madinia?.adresse && (
+                        <Text style={styles.footerText}>
+                            {madinia.adresse}
+                        </Text>
+                    )}
+                    {madinia?.pays && (
+                        <Text style={styles.footerText}>
+                            {madinia.pays}
+                        </Text>
+                    )}
+                    {madinia?.siret && (
+                        <Text style={styles.footerText}>
+                            SIRET: {madinia.siret}
+                        </Text>
+                    )}
+                    {madinia?.numero_nda && (
+                        <Text style={styles.footerText}>
+                            N° DA: {madinia.numero_nda}
+                        </Text>
+                    )}
+                    {facture.notes && (
+                        <Text style={[styles.footerText, { marginTop: 4 }]}>{facture.notes}</Text>
+                    )}
+                </View>
+                <View style={styles.footerRight}>
+                    <Text style={styles.footerTitle}>COORDONNÉES BANCAIRES</Text>
+                    {madinia?.nom_banque && (
+                        <Text style={styles.footerText}>
+                            {madinia.nom_banque}
+                        </Text>
+                    )}
+                    {madinia?.nom_compte_bancaire && (
+                        <Text style={styles.footerText}>
+                            Titulaire: {madinia.nom_compte_bancaire}
+                        </Text>
+                    )}
+                    {madinia?.numero_compte && (
+                        <Text style={styles.footerText}>
+                            N° Compte: {madinia.numero_compte}
+                        </Text>
+                    )}
+                    {madinia?.iban_bic_swift && (
+                        <Text style={styles.footerText}>
+                            IBAN/BIC: {madinia.iban_bic_swift}
+                        </Text>
+                    )}
+                    <Text style={[styles.footerText, { marginTop: 4 }]}>
+                        Contact: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
                     </Text>
-                )}
+                </View>
             </View>
         </View>
     );
@@ -591,7 +636,6 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
                 {renderDates}
                 {renderTable}
                 {renderSummary}
-                {renderPaymentAndNotes}
                 {renderFooter}
             </Page>
         </Document>

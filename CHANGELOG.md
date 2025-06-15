@@ -39,6 +39,19 @@ et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.
   - Actions groupées logiquement avec hauteurs et espacements uniformes
   - Design responsive optimisé mobile/desktop
 
+- **Migration complète vers React PDF** :
+  - Nouvelles routes de génération PDF : `/devis/{id}/generate-react-pdf` et `/factures/{id}/save-react-pdf`
+  - Pages dédiées génération PDF : `devis/generate-pdf.tsx` et `factures/sync-pdf.tsx`
+  - Système de sauvegarde double : local + Supabase Storage
+  - Composant `PdfSaveButton` avec génération côté client et envoi en base64
+  - Méthodes contrôleur `saveReactPdf()` pour devis et factures
+  - Documentation complète de migration et d'utilisation
+
+- **Commandes de test et synchronisation** :
+  - Nouvelle commande `TestEmailFacture` pour tests d'envoi d'emails
+  - Fonctionnalité de synchronisation PDF vers Supabase
+  - Génération automatique des PDFs depuis les pages React
+
 ### Modifié
 - **Structure PDF factures** :
   - Simplification du footer PDF avec informations essentielles
@@ -49,20 +62,54 @@ et ce projet adhère au [Versioning Sémantique](https://semver.org/spec/v2.0.0.
   - Email de l'admin prioritaire sur l'email Madinia dans les contacts principaux
   - Fallback vers l'email Madinia si aucun administrateur assigné
 
+- **Services PDF (dépréciation progressive)** :
+  - `DevisPdfService::genererEtSauvegarder()` marquée DEPRECATED avec logs d'avertissement
+  - `FacturePdfService::genererEtSauvegarder()` marquée DEPRECATED avec logs d'avertissement
+  - Méthodes `regenererPdf()` redirigent maintenant vers les pages React PDF
+  - Conservation des méthodes utilitaires pour compatibilité
+
+### Supprimé
+- **Suppression complète de DomPDF** :
+  - Package `barryvdh/laravel-dompdf` et toutes ses dépendances désinstallées
+  - Fichier de configuration `config/dompdf.php` supprimé
+  - Templates Blade `resources/views/pdfs/devis.blade.php` et `facture.blade.php` supprimés
+  - Imports DomPDF supprimés de tous les services
+  - Méthodes `genererPdf()` supprimées des services PDF
+
 ### Corrigé
 - **Erreurs de rendu PDF** : Correction du bug `toFixed is not a function` avec conversion explicite des types
 - **Données PDF sécurisées** : Amélioration de `getSafeFactureData()` et `getSafeDevisData()` avec conversion Number() robuste
 - **Interface TypeScript** : Ajout des propriétés manquantes dans l'interface Madinia et Facture
+- **Compatibilité Laravel** : Maintien du démarrage propre après suppression DomPDF
+- **Logs détaillés** : Ajout de logs pour le suivi des générations et sauvegardes PDF
 
 ### Technique
 - **Nouveaux composants React** :
   - `FacturePdfPreview` : Composant PDF dédié aux factures
+  - `PdfSaveButton` : Composant universel de génération et sauvegarde PDF
+  - `TestRenderComparison` : Composant de test et comparaison des rendus
   - Modal d'aperçu PDF réutilisable avec contrôles utilisateur
   - Fonctions de sécurisation des données pour le rendu PDF
+
+- **Architecture de sauvegarde robuste** :
+  - Système de double sauvegarde : local (Laravel Storage) + cloud (Supabase)
+  - Conversion base64 → binaire pour transfert PDF côté serveur
+  - Gestion d'erreurs granulaire avec logs détaillés
+  - URLs publiques Supabase pour accès externe aux PDFs
 
 - **Optimisation des conversions de données** : Remplacement de parseFloat() par Number() pour plus de robustesse
 - **Amélioration des composants PDF** : Meilleure gestion des données nulles/undefined
 - **Code plus maintenable** : Structure UI/UX harmonisée avec classes Tailwind cohérentes
+- **Documentation complète** : Guides de migration, utilisation et architecture
+- **Tests et comparaisons** : Outils de validation des rendus PDF
+
+### Résultats
+- **Migration DomPDF → React PDF réussie à 100%** avec suppression complète des dépendances
+- **Génération PDF côté client** : Performance améliorée et charge serveur réduite
+- **Rendu identique** : PDFs générés identiques à l'aperçu web grâce à React
+- **Double sauvegarde fiable** : Local + Supabase pour redondance maximale
+- **Rétrocompatibilité préservée** : Anciens PDFs et URLs restent fonctionnels
+- **Architecture moderne** : Composants React réutilisables et maintenables
 
 ## [0.2.8] - 2025-06-13
 

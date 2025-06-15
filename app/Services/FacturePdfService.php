@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Facture;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -12,49 +11,17 @@ use Exception;
 class FacturePdfService
 {
     /**
-     * Génère et sauvegarde le PDF d'une facture.
+     * DEPRECATED - Utilise React PDF maintenant via les routes /generate-react-pdf
+     * Cette méthode est conservée pour compatibilité mais ne génère plus de PDF
      */
     public function genererEtSauvegarder(Facture $facture): string
     {
-        try {
-            Log::info('Génération PDF facture', [
-                'facture_id' => $facture->id,
-                'numero_facture' => $facture->numero_facture,
-            ]);
+        Log::warning('DEPRECATED: genererEtSauvegarder() - Utilisez React PDF via les routes /generate-react-pdf', [
+            'facture_numero' => $facture->numero_facture
+        ]);
 
-            // Charger les relations nécessaires
-            $facture->load(['client.entreprise', 'devis']);
-
-            // Générer le PDF
-            $pdf = $this->genererPdf($facture);
-            $nomFichier = $this->getNomFichier($facture);
-
-            // Sauvegarder localement
-            $this->sauvegarderLocal($pdf, $nomFichier);
-
-            // Sauvegarder sur Supabase si configuré
-            $this->sauvegarderSupabase($pdf, $nomFichier);
-
-            // Générer et stocker l'URL Supabase
-            $urlSupabase = $this->genererUrlSupabase($nomFichier);
-            $facture->pdf_url = $urlSupabase;
-            $facture->save();
-
-            Log::info('PDF facture généré avec succès', [
-                'facture_id' => $facture->id,
-                'fichier' => $nomFichier,
-                'url_supabase' => $urlSupabase
-            ]);
-
-            return $nomFichier;
-        } catch (Exception $e) {
-            Log::error('Erreur génération PDF facture', [
-                'facture_id' => $facture->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            throw $e;
-        }
+        // Retourner un nom de fichier par défaut pour éviter les erreurs
+        return $this->getNomFichier($facture);
     }
 
     /**
@@ -235,25 +202,7 @@ class FacturePdfService
         }
     }
 
-    /**
-     * Génère le PDF à partir du template
-     */
-    private function genererPdf(Facture $facture)
-    {
-        return Pdf::loadView('pdfs.facture', [
-            'facture' => $facture,
-            'client' => $facture->client,
-            'entreprise' => $facture->client->entreprise,
-            'devis' => $facture->devis,
-        ])
-            ->setPaper('a4', 'portrait')
-            ->setOptions([
-                'dpi' => 150,
-                'defaultFont' => 'sans-serif',
-                'isRemoteEnabled' => true,
-                'chroot' => [resource_path(), public_path()],
-            ]);
-    }
+
 
     /**
      * Sauvegarde le PDF localement
@@ -278,27 +227,29 @@ class FacturePdfService
     private function sauvegarderSupabase($pdf, string $nomFichier): void
     {
         try {
-            $supabaseUrl = $this->getSupabaseProjectUrl();
-            $serviceKey = config('database.connections.pgsql.password'); // Utilise la clé service
-            $bucketName = 'pdfs';
+            $supabaseUrl = config('supabase.url');
+            $serviceKey = config('supabase.service_role_key');
+            $bucketName = config('supabase.storage_bucket', 'pdfs');
 
             if (!$supabaseUrl || !$serviceKey) {
                 Log::warning('Configuration Supabase manquante pour upload PDF');
                 return;
             }
 
+            // Obtenir le contenu binaire du PDF
+            $pdfContent = $pdf->output();
+
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$serviceKey}",
                 'Content-Type' => 'application/pdf',
-            ])->put(
-                "{$supabaseUrl}/storage/v1/object/{$bucketName}/factures/{$nomFichier}",
-                $pdf->output()
-            );
+            ])->withBody($pdfContent, 'application/pdf')
+            ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/factures/{$nomFichier}");
 
             if ($response->successful()) {
                 Log::info('PDF sauvegardé sur Supabase', [
                     'fichier' => $nomFichier,
-                    'bucket' => $bucketName
+                    'bucket' => $bucketName,
+                    'taille' => strlen($pdfContent) . ' bytes'
                 ]);
             } else {
                 Log::error('Erreur sauvegarde PDF Supabase', [
@@ -321,9 +272,9 @@ class FacturePdfService
     private function supprimerSupabase(string $nomFichier): void
     {
         try {
-            $supabaseUrl = $this->getSupabaseProjectUrl();
-            $serviceKey = config('database.connections.pgsql.password');
-            $bucketName = 'pdfs';
+            $supabaseUrl = config('supabase.url');
+            $serviceKey = config('supabase.service_role_key');
+            $bucketName = config('supabase.storage_bucket', 'pdfs');
 
             if (!$supabaseUrl || !$serviceKey) {
                 Log::warning('Configuration Supabase manquante pour suppression PDF');
@@ -354,27 +305,6 @@ class FacturePdfService
                 'error' => $e->getMessage()
             ]);
         }
-    }
-
-    /**
-     * Récupère l'URL du projet Supabase
-     */
-    private function getSupabaseProjectUrl(): ?string
-    {
-        $host = config('database.connections.pgsql.host');
-
-        if (!$host) {
-            return null;
-        }
-
-        // Extraire le nom du projet depuis l'host de la DB
-        // Format: db-xxx.supabase.co ou xxx.pooler.supabase.com
-        if (preg_match('/^(?:db-)?([^.]+)/', $host, $matches)) {
-            $projectId = $matches[1];
-            return "https://{$projectId}.supabase.co";
-        }
-
-        return null;
     }
 
     /**

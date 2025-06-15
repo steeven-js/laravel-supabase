@@ -43,7 +43,7 @@ class DevisController extends Controller
                     'date_validite' => $devis->date_validite->format('Y-m-d'),
                     'date_envoi_client' => $devis->date_envoi_client?->toISOString(),
                     'date_envoi_admin' => $devis->date_envoi_admin?->toISOString(),
-                    'montant_ttc' => $devis->montant_ttc,
+                    'montant_ttc' => (float) $devis->montant_ttc,
                     'peut_etre_envoye' => $devis->peutEtreEnvoye(),
                     'client' => [
                         'nom' => $devis->client->nom,
@@ -221,9 +221,9 @@ class DevisController extends Controller
             'date_validite' => $devis->date_validite?->format('Y-m-d') ?? '',
             'date_envoi_client' => $devis->date_envoi_client?->toISOString(),
             'date_envoi_admin' => $devis->date_envoi_admin?->toISOString(),
-            'montant_ht' => $devis->montant_ht,
-            'taux_tva' => $devis->taux_tva,
-            'montant_ttc' => $devis->montant_ttc,
+            'montant_ht' => (float) $devis->montant_ht,
+            'taux_tva' => (float) $devis->taux_tva,
+            'montant_ttc' => (float) $devis->montant_ttc,
             'notes' => $devis->notes,
             'description' => $devis->description,
             'conditions' => $devis->conditions,
@@ -241,12 +241,12 @@ class DevisController extends Controller
                 return [
                     'id' => $ligne->id,
                     'service_id' => $ligne->service_id,
-                    'quantite' => $ligne->quantite,
-                    'prix_unitaire_ht' => $ligne->prix_unitaire_ht,
-                    'taux_tva' => $ligne->taux_tva,
-                    'montant_ht' => $ligne->montant_ht,
-                    'montant_tva' => $ligne->montant_tva,
-                    'montant_ttc' => $ligne->montant_ttc,
+                    'quantite' => (float) $ligne->quantite,
+                    'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
+                    'taux_tva' => (float) $ligne->taux_tva,
+                    'montant_ht' => (float) $ligne->montant_ht,
+                    'montant_tva' => (float) $ligne->montant_tva,
+                    'montant_ttc' => (float) $ligne->montant_ttc,
                     'ordre' => $ligne->ordre,
                     'description_personnalisee' => $ligne->description_personnalisee,
                     'service' => $ligne->service ? [
@@ -329,9 +329,9 @@ class DevisController extends Controller
             'statut' => $devis->statut,
             'date_devis' => $devis->date_devis?->format('Y-m-d') ?? '',
             'date_validite' => $devis->date_validite?->format('Y-m-d') ?? '',
-            'montant_ht' => $devis->montant_ht,
-            'taux_tva' => $devis->taux_tva,
-            'montant_ttc' => $devis->montant_ttc,
+            'montant_ht' => (float) $devis->montant_ht,
+            'taux_tva' => (float) $devis->taux_tva,
+            'montant_ttc' => (float) $devis->montant_ttc,
             'notes' => $devis->notes,
             'description' => $devis->description,
             'conditions' => $devis->conditions,
@@ -340,12 +340,12 @@ class DevisController extends Controller
                 return [
                     'id' => $ligne->id,
                     'service_id' => $ligne->service_id,
-                    'quantite' => $ligne->quantite,
-                    'prix_unitaire_ht' => $ligne->prix_unitaire_ht,
-                    'taux_tva' => $ligne->taux_tva,
-                    'montant_ht' => $ligne->montant_ht,
-                    'montant_tva' => $ligne->montant_tva,
-                    'montant_ttc' => $ligne->montant_ttc,
+                    'quantite' => (float) $ligne->quantite,
+                    'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
+                    'taux_tva' => (float) $ligne->taux_tva,
+                    'montant_ht' => (float) $ligne->montant_ht,
+                    'montant_tva' => (float) $ligne->montant_tva,
+                    'montant_ttc' => (float) $ligne->montant_ttc,
                     'ordre' => $ligne->ordre,
                     'description_personnalisee' => $ligne->description_personnalisee,
                     'service' => $ligne->service ? [
@@ -648,9 +648,9 @@ class DevisController extends Controller
                 ] : null
             ],
             'objet' => $devis->objet,
-            'montant_ht' => $devis->montant_ht,
-            'montant_ttc' => $devis->montant_ttc,
-            'taux_tva' => $devis->taux_tva,
+            'montant_ht' => (float) $devis->montant_ht,
+            'montant_ttc' => (float) $devis->montant_ttc,
+            'taux_tva' => (float) $devis->taux_tva,
             'statut' => $devis->statut,
             'statut_envoi' => $devis->statut_envoi,
         ];
@@ -791,9 +791,9 @@ class DevisController extends Controller
                 ] : null
             ],
             'objet' => $devis->objet,
-            'montant_ht' => $devis->montant_ht,
-            'montant_ttc' => $devis->montant_ttc,
-            'taux_tva' => $devis->taux_tva,
+            'montant_ht' => (float) $devis->montant_ht,
+            'montant_ttc' => (float) $devis->montant_ttc,
+            'taux_tva' => (float) $devis->taux_tva,
         ];
 
         return Inertia::render('devis/transformer-facture', [
@@ -1159,30 +1159,23 @@ class DevisController extends Controller
     }
 
     /**
-     * Régénère le PDF du devis
+     * Régénère le PDF d'un devis
      */
     public function regenererPdf(Devis $devis)
     {
         try {
-            $nomFichier = $this->devisPdfService->mettreAJour($devis);
-            $devis->pdf_file = $nomFichier;
-            $devis->save();
-
-            Log::info('PDF régénéré manuellement', [
-                'devis_numero' => $devis->numero_devis,
-                'fichier' => $nomFichier
-            ]);
-
-            return redirect()->back()
-                ->with('success', '✅ PDF du devis ' . $devis->numero_devis . ' régénéré avec succès !');
+            // Redirection vers une page React pour générer le PDF
+            return redirect()->route('devis.show', $devis->id)
+                ->with('generate_pdf', true)
+                ->with('info', '💡 Utilisez le bouton "Sauvegarder PDF" pour générer le PDF avec react-pdf/renderer');
         } catch (Exception $e) {
             Log::error('Erreur régénération PDF devis', [
                 'devis_numero' => $devis->numero_devis,
                 'error' => $e->getMessage()
             ]);
 
-                    return redirect()->back()
-            ->with('error', '❌ Erreur lors de la régénération du PDF.');
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de la régénération du PDF.');
         }
     }
 
@@ -1192,46 +1185,11 @@ class DevisController extends Controller
     public function ensurePdf(Devis $devis)
     {
         try {
-            $needsRegeneration = false;
-            $message = '';
-
-            // Vérifier si le PDF existe
-            if (!$this->devisPdfService->pdfExiste($devis)) {
-                $needsRegeneration = true;
-                $message = 'PDF manquant';
-            } else {
-                // Vérifier si le PDF est à jour
-                $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
-                if ($cheminPdf && file_exists($cheminPdf)) {
-                    $dateModifPdf = filemtime($cheminPdf);
-                    $dateModifDevis = $devis->updated_at->timestamp;
-
-                    if ($dateModifDevis > $dateModifPdf) {
-                        $needsRegeneration = true;
-                        $message = 'PDF obsolète';
-                    }
-                }
-            }
-
-            // Générer si nécessaire
-            if ($needsRegeneration) {
-                $nomFichier = $this->devisPdfService->genererEtSauvegarder($devis);
-                $devis->pdf_file = $nomFichier;
-                $devis->save();
-
-                Log::info('PDF généré automatiquement pour aperçu', [
-                    'devis_id' => $devis->id,
-                    'raison' => $message,
-                    'fichier' => $nomFichier
-                ]);
-            }
-
+            // Toujours rediriger vers la génération React
             return response()->json([
-                'status' => 'ready',
-                'regenerated' => $needsRegeneration,
-                'message' => $needsRegeneration ? "PDF mis à jour ($message)" : 'PDF à jour'
+                'status' => 'redirect_to_react',
+                'message' => 'Utilisez le bouton "Sauvegarder PDF" pour générer avec react-pdf/renderer'
             ]);
-
         } catch (Exception $e) {
             Log::error('Erreur lors de la vérification/génération PDF pour aperçu', [
                 'devis_id' => $devis->id,
@@ -1242,6 +1200,97 @@ class DevisController extends Controller
                 'status' => 'error',
                 'message' => 'Erreur lors de la vérification du PDF'
             ], 500);
+        }
+    }
+
+    /**
+     * Génère automatiquement un PDF avec React PDF Renderer
+     */
+    public function generateReactPdf(Devis $devis)
+    {
+        try {
+            $devis->load(['client.entreprise', 'lignes.service', 'administrateur']);
+
+            // Récupérer les informations Madinia
+            $madinia = \App\Models\Madinia::getInstance();
+
+            // Construire les données formatées
+            $devisData = [
+                'numero_devis' => $devis->numero_devis,
+                'objet' => $devis->objet,
+                'statut' => $devis->statut,
+                'date_devis' => $devis->date_devis?->format('Y-m-d') ?? '',
+                'date_validite' => $devis->date_validite?->format('Y-m-d') ?? '',
+                'montant_ht' => (float) $devis->montant_ht,
+                'taux_tva' => (float) $devis->taux_tva,
+                'montant_ttc' => (float) $devis->montant_ttc,
+                'notes' => $devis->notes,
+                'client' => $devis->client ? [
+                    'nom' => $devis->client->nom,
+                    'prenom' => $devis->client->prenom,
+                    'email' => $devis->client->email,
+                    'telephone' => $devis->client->telephone,
+                    'adresse' => $devis->client->adresse,
+                    'ville' => $devis->client->ville,
+                    'code_postal' => $devis->client->code_postal,
+                    'entreprise' => $devis->client->entreprise ? [
+                        'nom' => $devis->client->entreprise->nom,
+                        'nom_commercial' => $devis->client->entreprise->nom_commercial,
+                        'adresse' => $devis->client->entreprise->adresse,
+                        'ville' => $devis->client->entreprise->ville,
+                        'code_postal' => $devis->client->entreprise->code_postal,
+                    ] : null
+                ] : null,
+                'administrateur' => $devis->administrateur ? [
+                    'name' => $devis->administrateur->name,
+                    'email' => $devis->administrateur->email,
+                ] : null,
+                'lignes' => $devis->lignes->map(function ($ligne) {
+                    return [
+                        'id' => $ligne->id,
+                        'quantite' => (float) $ligne->quantite,
+                        'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
+                        'taux_tva' => (float) $ligne->taux_tva,
+                        'montant_ht' => (float) $ligne->montant_ht,
+                        'montant_tva' => (float) $ligne->montant_tva,
+                        'montant_ttc' => (float) $ligne->montant_ttc,
+                        'ordre' => $ligne->ordre,
+                        'description_personnalisee' => $ligne->description_personnalisee,
+                        'service' => $ligne->service ? [
+                            'nom' => $ligne->service->nom,
+                            'description' => $ligne->service->description,
+                        ] : null
+                    ];
+                }),
+            ];
+
+            return Inertia::render('devis/generate-pdf', [
+                'devis' => $devisData,
+                'madinia' => $madinia ? [
+                    'name' => $madinia->name,
+                    'telephone' => $madinia->telephone,
+                    'email' => $madinia->email,
+                    'adresse' => $madinia->adresse,
+                    'pays' => $madinia->pays,
+                    'siret' => $madinia->siret,
+                    'numero_nda' => $madinia->numero_nda,
+                    'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                    'nom_banque' => $madinia->nom_banque,
+                    'numero_compte' => $madinia->numero_compte,
+                    'iban_bic_swift' => $madinia->iban_bic_swift,
+                ] : null,
+                'saveRoute' => route('devis.save-react-pdf', $devis->id),
+                'backRoute' => route('devis.show', $devis->id),
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Erreur génération PDF React', [
+                'devis_id' => $devis->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()
+                ->with('error', '❌ Erreur lors de la génération du PDF.');
         }
     }
 
@@ -1392,6 +1441,135 @@ class DevisController extends Controller
             return "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$chemin}";
         } else {
             throw new \Exception('Erreur upload Supabase: ' . $response->body());
+        }
+    }
+
+    /**
+     * Sauvegarde un PDF généré par React PDF Renderer
+     */
+    public function saveReactPdf(Request $request, Devis $devis)
+    {
+        try {
+            $request->validate([
+                'pdf_blob' => 'required|string', // Base64 du PDF
+                'filename' => 'required|string',
+            ]);
+
+            Log::info('Début sauvegarde PDF React', [
+                'devis_id' => $devis->id,
+                'numero_devis' => $devis->numero_devis,
+                'filename' => $request->filename,
+            ]);
+
+            // Décoder le blob PDF
+            $pdfContent = base64_decode($request->pdf_blob);
+
+            if ($pdfContent === false) {
+                throw new \Exception('Impossible de décoder le contenu PDF');
+            }
+
+            // Générer le nom de fichier
+            $nomFichier = "devis_{$devis->numero_devis}_{$devis->id}.pdf";
+
+            // 1. Sauvegarder localement
+            $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'devis');
+
+            // 2. Sauvegarder sur Supabase
+            $urlSupabase = $this->sauvegarderPdfSupabase($pdfContent, $nomFichier, 'devis');
+
+            // 3. Mettre à jour la base de données
+            $devis->update([
+                'pdf_file' => $nomFichier,
+                'pdf_url' => $urlSupabase,
+            ]);
+
+            Log::info('PDF React sauvegardé avec succès', [
+                'devis_id' => $devis->id,
+                'nom_fichier' => $nomFichier,
+                'url_supabase' => $urlSupabase,
+                'taille' => strlen($pdfContent) . ' bytes',
+            ]);
+
+            return redirect()->back()->with('success', '✅ PDF généré et sauvegardé avec succès !');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur sauvegarde PDF React', [
+                'devis_id' => $devis->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->with('error', '❌ Erreur lors de la sauvegarde du PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sauvegarde un PDF localement
+     */
+    private function sauvegarderPdfLocal(string $pdfContent, string $nomFichier, string $type): void
+    {
+        // Créer le dossier s'il n'existe pas
+        $dossier = "pdfs/{$type}";
+        if (!Storage::disk('public')->exists($dossier)) {
+            Storage::disk('public')->makeDirectory($dossier);
+        }
+
+        // Sauvegarder le PDF
+        Storage::disk('public')->put("{$dossier}/{$nomFichier}", $pdfContent);
+
+        Log::info('PDF sauvegardé localement', [
+            'fichier' => $nomFichier,
+            'chemin' => $dossier,
+            'taille' => strlen($pdfContent) . ' bytes'
+        ]);
+    }
+
+    /**
+     * Sauvegarde un PDF sur Supabase Storage
+     */
+    private function sauvegarderPdfSupabase(string $pdfContent, string $nomFichier, string $type): ?string
+    {
+        try {
+            $supabaseUrl = config('supabase.url');
+            $serviceKey = config('supabase.service_role_key');
+            $bucketName = config('supabase.storage_bucket', 'pdfs');
+
+            if (!$supabaseUrl || !$serviceKey) {
+                Log::warning('Configuration Supabase manquante pour upload PDF');
+                return null;
+            }
+
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$serviceKey}",
+                'Content-Type' => 'application/pdf',
+            ])->withBody($pdfContent, 'application/pdf')
+            ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/{$type}/{$nomFichier}");
+
+            if ($response->successful()) {
+                $urlPublique = "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$type}/{$nomFichier}";
+
+                Log::info('PDF sauvegardé sur Supabase', [
+                    'fichier' => $nomFichier,
+                    'bucket' => $bucketName,
+                    'taille' => strlen($pdfContent) . ' bytes',
+                    'url' => $urlPublique
+                ]);
+
+                return $urlPublique;
+            } else {
+                Log::error('Erreur sauvegarde PDF Supabase', [
+                    'fichier' => $nomFichier,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception sauvegarde PDF Supabase', [
+                'fichier' => $nomFichier,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 

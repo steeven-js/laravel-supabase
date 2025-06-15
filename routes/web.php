@@ -98,6 +98,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('devis/{devis}/telecharger-pdf', [DevisController::class, 'telechargerPdf'])->name('devis.telecharger-pdf');
     Route::post('devis/{devis}/regenerer-pdf', [DevisController::class, 'regenererPdf'])->name('devis.regenerer-pdf');
     Route::post('devis/{devis}/update-pdf-react', [DevisController::class, 'updatePdfFromReact'])->name('devis.update-pdf-react');
+    Route::post('devis/{devis}/save-react-pdf', [DevisController::class, 'saveReactPdf'])->name('devis.save-react-pdf');
+    Route::get('devis/{devis}/generate-react-pdf', [DevisController::class, 'generateReactPdf'])->name('devis.generate-react-pdf');
     // Nouveaux endpoints pour gestion intelligente
     Route::post('devis/{devis}/ensure-pdf', [DevisController::class, 'ensurePdf'])->name('devis.ensure-pdf');
     Route::get('devis/{devis}/pdf-status', [DevisController::class, 'getPdfStatus'])->name('devis.pdf-status');
@@ -116,12 +118,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('factures/{facture}/pdf', [FactureController::class, 'voirPdf'])->name('factures.pdf');
     Route::get('factures/{facture}/telecharger-pdf', [FactureController::class, 'telechargerPdf'])->name('factures.telecharger-pdf');
     Route::post('factures/{facture}/regenerer-pdf', [FactureController::class, 'regenererPdf'])->name('factures.regenerer-pdf');
-    // Nouveaux endpoints pour gestion intelligente
-    Route::post('factures/{facture}/ensure-pdf', [FactureController::class, 'ensurePdf'])->name('factures.ensure-pdf');
-    Route::get('factures/{facture}/pdf-status', [FactureController::class, 'getPdfStatus'])->name('factures.pdf-status');
-    // Nouveaux endpoints pour gestion intelligente
-    Route::post('factures/{facture}/ensure-pdf', [FactureController::class, 'ensurePdf'])->name('factures.ensure-pdf');
-    Route::get('factures/{facture}/pdf-status', [FactureController::class, 'getPdfStatus'])->name('factures.pdf-status');
+    Route::get('factures/{facture}/sync-pdf', [FactureController::class, 'syncSupabase'])->name('factures.sync-pdf');
+    Route::post('factures/{facture}/save-react-pdf', [FactureController::class, 'saveReactPdf'])->name('factures.save-react-pdf');
 
     // Routes pour le profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
