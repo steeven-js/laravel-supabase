@@ -94,13 +94,14 @@ export default function MonitoringIndex({ diagnostics }: Props) {
         setLoading(prev => ({ ...prev, [testType]: true }));
 
         try {
+            const isGetRequest = endpoint === 'tables-stats';
             const response = await fetch(`/monitoring/${endpoint}`, {
-                method: 'POST',
+                method: isGetRequest ? 'GET' : 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify(payload || {}),
+                body: isGetRequest ? undefined : JSON.stringify(payload || {}),
             });
 
             const result = await response.json();
@@ -433,6 +434,152 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                     </div>
                                     <div className="text-xs mt-1">
                                         {testResults.cache.timestamp}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Tables de Test Section */}
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Database className="w-5 h-5" />
+                            Tables de Test
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Switch Mode Test */}
+                        <div className="space-y-3">
+                            <h3 className="font-semibold">Mode de données</h3>
+                            <div className="flex items-center gap-4">
+                                <Badge variant="outline" className="text-blue-600">
+                                    Production : tables devis/factures
+                                </Badge>
+                                <Badge variant="outline" className="text-green-600">
+                                    Test : tables test_devis/test_factures
+                                </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Les tables de test ont la même structure que les tables de production mais contiennent des données de test.
+                            </p>
+                        </div>
+
+                        {/* Statistiques des tables */}
+                        <div className="space-y-3">
+                            <h3 className="font-semibold">Statistiques des tables</h3>
+                            <Button
+                                onClick={() => runTest('stats', 'tables-stats')}
+                                disabled={loading.stats}
+                                variant="outline"
+                                className="flex items-center gap-2"
+                            >
+                                {loading.stats ? (
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Activity className="w-4 h-4" />
+                                )}
+                                Afficher les statistiques
+                            </Button>
+                            {testResults.stats && testResults.stats.success && (
+                                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                                    {/* Production Stats */}
+                                    <Card>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-sm">Tables Production</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span>Devis:</span>
+                                                <Badge variant="secondary">{testResults.stats.stats.production.devis}</Badge>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>Factures:</span>
+                                                <Badge variant="secondary">{testResults.stats.stats.production.factures}</Badge>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>Lignes devis:</span>
+                                                <Badge variant="outline">{testResults.stats.stats.production.lignes_devis}</Badge>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>Lignes factures:</span>
+                                                <Badge variant="outline">{testResults.stats.stats.production.lignes_factures}</Badge>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Test Stats */}
+                                    <Card>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-sm">Tables Test</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span>Devis test:</span>
+                                                <Badge variant="secondary">{testResults.stats.stats.test.devis}</Badge>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>Factures test:</span>
+                                                <Badge variant="secondary">{testResults.stats.stats.test.factures}</Badge>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>Lignes devis:</span>
+                                                <Badge variant="outline">{testResults.stats.stats.test.lignes_devis}</Badge>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span>Lignes factures:</span>
+                                                <Badge variant="outline">{testResults.stats.stats.test.lignes_factures}</Badge>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Réinitialiser les tables de test */}
+                        <div className="space-y-3">
+                            <h3 className="font-semibold">Réinitialiser les données de test</h3>
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-yellow-800">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    <span className="font-medium">Attention</span>
+                                </div>
+                                <p className="text-sm text-yellow-700 mt-1">
+                                    Cette action va vider toutes les tables de test et générer de nouvelles données de test.
+                                </p>
+                            </div>
+                            <Button
+                                onClick={() => runTest('reset', 'reset-test-tables')}
+                                disabled={loading.reset}
+                                variant="destructive"
+                                className="flex items-center gap-2"
+                            >
+                                {loading.reset ? (
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                )}
+                                Vider et régénérer les tables de test
+                            </Button>
+                            {testResults.reset && (
+                                <div className={`p-3 rounded-md ${testResults.reset.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                    <div className="flex items-center gap-2">
+                                        {testResults.reset.success ? (
+                                            <CheckCircle className="w-4 h-4" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4" />
+                                        )}
+                                        <span className="font-medium">{testResults.reset.message}</span>
+                                    </div>
+                                    {testResults.reset.details && (
+                                        <div className="text-xs mt-2 space-y-1">
+                                            <div>Tables nettoyées: {testResults.reset.details.tables_cleaned.join(', ')}</div>
+                                            <div>Seeders exécutés: {testResults.reset.details.seeders_run.join(', ')}</div>
+                                        </div>
+                                    )}
+                                    <div className="text-xs mt-1">
+                                        {testResults.reset.timestamp}
                                     </div>
                                 </div>
                             )}

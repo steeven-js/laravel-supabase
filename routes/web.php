@@ -194,6 +194,8 @@ if (app()->environment('local')) {
         Route::post('test-email', [MonitoringController::class, 'testEmail'])->name('test-email');
         Route::post('test-database', [MonitoringController::class, 'testDatabase'])->name('test-database');
         Route::post('clear-cache', [MonitoringController::class, 'clearCache'])->name('clear-cache');
+        Route::post('reset-test-tables', [MonitoringController::class, 'resetTestTables'])->name('reset-test-tables');
+        Route::get('tables-stats', [MonitoringController::class, 'getTablesStats'])->name('tables-stats');
     });
 
     // Route pour prévisualiser l'email Markdown (développement uniquement)

@@ -236,4 +236,121 @@ class MonitoringController extends Controller
 
         return $diagnostics;
     }
+
+    /**
+     * Vider les tables de test et relancer les seeders
+     */
+    public function resetTestTables()
+    {
+        // Vérifier que nous sommes en mode local
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        try {
+            Log::info('🧪 Début de la réinitialisation des tables de test');
+
+            // Vider les tables de test
+            DB::table('test_lignes_factures')->delete();
+            DB::table('test_lignes_devis')->delete();
+            DB::table('test_factures')->delete();
+            DB::table('test_devis')->delete();
+
+            Log::info('🗑️ Tables de test vidées');
+
+            // Relancer les seeders
+            Artisan::call('db:seed', ['--class' => 'TestDataSeeder']);
+
+            Log::info('✅ Seeders de test exécutés avec succès');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tables de test réinitialisées et données régénérées avec succès',
+                'timestamp' => now()->format('d/m/Y H:i:s'),
+                'details' => [
+                    'tables_cleaned' => ['test_devis', 'test_factures', 'test_lignes_devis', 'test_lignes_factures'],
+                    'seeders_run' => ['TestDevisSeeder', 'TestFacturesSeeder']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la réinitialisation des tables de test', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la réinitialisation : ' . $e->getMessage(),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtenir les statistiques des tables de test vs production
+     */
+    public function getTablesStats()
+    {
+        // Vérifier que nous sommes en mode local
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        try {
+            $stats = [
+                'production' => [
+                    'devis' => DB::table('devis')->count(),
+                    'factures' => DB::table('factures')->count(),
+                    'lignes_devis' => DB::table('lignes_devis')->count(),
+                    'lignes_factures' => DB::table('lignes_factures')->count(),
+                ],
+                'test' => [
+                    'devis' => DB::table('test_devis')->count(),
+                    'factures' => DB::table('test_factures')->count(),
+                    'lignes_devis' => DB::table('test_lignes_devis')->count(),
+                    'lignes_factures' => DB::table('test_lignes_factures')->count(),
+                ],
+            ];
+
+            // Ajouter des informations sur les statuts
+            $stats['production']['devis_by_status'] = DB::table('devis')
+                ->select('statut', DB::raw('count(*) as count'))
+                ->groupBy('statut')
+                ->pluck('count', 'statut')
+                ->toArray();
+
+            $stats['production']['factures_by_status'] = DB::table('factures')
+                ->select('statut', DB::raw('count(*) as count'))
+                ->groupBy('statut')
+                ->pluck('count', 'statut')
+                ->toArray();
+
+            $stats['test']['devis_by_status'] = DB::table('test_devis')
+                ->select('statut', DB::raw('count(*) as count'))
+                ->groupBy('statut')
+                ->pluck('count', 'statut')
+                ->toArray();
+
+            $stats['test']['factures_by_status'] = DB::table('test_factures')
+                ->select('statut', DB::raw('count(*) as count'))
+                ->groupBy('statut')
+                ->pluck('count', 'statut')
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'stats' => $stats,
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des statistiques : ' . $e->getMessage(),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ], 500);
+        }
+    }
 }
