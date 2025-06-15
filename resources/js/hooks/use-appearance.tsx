@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useContext } from 'react';
+import { AppearanceProvider, useAppearanceContext, Appearance } from './appearance-context';
 
-export type Appearance = 'light' | 'dark' | 'system';
+export type { Appearance };
 
 const prefersDark = () => {
     if (typeof window === 'undefined') {
@@ -48,26 +49,18 @@ export function initializeTheme() {
 }
 
 export function useAppearance() {
-    const [appearance, setAppearance] = useState<Appearance>('system');
-
-    const updateAppearance = useCallback((mode: Appearance) => {
-        setAppearance(mode);
-
-        // Store in localStorage for client-side persistence...
-        localStorage.setItem('appearance', mode);
-
-        // Store in cookie for SSR...
-        setCookie('appearance', mode);
-
-        applyTheme(mode);
-    }, []);
-
-    useEffect(() => {
-        const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-        updateAppearance(savedAppearance || 'system');
-
-        return () => mediaQuery()?.removeEventListener('change', handleSystemThemeChange);
-    }, [updateAppearance]);
-
-    return { appearance, updateAppearance } as const;
+    try {
+        return useAppearanceContext();
+    } catch {
+        // fallback pour compatibilité (dev/test hors provider)
+        // Ancienne logique (non réactive entre composants)
+        const appearance = (typeof window !== 'undefined' ? (localStorage.getItem('appearance') as Appearance) : 'system') || 'system';
+        return {
+            appearance,
+            updateAppearance: () => {},
+        };
+    }
 }
+
+// Exporter le provider pour l'utiliser dans l'app
+export { AppearanceProvider };
