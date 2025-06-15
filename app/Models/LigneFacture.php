@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\TestModeAware;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LigneFacture extends Model
 {
-    use HasFactory;
+    use HasFactory, TestModeAware;
 
     protected $table = 'lignes_factures';
 
@@ -40,7 +41,7 @@ class LigneFacture extends Model
      */
     public function facture(): BelongsTo
     {
-        return $this->belongsTo(Facture::class);
+        return $this->belongsTo(Facture::class, 'facture_id', 'id');
     }
 
     /**

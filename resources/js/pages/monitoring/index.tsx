@@ -94,7 +94,7 @@ export default function MonitoringIndex({ diagnostics }: Props) {
         setLoading(prev => ({ ...prev, [testType]: true }));
 
         try {
-            const isGetRequest = endpoint === 'tables-stats';
+            const isGetRequest = ['tables-stats', 'current-mode'].includes(endpoint);
             const response = await fetch(`/monitoring/${endpoint}`, {
                 method: isGetRequest ? 'GET' : 'POST',
                 headers: {
@@ -452,17 +452,97 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                     <CardContent className="space-y-6">
                         {/* Switch Mode Test */}
                         <div className="space-y-3">
-                            <h3 className="font-semibold">Mode de données</h3>
+                            <h3 className="font-semibold">Mode de données actuel</h3>
                             <div className="flex items-center gap-4">
-                                <Badge variant="outline" className="text-blue-600">
-                                    Production : tables devis/factures
-                                </Badge>
-                                <Badge variant="outline" className="text-green-600">
-                                    Test : tables test_devis/test_factures
-                                </Badge>
+                                <Button
+                                    onClick={() => runTest('currentMode', 'current-mode')}
+                                    disabled={loading.currentMode}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    {loading.currentMode ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Activity className="w-4 h-4" />
+                                    )}
+                                    Vérifier le mode
+                                </Button>
+                                {testResults.currentMode && testResults.currentMode.success && (
+                                    <Badge
+                                        variant={testResults.currentMode.mode === 'test' ? 'default' : 'secondary'}
+                                        className={testResults.currentMode.mode === 'test' ? 'bg-green-600' : 'bg-blue-600'}
+                                    >
+                                        Mode {testResults.currentMode.mode.toUpperCase()}
+                                    </Badge>
+                                )}
                             </div>
+
+                            {/* Boutons de switch */}
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => runTest('switchProd', 'switch-to-production')}
+                                    disabled={loading.switchProd}
+                                    variant="outline"
+                                    className="flex items-center gap-2 text-blue-600 border-blue-600 hover:bg-blue-50"
+                                >
+                                    {loading.switchProd ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Database className="w-4 h-4" />
+                                    )}
+                                    Mode Production
+                                </Button>
+                                <Button
+                                    onClick={() => runTest('switchTest', 'switch-to-test')}
+                                    disabled={loading.switchTest}
+                                    variant="outline"
+                                    className="flex items-center gap-2 text-green-600 border-green-600 hover:bg-green-50"
+                                >
+                                    {loading.switchTest ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Database className="w-4 h-4" />
+                                    )}
+                                    Mode Test
+                                </Button>
+                            </div>
+
+                            {/* Messages de switch */}
+                            {testResults.switchProd && (
+                                <div className={`p-3 rounded-md ${testResults.switchProd.success ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
+                                    <div className="flex items-center gap-2">
+                                        {testResults.switchProd.success ? (
+                                            <CheckCircle className="w-4 h-4" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4" />
+                                        )}
+                                        <span className="font-medium">{testResults.switchProd.message}</span>
+                                    </div>
+                                    <div className="text-xs mt-1">
+                                        {testResults.switchProd.timestamp}
+                                    </div>
+                                </div>
+                            )}
+
+                            {testResults.switchTest && (
+                                <div className={`p-3 rounded-md ${testResults.switchTest.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                    <div className="flex items-center gap-2">
+                                        {testResults.switchTest.success ? (
+                                            <CheckCircle className="w-4 h-4" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4" />
+                                        )}
+                                        <span className="font-medium">{testResults.switchTest.message}</span>
+                                    </div>
+                                    <div className="text-xs mt-1">
+                                        {testResults.switchTest.timestamp}
+                                    </div>
+                                </div>
+                            )}
+
                             <p className="text-sm text-muted-foreground">
-                                Les tables de test ont la même structure que les tables de production mais contiennent des données de test.
+                                Le switch change dynamiquement les tables utilisées par l'application. Les modèles Devis, Facture et leurs lignes basculeront automatiquement.
                             </p>
                         </div>
 

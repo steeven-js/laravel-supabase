@@ -238,6 +238,72 @@ class MonitoringController extends Controller
     }
 
     /**
+     * Basculer vers le mode test
+     */
+    public function switchToTestMode()
+    {
+        // Vérifier que nous sommes en mode local
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        session(['test_mode' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Basculé vers le mode TEST - Utilisation des tables test_*',
+            'mode' => 'test',
+            'timestamp' => now()->format('d/m/Y H:i:s')
+        ]);
+    }
+
+    /**
+     * Basculer vers le mode production
+     */
+    public function switchToProductionMode()
+    {
+        // Vérifier que nous sommes en mode local
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        session(['test_mode' => false]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Basculé vers le mode PRODUCTION - Utilisation des tables normales',
+            'mode' => 'production',
+            'timestamp' => now()->format('d/m/Y H:i:s')
+        ]);
+    }
+
+    /**
+     * Obtenir le mode actuel
+     */
+    public function getCurrentMode()
+    {
+        // Vérifier que nous sommes en mode local
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        $testMode = session('test_mode', false);
+
+        return response()->json([
+            'success' => true,
+            'mode' => $testMode ? 'test' : 'production',
+            'test_mode' => $testMode,
+            'tables' => [
+                'devis' => $testMode ? 'test_devis' : 'devis',
+                'factures' => $testMode ? 'test_factures' : 'factures',
+                'lignes_devis' => $testMode ? 'test_lignes_devis' : 'lignes_devis',
+                'lignes_factures' => $testMode ? 'test_lignes_factures' : 'lignes_factures',
+            ],
+            'timestamp' => now()->format('d/m/Y H:i:s')
+        ]);
+    }
+
+    /**
      * Vider les tables de test et relancer les seeders
      */
     public function resetTestTables()
