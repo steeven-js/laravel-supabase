@@ -199,6 +199,7 @@ if (app()->environment('local')) {
         Route::post('switch-to-test', [MonitoringController::class, 'switchToTestMode'])->name('switch-to-test');
         Route::post('switch-to-production', [MonitoringController::class, 'switchToProductionMode'])->name('switch-to-production');
         Route::get('current-mode', [MonitoringController::class, 'getCurrentMode'])->name('current-mode');
+        Route::get('test-tables', [MonitoringController::class, 'testTables'])->name('test-tables');
     });
 
     // Route pour prévisualiser l'email Markdown (développement uniquement)

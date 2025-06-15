@@ -12,6 +12,11 @@ class Facture extends Model
     use HasHistorique, TestModeAware;
 
     /**
+     * Le nom de la table associée au modèle.
+     */
+    protected $table = 'factures';
+
+    /**
      * Les attributs qui peuvent être assignés en masse.
      */
     protected $fillable = [

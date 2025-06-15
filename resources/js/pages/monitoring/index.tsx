@@ -94,7 +94,7 @@ export default function MonitoringIndex({ diagnostics }: Props) {
         setLoading(prev => ({ ...prev, [testType]: true }));
 
         try {
-            const isGetRequest = ['tables-stats', 'current-mode'].includes(endpoint);
+            const isGetRequest = ['tables-stats', 'current-mode', 'test-tables'].includes(endpoint);
             const response = await fetch(`/monitoring/${endpoint}`, {
                 method: isGetRequest ? 'GET' : 'POST',
                 headers: {
@@ -506,6 +506,20 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                     )}
                                     Mode Test
                                 </Button>
+                                <Button
+                                    onClick={() => runTest('testTables', 'test-tables')}
+                                    disabled={loading.testTables}
+                                    variant="secondary"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    {loading.testTables ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Activity className="w-4 h-4" />
+                                    )}
+                                    Test Tables
+                                </Button>
                             </div>
 
                             {/* Messages de switch */}
@@ -537,6 +551,37 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                     </div>
                                     <div className="text-xs mt-1">
                                         {testResults.switchTest.timestamp}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Résultats du test des tables */}
+                            {testResults.testTables && testResults.testTables.success && (
+                                <div className="p-3 rounded-md bg-gray-50 text-gray-700">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Activity className="w-4 h-4" />
+                                        <span className="font-medium">Test des tables - Mode {testResults.testTables.mode.toUpperCase()}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <strong>Tables utilisées:</strong>
+                                            <ul className="mt-1 space-y-1">
+                                                <li>• Devis: {testResults.testTables.tables.devis}</li>
+                                                <li>• Factures: {testResults.testTables.tables.factures}</li>
+                                                <li>• Lignes devis: {testResults.testTables.tables.lignes_devis}</li>
+                                                <li>• Lignes factures: {testResults.testTables.tables.lignes_factures}</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <strong>Nombre d'enregistrements:</strong>
+                                            <ul className="mt-1 space-y-1">
+                                                <li>• Devis: {testResults.testTables.counts.devis}</li>
+                                                <li>• Factures: {testResults.testTables.counts.factures}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs mt-2">
+                                        {testResults.testTables.timestamp}
                                     </div>
                                 </div>
                             )}

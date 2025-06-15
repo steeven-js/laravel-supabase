@@ -4,24 +4,38 @@ namespace App\Traits;
 
 trait TestModeAware
 {
-    /**
+        /**
      * Obtenir le nom de la table selon le mode (production ou test)
      */
     public function getTable()
     {
+        // Si nous ne sommes pas en mode local, toujours utiliser les tables de production
+        if (!app()->environment('local')) {
+            return $this->getBaseTable();
+        }
+
         // Récupérer le mode test depuis la session
         $testMode = session('test_mode', false);
 
-        // Si nous ne sommes pas en mode local, toujours utiliser les tables de production
-        if (!app()->environment('local')) {
-            $testMode = false;
-        }
-
         // Obtenir le nom de table de base
-        $baseTable = parent::getTable();
+        $baseTable = $this->getBaseTable();
 
         // Ajouter le préfixe 'test_' si en mode test
         return $testMode ? 'test_' . $baseTable : $baseTable;
+    }
+
+    /**
+     * Obtenir le nom de table de base (sans préfixe test)
+     */
+    protected function getBaseTable()
+    {
+        // Si la propriété $table est définie, l'utiliser
+        if (isset($this->table)) {
+            return $this->table;
+        }
+
+        // Sinon, utiliser la méthode parent
+        return parent::getTable();
     }
 
     /**

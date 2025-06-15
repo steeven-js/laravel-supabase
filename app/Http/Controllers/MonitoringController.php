@@ -304,6 +304,46 @@ class MonitoringController extends Controller
     }
 
     /**
+     * Tester le fonctionnement des tables dynamiques
+     */
+    public function testTables()
+    {
+        // Vérifier que nous sommes en mode local
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        $testMode = session('test_mode', false);
+
+        // Tester les modèles
+        $devis = new \App\Models\Devis();
+        $facture = new \App\Models\Facture();
+        $ligneDevis = new \App\Models\LigneDevis();
+        $ligneFacture = new \App\Models\LigneFacture();
+
+        // Compter les enregistrements
+        $countDevis = \App\Models\Devis::count();
+        $countFactures = \App\Models\Facture::count();
+
+        return response()->json([
+            'success' => true,
+            'mode' => $testMode ? 'test' : 'production',
+            'session_test_mode' => $testMode,
+            'tables' => [
+                'devis' => $devis->getTable(),
+                'factures' => $facture->getTable(),
+                'lignes_devis' => $ligneDevis->getTable(),
+                'lignes_factures' => $ligneFacture->getTable(),
+            ],
+            'counts' => [
+                'devis' => $countDevis,
+                'factures' => $countFactures,
+            ],
+            'timestamp' => now()->format('d/m/Y H:i:s')
+        ]);
+    }
+
+    /**
      * Vider les tables de test et relancer les seeders
      */
     public function resetTestTables()
