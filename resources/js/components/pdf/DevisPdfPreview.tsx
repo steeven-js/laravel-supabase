@@ -22,6 +22,21 @@ const fDateSimple = (dateString: string) => {
     });
 };
 
+// Fonction utilitaire pour tronquer intelligemment les descriptions
+const tronquerDescription = (description: string, maxLength: number = 200) => {
+    if (!description || description.length <= maxLength) return description;
+
+    // Tronquer au dernier mot complet avant la limite
+    const tronque = description.substring(0, maxLength);
+    const dernierEspace = tronque.lastIndexOf(' ');
+
+    if (dernierEspace > maxLength * 0.8) { // Si on peut tronquer près d'un mot
+        return tronque.substring(0, dernierEspace) + '...';
+    }
+
+    return tronque + '...';
+};
+
 // Configuration des polices - Utilisation des polices par défaut
 // Font.register supprimé pour éviter les erreurs de chargement
 
@@ -171,9 +186,9 @@ const useStyles = () =>
                     borderBottomWidth: 1,
                     borderBottomColor: '#E9ECEF',
                     minHeight: 40,
-                    wrap: true, // Permet le passage à la page suivante
-                    orphans: 2, // Évite les lignes orphelines
-                    widows: 2, // Évite les lignes veuves
+                    wrap: false, // Empêche les coupures de ligne
+                    orphans: 3, // Évite les lignes orphelines
+                    widows: 3, // Évite les lignes veuves
                 },
                 tableRowLast: {
                     borderBottomWidth: 0,
@@ -217,11 +232,13 @@ const useStyles = () =>
                     fontSize: 8,
                     color: '#666666',
                     lineHeight: 1.3,
+                    maxLines: 3, // Limite à 3 lignes pour éviter les débordements
                 },
                 // Summary
                 summarySection: {
                     alignItems: 'flex-end',
-                    marginTop: 20,
+                    marginTop: 15,
+                    marginBottom: 10,
                     wrap: false, // Empêche la coupure du résumé
                 },
                 summaryTable: {
@@ -255,35 +272,100 @@ const useStyles = () =>
                     fontWeight: 700,
                     color: '#000000',
                 },
-                // Footer - Retiré le positionnement absolu pour permettre le flux naturel
-                footer: {
+                // Section bancaire et signature avant le résumé
+                bankingSignatureSection: {
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: 15,
+                    marginTop: 10,
+                    wrap: false,
+                },
+                // Section bancaire sur page dédiée (plus d'espace)
+                bankingSignatureSectionDedicated: {
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginBottom: 25,
                     marginTop: 30,
+                    wrap: false,
+                },
+                bankingBox: {
+                    width: '48%',
+                    backgroundColor: '#F8F9FA',
+                    padding: 8,
+                    borderRadius: 4,
+                    borderWidth: 1,
+                    borderColor: '#E9ECEF',
+                },
+                signatureBox: {
+                    width: '48%',
+                    backgroundColor: '#F8F9FA',
+                    padding: 8,
+                    borderRadius: 4,
+                    borderWidth: 1,
+                    borderColor: '#E9ECEF',
+                    minHeight: 100,
+                },
+                bankingTitle: {
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: '#000000',
+                    marginBottom: 6,
+                    textTransform: 'uppercase',
+                },
+                bankingText: {
+                    fontSize: 8,
+                    color: '#333333',
+                    marginBottom: 2,
+                },
+                signatureTitle: {
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: '#000000',
+                    marginBottom: 6,
+                    textTransform: 'uppercase',
+                },
+                signatureField: {
+                    fontSize: 8,
+                    color: '#666666',
+                    marginBottom: 8,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#CCCCCC',
+                    paddingBottom: 2,
+                },
+                signatureLabel: {
+                    fontSize: 8,
+                    color: '#333333',
+                    marginBottom: 2,
+                },
+                signatureSpace: {
+                    marginTop: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#CCCCCC',
+                    height: 30,
+                },
+                // Footer - Réorganisé pour une ligne horizontale
+                footer: {
+                    marginTop: 10,
                     borderTopWidth: 1,
                     borderTopColor: '#E9ECEF',
-                    paddingTop: 15,
+                    paddingTop: 8,
                     wrap: false, // Empêche la coupure du footer
                 },
                 footerContent: {
                     flexDirection: 'row',
-                    justifyContent: 'space-between',
-                },
-                footerLeft: {
-                    width: '65%',
-                },
-                footerRight: {
-                    width: '30%',
-                    textAlign: 'right',
-                },
-                footerTitle: {
-                    fontSize: 9,
-                    fontWeight: 700,
-                    color: '#000000',
-                    marginBottom: 4,
+                    justifyContent: 'center',
+                    flexWrap: 'wrap',
                 },
                 footerText: {
-                    fontSize: 8,
+                    fontSize: 7,
                     color: '#666666',
-                    marginBottom: 2,
+                    textAlign: 'center',
+                    marginHorizontal: 4,
+                },
+                footerSeparator: {
+                    fontSize: 7,
+                    color: '#666666',
+                    marginHorizontal: 2,
                 },
                 // Styles pour les pages multiples
                 pageBreak: {
@@ -533,9 +615,11 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                                 {ligne.service?.nom || `Phase ${index + 1} - Service personnalisé`}
                             </Text>
                             <Text style={styles.descriptionDetail}>
-                                {ligne.description_personnalisee ||
+                                {tronquerDescription(
+                                    ligne.description_personnalisee ||
                                     ligne.service?.description ||
-                                    'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'}
+                                    'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'
+                                )}
                             </Text>
                         </View>
                         <Text style={styles.cellQuantity}>
@@ -553,7 +637,9 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                         <Text style={styles.cellNum}>1</Text>
                         <View style={styles.cellDescription}>
                             <Text style={styles.descriptionTitle}>Service personnalisé</Text>
-                            <Text style={styles.descriptionDetail}>Prestation de service</Text>
+                            <Text style={styles.descriptionDetail}>
+                                {tronquerDescription('Prestation de service')}
+                            </Text>
                         </View>
                         <Text style={styles.cellQuantity}>1 heure</Text>
                         <Text style={styles.cellPrice}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
@@ -587,66 +673,83 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
         </View>
     );
 
+        const renderBankingAndSignature = (isDedicatedPage: boolean = false) => (
+        <View style={isDedicatedPage ? styles.bankingSignatureSectionDedicated : styles.bankingSignatureSection}>
+            <View style={styles.bankingBox}>
+                <Text style={styles.bankingTitle}>Coordonnées bancaires</Text>
+                {madinia?.nom_banque && (
+                    <Text style={styles.bankingText}>
+                        {madinia.nom_banque}
+                    </Text>
+                )}
+                {madinia?.nom_compte_bancaire && (
+                    <Text style={styles.bankingText}>
+                        Titulaire: {madinia.nom_compte_bancaire}
+                    </Text>
+                )}
+                {madinia?.numero_compte && (
+                    <Text style={styles.bankingText}>
+                        N° Compte: {madinia.numero_compte}
+                    </Text>
+                )}
+                {madinia?.iban_bic_swift && (
+                    <Text style={styles.bankingText}>
+                        IBAN/BIC: {madinia.iban_bic_swift}
+                    </Text>
+                )}
+            </View>
+
+            <View style={styles.signatureBox}>
+                <Text style={styles.signatureTitle}>Acceptation du devis</Text>
+
+                <Text style={styles.signatureLabel}>Date :</Text>
+                <View style={styles.signatureField}></View>
+
+                <Text style={styles.signatureLabel}>Lieu :</Text>
+                <View style={styles.signatureField}></View>
+
+                <Text style={styles.signatureLabel}>Signature et cachet :</Text>
+                <View style={styles.signatureSpace}></View>
+            </View>
+        </View>
+    );
+
     const renderFooter = (
         <View style={styles.footer}>
             <View style={styles.footerContent}>
-                <View style={styles.footerLeft}>
-                    <Text style={styles.footerTitle}>INFORMATIONS LÉGALES</Text>
-                    {madinia?.name && (
-                        <Text style={styles.footerText}>
-                            {madinia.name}
-                        </Text>
-                    )}
-                    {madinia?.adresse && (
-                        <Text style={styles.footerText}>
-                            {madinia.adresse}
-                        </Text>
-                    )}
-                    {madinia?.pays && (
-                        <Text style={styles.footerText}>
-                            {madinia.pays}
-                        </Text>
-                    )}
-                    {madinia?.siret && (
-                        <Text style={styles.footerText}>
-                            SIRET: {madinia.siret}
-                        </Text>
-                    )}
-                    {madinia?.numero_nda && (
-                        <Text style={styles.footerText}>
-                            N° DA: {madinia.numero_nda}
-                        </Text>
-                    )}
-                    {devis.notes && (
-                        <Text style={[styles.footerText, { marginTop: 4 }]}>{devis.notes}</Text>
-                    )}
-                </View>
-                <View style={styles.footerRight}>
-                    <Text style={styles.footerTitle}>COORDONNÉES BANCAIRES</Text>
-                    {madinia?.nom_banque && (
-                        <Text style={styles.footerText}>
-                            {madinia.nom_banque}
-                        </Text>
-                    )}
-                    {madinia?.nom_compte_bancaire && (
-                        <Text style={styles.footerText}>
-                            Titulaire: {madinia.nom_compte_bancaire}
-                        </Text>
-                    )}
-                    {madinia?.numero_compte && (
-                        <Text style={styles.footerText}>
-                            N° Compte: {madinia.numero_compte}
-                        </Text>
-                    )}
-                    {madinia?.iban_bic_swift && (
-                        <Text style={styles.footerText}>
-                            IBAN/BIC: {madinia.iban_bic_swift}
-                        </Text>
-                    )}
-                    <Text style={[styles.footerText, { marginTop: 4 }]}>
-                        Contact: {devis.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
-                    </Text>
-                </View>
+                {madinia?.name && (
+                    <>
+                        <Text style={styles.footerText}>{madinia.name}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
+                )}
+                {madinia?.adresse && (
+                    <>
+                        <Text style={styles.footerText}>{madinia.adresse}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
+                )}
+                {madinia?.siret && (
+                    <>
+                        <Text style={styles.footerText}>SIRET: {madinia.siret}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
+                )}
+                {madinia?.numero_nda && (
+                    <>
+                        <Text style={styles.footerText}>N° DA: {madinia.numero_nda}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
+                )}
+                <Text style={styles.footerText}>
+                    Contact: {devis.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+                </Text>
+                {devis.notes && (
+                    <>
+                        <Text style={styles.footerSeparator}>•</Text>
+                        <Text style={styles.footerText}>{devis.notes}</Text>
+                    </>
+                )}
             </View>
         </View>
     );
@@ -660,13 +763,67 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
         return chunks;
     };
 
-    // Calculer le nombre de lignes par page (approximativement)
-    const lignesParPage = 12; // Ajustable selon l'espace disponible
+        // Calculer dynamiquement le nombre de lignes par page
     const lignes = devis.lignes && devis.lignes.length > 0 ? devis.lignes : [];
-    const chunksLignes = lignes.length > lignesParPage ? chunkArray(lignes, lignesParPage) : [lignes];
+
+    // Fonction pour estimer la hauteur d'une ligne selon sa description
+    const estimerHauteurLigne = (ligne: any) => {
+        const description = ligne.description_personnalisee || ligne.service?.description || '';
+        const longueurDescription = description.length;
+
+        // Hauteur de base : 40px
+        // Hauteur supplémentaire selon la longueur de la description
+        if (longueurDescription > 150) return 70; // Description très longue
+        if (longueurDescription > 80) return 55;  // Description longue
+        return 40; // Description normale
+    };
+
+    // Calculer les chunks de manière intelligente selon la hauteur estimée
+    const calculerChunksIntelligents = (lignesArray: any[]) => {
+        const chunks = [];
+        let chunkActuel: any[] = [];
+        let hauteurChunkActuel = 0;
+        // Hauteur disponible pour le tableau sur une page complète
+        const hauteurMaxParPageComplete = 600;
+        // Hauteur disponible pour le tableau sur la première page (avec info client/dates)
+        const hauteurMaxPremierePageAvecInfo = 400;
+
+        lignesArray.forEach((ligne, index) => {
+            const hauteurLigne = estimerHauteurLigne(ligne);
+            const estPremiereIteration = chunks.length === 0;
+            const hauteurMax = estPremiereIteration ? hauteurMaxPremierePageAvecInfo : hauteurMaxParPageComplete;
+
+            // Si ajouter cette ligne dépasse la hauteur max OU on a déjà le nombre max de lignes
+            const maxLignes = estPremiereIteration ? 10 : 15;
+            if ((hauteurChunkActuel + hauteurLigne > hauteurMax && chunkActuel.length > 0) || chunkActuel.length >= maxLignes) {
+                chunks.push(chunkActuel);
+                chunkActuel = [ligne];
+                hauteurChunkActuel = hauteurLigne;
+            } else {
+                chunkActuel.push(ligne);
+                hauteurChunkActuel += hauteurLigne;
+            }
+        });
+
+        // Ajouter le dernier chunk s'il n'est pas vide
+        if (chunkActuel.length > 0) {
+            chunks.push(chunkActuel);
+        }
+
+        return chunks.length > 0 ? chunks : [lignesArray];
+    };
+
+    const chunksLignes = lignes.length > 8 ? calculerChunksIntelligents(lignes) : [lignes];
+
+    // Déterminer si on a besoin d'une page séparée pour la section finale
+    const hauteurEstimeeDernierChunk = chunksLignes[chunksLignes.length - 1]?.reduce((total, ligne) => total + estimerHauteurLigne(ligne), 0) || 0;
+    const hauteurSectionFinale = 180; // Section bancaire + résumé + footer
+    const espaceDisponibleDernierePage = chunksLignes.length === 1 ? 400 : 600; // Moins d'espace sur première page
+
+    const needsSeparateFinalPage = (hauteurEstimeeDernierChunk + hauteurSectionFinale) > espaceDisponibleDernierePage;
 
     // Fonction pour créer le tableau avec un subset de lignes
-    const renderTableWithLines = (lignesChunk: any[], isFirstPage: boolean, isLastPage: boolean, chunkIndex: number) => (
+    const renderTableWithLines = (lignesChunk: any[], isFirstPage: boolean, isLastTablePage: boolean, chunkIndex: number) => (
         <View style={styles.tableSection}>
             {isFirstPage && <Text style={styles.tableTitle}>Détails du devis</Text>}
             {!isFirstPage && (
@@ -694,9 +851,10 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
 
                 {/* Lignes du tableau pour ce chunk */}
                 {lignesChunk.length > 0 ? lignesChunk.map((ligne, index) => {
-                    const globalIndex = chunkIndex * lignesParPage + index;
+                    // Calculer l'index global en comptant toutes les lignes des chunks précédents
+                    const globalIndex = chunksLignes.slice(0, chunkIndex).reduce((total, chunk) => total + chunk.length, 0) + index;
                     const isLastInChunk = index === lignesChunk.length - 1;
-                    const isLastInDocument = isLastPage && isLastInChunk;
+                    const isLastInDocument = isLastTablePage && isLastInChunk;
 
                     return (
                         <View
@@ -711,11 +869,13 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                                 <Text style={styles.descriptionTitle}>
                                     {ligne.service?.nom || `Phase ${globalIndex + 1} - Service personnalisé`}
                                 </Text>
-                                <Text style={styles.descriptionDetail}>
-                                    {ligne.description_personnalisee ||
-                                        ligne.service?.description ||
-                                        'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'}
-                                </Text>
+                                                            <Text style={styles.descriptionDetail}>
+                                {tronquerDescription(
+                                    ligne.description_personnalisee ||
+                                    ligne.service?.description ||
+                                    'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'
+                                )}
+                            </Text>
                             </View>
                             <Text style={styles.cellQuantity}>
                                 {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
@@ -748,7 +908,8 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
         <Document>
             {chunksLignes.map((chunk, chunkIndex) => {
                 const isFirstPage = chunkIndex === 0;
-                const isLastPage = chunkIndex === chunksLignes.length - 1;
+                const isLastTablePage = chunkIndex === chunksLignes.length - 1;
+                const shouldShowFinalSections = isLastTablePage && !needsSeparateFinalPage;
 
                 return (
                     <Page key={chunkIndex} size="A4" style={styles.page}>
@@ -763,7 +924,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                                 </View>
                                 <View style={styles.statusSection}>
                                     <Text style={styles.devisNumber}>
-                                        {devis.numero_devis} (page {chunkIndex + 1}/{chunksLignes.length})
+                                        {devis.numero_devis} (page {chunkIndex + 1}/{needsSeparateFinalPage ? chunksLignes.length + 1 : chunksLignes.length})
                                     </Text>
                                 </View>
                             </View>
@@ -778,11 +939,12 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                         )}
 
                         {/* Tableau pour cette page */}
-                        {renderTableWithLines(chunk, isFirstPage, isLastPage, chunkIndex)}
+                        {renderTableWithLines(chunk, isFirstPage, isLastTablePage, chunkIndex)}
 
-                        {/* Résumé et footer seulement sur la dernière page */}
-                        {isLastPage && (
+                        {/* Section bancaire/signature, résumé et footer si on n'a pas besoin d'une page séparée */}
+                        {shouldShowFinalSections && (
                             <>
+                                {renderBankingAndSignature(false)}
                                 {renderSummary}
                                 {renderFooter}
                             </>
@@ -790,6 +952,31 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                     </Page>
                 );
             })}
+
+            {/* Page séparée pour les sections finales si nécessaire */}
+            {needsSeparateFinalPage && (
+                <Page size="A4" style={styles.page}>
+                    {/* En-tête simplifié */}
+                    <View style={styles.header}>
+                        <View style={styles.logoSection}>
+                            <Image
+                                style={styles.logo}
+                                src="/logo/logo-1-small.png"
+                            />
+                        </View>
+                        <View style={styles.statusSection}>
+                            <Text style={styles.devisNumber}>
+                                {devis.numero_devis} (page {chunksLignes.length + 1}/{chunksLignes.length + 1})
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Sections finales sur page dédiée */}
+                    {renderBankingAndSignature(true)}
+                    {renderSummary}
+                    {renderFooter}
+                </Page>
+            )}
         </Document>
     );
 }
