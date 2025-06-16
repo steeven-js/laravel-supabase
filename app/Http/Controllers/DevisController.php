@@ -520,7 +520,7 @@ class DevisController extends Controller
                 'client_id' => 'required|exists:clients,id',
                 'date_devis' => 'required|date',
                 'date_validite' => 'required|date|after:date_devis',
-                'statut' => 'required|in:brouillon,envoye,accepte,refuse,expire',
+                'statut' => 'required|in:brouillon,en_attente,envoye,accepte,refuse,expire',
                 'objet' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'conditions' => 'nullable|string',

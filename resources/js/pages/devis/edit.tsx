@@ -123,6 +123,8 @@ const getStatusStyles = (statut: string) => {
             return 'bg-green-100 text-green-800 border-green-200';
         case 'envoye':
             return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'en_attente':
+            return 'bg-amber-100 text-amber-800 border-amber-200';
         case 'refuse':
             return 'bg-red-100 text-red-800 border-red-200';
         case 'expire':
@@ -140,6 +142,8 @@ const getStatusIcon = (statut: string) => {
             return <CheckCircle className="h-4 w-4" />;
         case 'envoye':
             return <Clock className="h-4 w-4" />;
+        case 'en_attente':
+            return <Clock className="h-4 w-4" />;
         case 'refuse':
             return <XCircle className="h-4 w-4" />;
         case 'expire':
@@ -153,6 +157,8 @@ const formatStatut = (statut: string) => {
     switch (statut) {
         case 'brouillon':
             return 'Brouillon';
+        case 'en_attente':
+            return 'En attente';
         case 'envoye':
             return 'Envoyé';
         case 'accepte':
@@ -687,7 +693,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
                                         </Badge>
                                     </div>
                                     <div>
-                                        <Select value={data.statut || ''} onValueChange={(value) => setData('statut', value as 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire')}>
+                                        <Select value={data.statut || ''} onValueChange={(value) => setData('statut', value as 'brouillon' | 'en_attente' | 'envoye' | 'accepte' | 'refuse' | 'expire')}>
                                             <SelectTrigger className="w-full h-11 border border-slate-300 dark:border-slate-600 hover:border-amber-400 dark:hover:border-amber-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 transition-colors">
                                                 <div className="flex items-center gap-2">
                                                     <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -696,6 +702,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="brouillon">Brouillon</SelectItem>
+                                                <SelectItem value="en_attente">En attente</SelectItem>
                                                 <SelectItem value="envoye">Envoyé</SelectItem>
                                                 <SelectItem value="accepte">Accepté</SelectItem>
                                                 <SelectItem value="refuse">Refusé</SelectItem>
