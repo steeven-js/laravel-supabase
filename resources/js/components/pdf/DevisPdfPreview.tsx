@@ -37,6 +37,23 @@ const tronquerDescription = (description: string, maxLength: number = 200) => {
     return tronque + '...';
 };
 
+// Fonction utilitaire pour formater les unités
+const formatUnite = (quantite: number, unite?: string): string => {
+    if (!unite) return quantite <= 1 ? 'unité' : 'unités';
+
+    const unites = {
+        heure: quantite <= 1 ? 'heure' : 'heures',
+        journee: quantite <= 1 ? 'journée' : 'journées',
+        semaine: quantite <= 1 ? 'semaine' : 'semaines',
+        mois: 'mois',
+        unite: quantite <= 1 ? 'unité' : 'unités',
+        forfait: quantite <= 1 ? 'forfait' : 'forfaits',
+        licence: quantite <= 1 ? 'licence' : 'licences',
+    };
+
+    return unites[unite as keyof typeof unites] || (quantite <= 1 ? 'unité' : 'unités');
+};
+
 // Configuration des polices - Utilisation des polices par défaut
 // Font.register supprimé pour éviter les erreurs de chargement
 
@@ -409,6 +426,7 @@ interface DevisPdfPreviewProps {
             service?: {
                 nom: string;
                 description: string;
+                unite?: string;
             };
         }>;
         client: {
@@ -623,7 +641,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                             </Text>
                         </View>
                         <Text style={styles.cellQuantity}>
-                            {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
+                            {ligne.quantite || 1} {formatUnite(ligne.quantite || 1, ligne.service?.unite)}
                         </Text>
                         <Text style={styles.cellPrice}>
                             {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
@@ -641,7 +659,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                                 {tronquerDescription('Prestation de service')}
                             </Text>
                         </View>
-                        <Text style={styles.cellQuantity}>1 heure</Text>
+                        <Text style={styles.cellQuantity}>1 unité</Text>
                         <Text style={styles.cellPrice}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
                         <Text style={styles.cellTotal}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
                     </View>
@@ -878,7 +896,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                             </Text>
                             </View>
                             <Text style={styles.cellQuantity}>
-                                {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
+                                {ligne.quantite || 1} {formatUnite(ligne.quantite || 1, ligne.service?.unite)}
                             </Text>
                             <Text style={styles.cellPrice}>
                                 {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
@@ -895,7 +913,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                             <Text style={styles.descriptionTitle}>Service personnalisé</Text>
                             <Text style={styles.descriptionDetail}>Prestation de service</Text>
                         </View>
-                        <Text style={styles.cellQuantity}>1 heure</Text>
+                        <Text style={styles.cellQuantity}>1 unité</Text>
                         <Text style={styles.cellPrice}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
                         <Text style={styles.cellTotal}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
                     </View>

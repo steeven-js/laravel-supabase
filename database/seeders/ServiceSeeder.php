@@ -20,6 +20,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Création d\'un site web vitrine responsive avec CMS',
                 'prix_ht' => 2500.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -28,6 +29,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Développement d\'une application web personnalisée (Laravel/React)',
                 'prix_ht' => 8000.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -36,6 +38,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Création d\'une API REST sécurisée avec documentation',
                 'prix_ht' => 3500.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -44,6 +47,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Intégration entre différents systèmes et plateformes',
                 'prix_ht' => 1500.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -52,6 +56,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Maintenance et support technique mensuel',
                 'prix_ht' => 350.00,
                 'qte_defaut' => 12,
+                'unite' => 'mois',
                 'actif' => true,
             ],
             [
@@ -60,6 +65,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Formation des utilisateurs finaux (par journée)',
                 'prix_ht' => 450.00,
                 'qte_defaut' => 2,
+                'unite' => 'journee',
                 'actif' => true,
             ],
             [
@@ -68,6 +74,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Audit de sécurité complet avec rapport détaillé',
                 'prix_ht' => 1200.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -76,6 +83,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Optimisation des performances et de la vitesse',
                 'prix_ht' => 800.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -84,6 +92,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Migration sécurisée de données entre systèmes',
                 'prix_ht' => 1800.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -92,6 +101,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Conception d\'interface utilisateur et expérience utilisateur',
                 'prix_ht' => 2200.00,
                 'qte_defaut' => 1,
+                'unite' => 'forfait',
                 'actif' => true,
             ],
             [
@@ -100,6 +110,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Consultation technique et conseils stratégiques (par heure)',
                 'prix_ht' => 85.00,
                 'qte_defaut' => 8,
+                'unite' => 'heure',
                 'actif' => true,
             ],
             [
@@ -108,6 +119,7 @@ class ServiceSeeder extends Seeder
                 'description' => 'Hébergement haute performance avec support 24/7 (par mois)',
                 'prix_ht' => 150.00,
                 'qte_defaut' => 12,
+                'unite' => 'mois',
                 'actif' => true,
             ],
         ];

@@ -67,6 +67,7 @@ interface Service {
     description: string;
     prix_ht: number;
     qte_defaut: number;
+    unite?: string;
 }
 
 interface Administrateur {

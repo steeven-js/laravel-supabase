@@ -52,6 +52,7 @@ export default function ServiceCreate() {
         description: '',
         prix_ht: '',
         qte_defaut: '1',
+        unite: 'heure' as string,
         actif: true as boolean,
     });
 
@@ -106,6 +107,7 @@ export default function ServiceCreate() {
             description: '',
             prix_ht: '',
             qte_defaut: '1',
+            unite: 'heure',
             actif: true,
         });
         clearErrors();
@@ -435,6 +437,38 @@ export default function ServiceCreate() {
                                                     Quantité proposée par défaut dans les devis
                                                 </p>
                                             </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="unite" className="flex items-center gap-2">
+                                                <Calculator className="h-4 w-4" />
+                                                Type d'unité
+                                                <span className="text-destructive">*</span>
+                                                {renderFieldIcon(getFieldStatus('unite', data.unite))}
+                                            </Label>
+                                            <Select value={data.unite} onValueChange={(value) => setData('unite', value)}>
+                                                <SelectTrigger className={getFieldError('unite') ? 'border-destructive' : ''}>
+                                                    <SelectValue placeholder="Sélectionner une unité" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="heure">Heure(s)</SelectItem>
+                                                    <SelectItem value="journee">Journée(s)</SelectItem>
+                                                    <SelectItem value="semaine">Semaine(s)</SelectItem>
+                                                    <SelectItem value="mois">Mois</SelectItem>
+                                                    <SelectItem value="unite">Unité(s)</SelectItem>
+                                                    <SelectItem value="forfait">Forfait(s)</SelectItem>
+                                                    <SelectItem value="licence">Licence(s)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {getFieldError('unite') && (
+                                                <div className="flex items-center gap-2 text-sm text-destructive">
+                                                    <AlertCircle className="h-4 w-4" />
+                                                    {getFieldError('unite')}
+                                                </div>
+                                            )}
+                                            <p className="text-xs text-muted-foreground">
+                                                Type d'unité utilisé pour facturer ce service (ex: {data.qte_defaut} {data.unite === 'heure' ? data.qte_defaut === '1' ? 'heure' : 'heures' : data.unite === 'journee' ? data.qte_defaut === '1' ? 'journée' : 'journées' : data.unite === 'semaine' ? data.qte_defaut === '1' ? 'semaine' : 'semaines' : data.unite === 'mois' ? 'mois' : data.unite === 'unite' ? data.qte_defaut === '1' ? 'unité' : 'unités' : data.unite === 'forfait' ? data.qte_defaut === '1' ? 'forfait' : 'forfaits' : data.unite === 'licence' ? data.qte_defaut === '1' ? 'licence' : 'licences' : data.unite})
+                                            </p>
                                         </div>
 
                                         {data.prix_ht && (

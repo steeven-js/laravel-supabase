@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasHistorique;
+use App\ServiceUnite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,12 +18,14 @@ class Service extends Model
         'description',
         'prix_ht',
         'qte_defaut',
+        'unite',
         'actif',
     ];
 
     protected $casts = [
         'prix_ht' => 'decimal:2',
         'qte_defaut' => 'integer',
+        'unite' => ServiceUnite::class,
         'actif' => 'boolean',
     ];
 
@@ -60,6 +63,15 @@ class Service extends Model
               ->orWhere('code', 'like', '%' . $term . '%')
               ->orWhere('description', 'like', '%' . $term . '%');
         });
+    }
+
+    /**
+     * Retourne le libellé de l'unité formaté selon la quantité
+     */
+    public function getUniteLibelle(?int $quantite = null): string
+    {
+        $qte = $quantite ?? $this->qte_defaut ?? 1;
+        return $this->unite ? $this->unite->getLibelle($qte) : 'unité';
     }
 
     /**

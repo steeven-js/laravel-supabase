@@ -58,6 +58,7 @@ interface Service {
     description?: string;
     prix_ht: number;
     qte_defaut: number;
+    unite?: string;
     actif: boolean;
     lignes_devis_count: number;
     lignes_factures_count: number;
@@ -450,7 +451,18 @@ export default function ServicesIndex({
                                                         {formatPrice(service.prix_ht)}
                                                     </div>
                                                     <div className="text-sm text-muted-foreground">
-                                                        Qté: {service.qte_defaut}
+                                                        Qté: {service.qte_defaut} {service.unite && (
+                                                            <span className="text-blue-600 font-medium">
+                                                                {service.unite === 'heure' ? service.qte_defaut > 1 ? 'heures' : 'heure' :
+                                                                 service.unite === 'journee' ? service.qte_defaut > 1 ? 'journées' : 'journée' :
+                                                                 service.unite === 'semaine' ? service.qte_defaut > 1 ? 'semaines' : 'semaine' :
+                                                                 service.unite === 'mois' ? 'mois' :
+                                                                 service.unite === 'unite' ? service.qte_defaut > 1 ? 'unités' : 'unité' :
+                                                                 service.unite === 'forfait' ? service.qte_defaut > 1 ? 'forfaits' : 'forfait' :
+                                                                 service.unite === 'licence' ? service.qte_defaut > 1 ? 'licences' : 'licence' :
+                                                                 service.unite}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="p-4">

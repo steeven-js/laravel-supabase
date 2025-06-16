@@ -73,6 +73,7 @@ class ServiceController extends Controller
             'description' => 'nullable|string|max:1000',
             'prix_ht' => 'required|numeric|min:0|max:999999.99',
             'qte_defaut' => 'required|integer|min:1|max:9999',
+            'unite' => 'required|string|in:heure,journee,semaine,mois,unite,forfait,licence',
             'actif' => 'boolean',
         ]);
 
@@ -166,6 +167,7 @@ class ServiceController extends Controller
             'description' => 'nullable|string|max:1000',
             'prix_ht' => 'required|numeric|min:0|max:999999.99',
             'qte_defaut' => 'required|integer|min:1|max:9999',
+            'unite' => 'required|string|in:heure,journee,semaine,mois,unite,forfait,licence',
             'actif' => 'boolean',
         ]);
 

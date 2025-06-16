@@ -358,6 +358,7 @@ class DevisController extends Controller
                         'nom' => $ligne->service->nom,
                         'description' => $ligne->service->description,
                         'code' => $ligne->service->code,
+                        'unite' => $ligne->service->unite ? $ligne->service->unite->value : null,
                     ] : null
                 ];
             }),
@@ -464,6 +465,7 @@ class DevisController extends Controller
                         'description' => $ligne->service->description,
                         'prix_ht' => $ligne->service->prix_ht,
                         'qte_defaut' => $ligne->service->qte_defaut,
+                        'unite' => $ligne->service->unite ? $ligne->service->unite->value : null,
                     ] : null
                 ];
             }),

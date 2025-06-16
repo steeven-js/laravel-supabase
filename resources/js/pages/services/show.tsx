@@ -50,6 +50,7 @@ interface Service {
     description?: string;
     prix_ht: number;
     qte_defaut: number;
+    unite?: string;
     actif: boolean;
     created_at: string;
     updated_at: string;
@@ -365,7 +366,18 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Package className="h-4 w-4" />
-                                            Qté défaut: {service.qte_defaut}
+                                            Qté défaut: {service.qte_defaut} {service.unite && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-1">
+                                                    {service.unite === 'heure' ? service.qte_defaut > 1 ? 'heures' : 'heure' :
+                                                     service.unite === 'journee' ? service.qte_defaut > 1 ? 'journées' : 'journée' :
+                                                     service.unite === 'semaine' ? service.qte_defaut > 1 ? 'semaines' : 'semaine' :
+                                                     service.unite === 'mois' ? 'mois' :
+                                                     service.unite === 'unite' ? service.qte_defaut > 1 ? 'unités' : 'unité' :
+                                                     service.unite === 'forfait' ? service.qte_defaut > 1 ? 'forfaits' : 'forfait' :
+                                                     service.unite === 'licence' ? service.qte_defaut > 1 ? 'licences' : 'licence' :
+                                                     service.unite}
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Calendar className="h-4 w-4" />
