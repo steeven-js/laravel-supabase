@@ -318,7 +318,7 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
                     </div>
 
                     {/* Boutons de développement - seulement en mode local et pour les super admins */}
-                    {isLocal && auth?.user?.role === 'superadmin' && (
+                    {isLocal && auth?.user?.role === 'super_admin' && (
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
@@ -757,7 +757,7 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
                 </Card>
 
                 {/* Démonstration des toasts Sonner - seulement pour les super admins */}
-                {auth?.user?.role === 'superadmin' && <ToastDemo />}
+                {auth?.user?.role === 'super_admin' && <ToastDemo />}
             </div>
         </AppLayout>
     );

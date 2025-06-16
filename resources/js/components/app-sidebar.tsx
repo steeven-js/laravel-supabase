@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor, Package, Building, Mail, Shield } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor, Package, Building, Mail } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -48,6 +48,18 @@ const mainNavItems: NavItem[] = [
         href: '/email-templates',
         icon: Mail,
     },
+
+    {
+        title: 'Utilisateurs',
+        href: '/admin/users',
+        icon: Users,
+    },
+
+    {
+        title: 'Monitoring',
+        href: '/admin/monitoring',
+        icon: Monitor,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -67,26 +79,10 @@ export function AppSidebar() {
     const { props } = usePage();
     const auth = (props as any).auth;
     const user = auth?.user;
-    const isSuperAdmin = user?.role === 'superadmin';
 
-    // Éléments de navigation avec éléments conditionnels pour super admin
-    let navigationItems = [...mainNavItems];
-
-    // Ajouter les éléments super admin si l'utilisateur est super admin
-    if (isSuperAdmin) {
-        navigationItems.push(
-            {
-                title: 'Liste des Admins',
-                href: '/admin/users/admins',
-                icon: Shield,
-            },
-            {
-                title: 'Monitoring & Tests',
-                href: '/admin/monitoring',
-                icon: Monitor,
-            }
-        );
-    }
+    // Utiliser directement les éléments de navigation principaux
+    // Les liens admin sont maintenant inclus dans mainNavItems
+    const navigationItems = [...mainNavItems];
 
     return (
         <Sidebar collapsible="icon" variant="inset">

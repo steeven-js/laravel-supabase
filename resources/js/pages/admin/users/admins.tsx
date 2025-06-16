@@ -79,7 +79,7 @@ const getRoleBadgeColor = (role: string) => {
 };
 
 const getRoleIcon = (role: string) => {
-    return role === 'superadmin' ?
+    return role === 'super_admin' ?
         <Shield className="h-4 w-4 text-purple-600" /> :
         <UserCog className="h-4 w-4 text-blue-600" />;
 };
@@ -136,7 +136,7 @@ export default function AdminsIndex({ admins }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {admins.data.filter(admin => admin.role === 'superadmin').length}
+                                    {admins.data.filter(admin => admin.role === 'super_admin').length}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     Accès complet au système
@@ -186,7 +186,7 @@ export default function AdminsIndex({ admins }: Props) {
                                                 <TableCell>
                                                     <div className="flex items-center space-x-3">
                                                         <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                                                            admin.role === 'superadmin'
+                                                            admin.role === 'super_admin'
                                                                 ? 'bg-gradient-to-br from-purple-500 to-purple-700'
                                                                 : 'bg-gradient-to-br from-blue-500 to-blue-700'
                                                         }`}>

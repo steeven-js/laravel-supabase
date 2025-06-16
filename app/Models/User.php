@@ -27,7 +27,7 @@ class User extends Authenticatable
         'code_postal',
         'pays',
         'avatar',
-        'role',
+        'user_role_id',
     ];
 
     /**
@@ -54,43 +54,71 @@ class User extends Authenticatable
     }
 
     /**
+     * Relation avec le rôle utilisateur
+     */
+    public function userRole()
+    {
+        return $this->belongsTo(UserRole::class);
+    }
+
+    /**
      * Check if user is superadmin.
      */
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'superadmin';
+        return $this->userRole?->name === 'super_admin';
     }
 
     /**
-     * Check if user is admin (tous les utilisateurs sont admin maintenant).
+     * Check if user is admin or higher.
      */
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'superadmin']);
+        return $this->userRole?->isAdminOrHigher() ?? false;
     }
 
     /**
      * Check if user has specific role.
      */
-    public function hasRole(string $role): bool
+    public function hasRole(string $roleName): bool
     {
-        return $this->role === $role;
+        return $this->userRole?->name === $roleName;
     }
 
     /**
-     * Get users with admin role or higher (tous les utilisateurs maintenant).
+     * Check if user has specific permission.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return $this->userRole?->hasPermission($permission) ?? false;
+    }
+
+    /**
+     * Get the role name for compatibility.
+     */
+    public function getRoleAttribute(): ?string
+    {
+        return $this->userRole?->name;
+    }
+
+    /**
+     * Get users with admin role or higher.
      */
     public static function getAdmins()
     {
-        return self::whereIn('role', ['admin', 'superadmin'])->get();
+        return self::whereHas('userRole', function ($query) {
+            $query->whereIn('name', ['admin', 'super_admin']);
+        })->get();
     }
 
     /**
-     * Scope for admin users only (tous les utilisateurs maintenant).
+     * Scope for admin users only.
      */
     public function scopeAdmins($query)
     {
-        return $query->whereIn('role', ['admin', 'superadmin']);
+        return $query->whereHas('userRole', function ($q) {
+            $q->whereIn('name', ['admin', 'super_admin']);
+        });
     }
 
     /**
@@ -98,7 +126,9 @@ class User extends Authenticatable
      */
     public function scopeSuperAdmins($query)
     {
-        return $query->where('role', 'superadmin');
+        return $query->whereHas('userRole', function ($q) {
+            $q->where('name', 'super_admin');
+        });
     }
 
     /**
@@ -144,11 +174,6 @@ class User extends Authenticatable
      */
     public function getRoleDisplayAttribute(): string
     {
-        $roles = [
-            'admin' => 'Administrateur',
-            'superadmin' => 'Super Administrateur'
-        ];
-
-        return $roles[$this->role] ?? 'Administrateur';
+        return $this->userRole?->display_name ?? 'Administrateur';
     }
 }

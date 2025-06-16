@@ -22,11 +22,20 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Plus, MoreHorizontal, Eye, Edit, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface UserRole {
+    id: number;
+    name: 'super_admin' | 'admin';
+    display_name: string;
+    description?: string;
+}
+
 interface User {
     id: number;
     name: string;
     email: string;
-    role: string;
+    user_role_id?: number;
+    user_role?: UserRole;
+    role?: string; // Getter pour compatibilité
     created_at: string;
     updated_at: string;
 }
@@ -56,22 +65,16 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const getRoleDisplay = (role: string) => {
-    switch (role) {
-        case 'admin':
-            return 'Administrateur';
-        case 'superadmin':
-            return 'Super Administrateur';
-        default:
-            return 'Administrateur';
-    }
+const getRoleDisplay = (user: User): string => {
+    return user.user_role?.display_name || 'Administrateur';
 };
 
-const getRoleBadgeColor = (role: string) => {
-    switch (role) {
+const getRoleBadgeColor = (user: User): string => {
+    const roleName = user.user_role?.name || user.role;
+    switch (roleName) {
         case 'admin':
             return 'bg-blue-100 text-blue-800';
-        case 'superadmin':
+        case 'super_admin':
             return 'bg-purple-100 text-purple-800';
         default:
             return 'bg-blue-100 text-blue-800';
@@ -140,7 +143,7 @@ export default function UsersIndex({ users }: Props) {
                                                 <TableCell>
                                                     <div className="flex items-center space-x-3">
                                                         <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                                                            user.role === 'superadmin'
+                                                            (user.user_role?.name || user.role) === 'super_admin'
                                                                 ? 'bg-gradient-to-br from-purple-500 to-purple-700'
                                                                 : 'bg-gradient-to-br from-blue-500 to-blue-700'
                                                         }`}>
@@ -155,8 +158,8 @@ export default function UsersIndex({ users }: Props) {
                                                     {user.email}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge className={getRoleBadgeColor(user.role)}>
-                                                        {getRoleDisplay(user.role)}
+                                                    <Badge className={getRoleBadgeColor(user)}>
+                                                        {getRoleDisplay(user)}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-gray-600">

@@ -32,9 +32,13 @@ class AdminController extends Controller
         $this->requireSuperAdmin();
 
         $totalUsers = User::count();
-        $totalAdmins = User::where('role', 'admin')->count();
-        $totalSuperAdmins = User::where('role', 'superadmin')->count();
-        $recentUsers = User::latest()->take(5)->get();
+        $totalAdmins = User::whereHas('userRole', function ($q) {
+            $q->where('name', 'admin');
+        })->count();
+        $totalSuperAdmins = User::whereHas('userRole', function ($q) {
+            $q->where('name', 'super_admin');
+        })->count();
+        $recentUsers = User::with('userRole')->latest()->take(5)->get();
 
         return Inertia::render('admin/dashboard', [
             'totalUsers' => $totalUsers,
@@ -51,7 +55,7 @@ class AdminController extends Controller
     {
         $this->requireSuperAdmin();
 
-        $users = User::orderBy('created_at', 'desc')->paginate(20);
+        $users = User::with('userRole')->orderBy('created_at', 'desc')->paginate(20);
 
         return Inertia::render('admin/users/index', [
             'users' => $users
@@ -79,7 +83,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,superadmin',
+            'user_role_id' => 'required|exists:user_roles,id',
             'telephone' => 'nullable|string|max:20',
             'ville' => 'nullable|string|max:100',
             'adresse' => 'nullable|string|max:255',
@@ -97,7 +101,7 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'user_role_id' => $request->user_role_id,
             'telephone' => $request->telephone,
             'ville' => $request->ville,
             'adresse' => $request->adresse,
@@ -117,7 +121,7 @@ class AdminController extends Controller
         $this->requireSuperAdmin();
 
         return Inertia::render('admin/users/show', [
-            'user' => $user
+            'user' => $user->load('userRole')
         ]);
     }
 
@@ -129,7 +133,7 @@ class AdminController extends Controller
         $this->requireSuperAdmin();
 
         return Inertia::render('admin/users/edit', [
-            'user' => $user
+            'user' => $user->load('userRole')
         ]);
     }
 
@@ -144,7 +148,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:admin,superadmin',
+            'user_role_id' => 'required|exists:user_roles,id',
             'telephone' => 'nullable|string|max:20',
             'ville' => 'nullable|string|max:100',
             'adresse' => 'nullable|string|max:255',
@@ -161,7 +165,7 @@ class AdminController extends Controller
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role,
+            'user_role_id' => $request->user_role_id,
             'telephone' => $request->telephone,
             'ville' => $request->ville,
             'adresse' => $request->adresse,
@@ -189,7 +193,9 @@ class AdminController extends Controller
         // Empêcher la suppression du dernier super admin
         /** @var User $currentUser */
         $currentUser = Auth::user();
-        if ($user->isSuperAdmin() && User::where('role', 'superadmin')->count() === 1) {
+        if ($user->isSuperAdmin() && User::whereHas('userRole', function ($q) {
+            $q->where('name', 'super_admin');
+        })->count() === 1) {
             return redirect()->back()
                 ->with('error', 'Impossible de supprimer le dernier Super Administrateur.');
         }
@@ -207,7 +213,7 @@ class AdminController extends Controller
     {
         $this->requireSuperAdmin();
 
-        $admins = User::admins()->orderBy('created_at', 'desc')->paginate(20);
+        $admins = User::with('userRole')->admins()->orderBy('created_at', 'desc')->paginate(20);
 
         return Inertia::render('admin/users/admins', [
             'admins' => $admins
@@ -222,7 +228,7 @@ class AdminController extends Controller
         $this->requireSuperAdmin();
 
         $validator = Validator::make($request->all(), [
-            'role' => 'required|in:admin,superadmin',
+            'user_role_id' => 'required|exists:user_roles,id',
         ]);
 
         if ($validator->fails()) {
@@ -230,15 +236,18 @@ class AdminController extends Controller
         }
 
         // Empêcher la modification du dernier super admin
-        if ($user->isSuperAdmin() && $request->role !== 'superadmin' && User::where('role', 'superadmin')->count() === 1) {
+        $superAdminRoleId = \App\Models\UserRole::where('name', 'super_admin')->value('id');
+        if ($user->isSuperAdmin() && $request->user_role_id != $superAdminRoleId && User::whereHas('userRole', function ($q) {
+            $q->where('name', 'super_admin');
+        })->count() === 1) {
             return response()->json(['error' => 'Impossible de modifier le rôle du dernier Super Administrateur.'], 400);
         }
 
-        $user->update(['role' => $request->role]);
+        $user->update(['user_role_id' => $request->user_role_id]);
 
         return response()->json([
             'success' => 'Rôle mis à jour avec succès.',
-            'role_display' => $user->role_display
+            'role_display' => $user->fresh()->load('userRole')->role_display
         ]);
     }
 }
