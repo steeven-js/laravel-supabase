@@ -343,12 +343,12 @@ L'équipe Madin.IA",
             );
         }
 
-        // Templates pour l'acceptation de devis
+        // Templates pour l'acceptation de devis - FIXED: Changed sub_category values
         $templatesAcceptation = [
             [
                 'name' => 'Confirmation acceptation - Standard',
-                'category' => 'acceptation_devis',
-                'sub_category' => 'confirmation',
+                'category' => 'confirmation',
+                'sub_category' => 'confirmation_standard', // ✅ Changed from 'confirmation' to 'confirmation_standard'
                 'subject' => 'Confirmation d\'acceptation de votre devis {{devis_numero}}',
                 'body' => "Bonjour {{client_nom}},
 
@@ -363,13 +363,13 @@ Nous vous remercions pour votre confiance.
 Cordialement,
 L'équipe {{entreprise_nom}}",
                 'description' => 'Email de confirmation standard pour l\'acceptation d\'un devis',
-                'is_default' => true,
+                'is_default' => false, // ✅ Changed to false since there's already a default for this sub_category
                 'variables' => ['client_nom', 'devis_numero', 'devis_montant_ttc', 'entreprise_nom']
             ],
             [
                 'name' => 'Confirmation acceptation - Détaillée',
-                'category' => 'acceptation_devis',
-                'sub_category' => 'confirmation',
+                'category' => 'confirmation',
+                'sub_category' => 'confirmation_etapes', // ✅ Changed from 'confirmation' to 'confirmation_etapes'
                 'subject' => '✅ Votre devis {{devis_numero}} a été accepté - Prochaines étapes',
                 'body' => "Bonjour {{client_nom}},
 
