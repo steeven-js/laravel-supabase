@@ -177,32 +177,11 @@ class DevisController extends Controller
             $devis->calculerMontants();
             $devis->save();
 
-            // Générer et sauvegarder le PDF automatiquement
-            try {
-                // Simuler le PDF en base64 pour l'instant
-                $pdfBase64 = base64_encode("PDF généré automatiquement pour le devis {$devis->numero_devis}");
-
-                // Créer une requête simulée
-                $request = new \Illuminate\Http\Request();
-                $request->merge([
-                    'pdf_blob' => $pdfBase64,
-                    'filename' => "{$devis->numero_devis}.pdf",
-                    'type' => 'devis'
-                ]);
-
-                // Appeler saveReactPdf directement
-                $this->saveReactPdf($request, $devis);
-
-                Log::info('PDF généré automatiquement lors de la création', [
-                    'devis_id' => $devis->id,
-                    'numero_devis' => $devis->numero_devis
-                ]);
-            } catch (Exception $e) {
-                Log::error('Erreur génération PDF lors création devis', [
-                    'devis_id' => $devis->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
+            // PDF sera généré par React uniquement (via generateAndSavePdf dans edit.tsx)
+            Log::info('Devis créé - PDF sera généré côté client', [
+                'devis_id' => $devis->id,
+                'numero_devis' => $devis->numero_devis
+            ]);
 
             return redirect()->route('devis.show', $devis)
                 ->with('success', '✅ Devis ' . $devis->numero_devis . ' créé avec succès et placé en attente !');
@@ -269,32 +248,11 @@ class DevisController extends Controller
             $devis->calculerMontants();
             $devis->save();
 
-            // Générer et sauvegarder le PDF automatiquement
-            try {
-                // Simuler le PDF en base64 pour l'instant
-                $pdfBase64 = base64_encode("PDF généré automatiquement pour le devis brouillon {$devis->numero_devis}");
-
-                // Créer une requête simulée
-                $request = new \Illuminate\Http\Request();
-                $request->merge([
-                    'pdf_blob' => $pdfBase64,
-                    'filename' => "{$devis->numero_devis}.pdf",
-                    'type' => 'devis'
-                ]);
-
-                // Appeler saveReactPdf directement
-                $this->saveReactPdf($request, $devis);
-
-                Log::info('PDF généré automatiquement lors de la création brouillon', [
-                    'devis_id' => $devis->id,
-                    'numero_devis' => $devis->numero_devis
-                ]);
-            } catch (Exception $e) {
-                Log::error('Erreur génération PDF lors création devis brouillon', [
-                    'devis_id' => $devis->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
+            // PDF sera généré par React uniquement (via generateAndSavePdf dans edit.tsx)
+            Log::info('Devis brouillon créé - PDF sera généré côté client', [
+                'devis_id' => $devis->id,
+                'numero_devis' => $devis->numero_devis
+            ]);
 
             return redirect()->route('devis.show', $devis)
                 ->with('success', '📝 Devis ' . $devis->numero_devis . ' enregistré comme brouillon !');
@@ -459,7 +417,7 @@ class DevisController extends Controller
      */
     public function edit(Devis $devis)
     {
-        $devis->load(['client.entreprise', 'lignes.service']);
+        $devis->load(['client.entreprise', 'lignes.service', 'administrateur']);
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
         $services = \App\Models\Service::actif()->orderBy('nom')->get();
         $administrateurs = \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get();
@@ -482,6 +440,11 @@ class DevisController extends Controller
             'description' => $devis->description,
             'conditions' => $devis->conditions,
             'archive' => $devis->archive,
+            'administrateur' => $devis->administrateur ? [
+                'id' => $devis->administrateur->id,
+                'name' => $devis->administrateur->name,
+                'email' => $devis->administrateur->email,
+            ] : null,
             'lignes' => $devis->lignes->map(function ($ligne) {
                 return [
                     'id' => $ligne->id,
@@ -606,33 +569,6 @@ class DevisController extends Controller
             // Recalculer les montants du devis
             $devis->calculerMontants();
             $devis->save();
-
-            // Mettre à jour le PDF après modification
-            try {
-                // Simuler le PDF en base64 pour l'instant
-                $pdfBase64 = base64_encode("PDF mis à jour automatiquement pour le devis {$devis->numero_devis}");
-
-                // Créer une requête simulée
-                $request = new \Illuminate\Http\Request();
-                $request->merge([
-                    'pdf_blob' => $pdfBase64,
-                    'filename' => "{$devis->numero_devis}.pdf",
-                    'type' => 'devis'
-                ]);
-
-                // Appeler saveReactPdf directement
-                $this->saveReactPdf($request, $devis);
-
-                Log::info('PDF mis à jour automatiquement lors de la modification', [
-                    'devis_id' => $devis->id,
-                    'numero_devis' => $devis->numero_devis
-                ]);
-            } catch (Exception $e) {
-                Log::error('Erreur mise à jour PDF lors modification devis', [
-                    'devis_id' => $devis->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
 
             return redirect()->route('devis.index')
                 ->with('success', '🎉 Devis ' . $devis->numero_devis . ' mis à jour avec succès !');
@@ -1175,19 +1111,10 @@ class DevisController extends Controller
         ]);
 
         try {
-            // Forcer la régénération du PDF à chaque envoi
-            Log::info('Régénération du PDF pour l\'envoi email...', [
+            // PDF sera utilisé depuis la version React existante
+            Log::info('Utilisation du PDF React existant pour l\'envoi email', [
                 'devis_numero' => $devis->numero_devis,
-            ]);
-
-            // Générer le PDF
-            $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
-            $devis->pdf_file = $nomFichierPdf;
-            $devis->save();
-
-            Log::info('PDF régénéré pour l\'envoi email', [
-                'devis_numero' => $devis->numero_devis,
-                'fichier_pdf' => $nomFichierPdf,
+                'fichier_pdf' => $devis->pdf_file,
             ]);
 
             // Créer l'instance de mail
@@ -1294,12 +1221,9 @@ class DevisController extends Controller
             $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
 
             if (!$cheminPdf || !file_exists($cheminPdf)) {
-                // Générer le PDF s'il n'existe pas
-                $nomFichier = $this->devisPdfService->genererEtSauvegarder($devis);
-                $devis->pdf_file = $nomFichier;
-                $devis->save();
-
-                $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+                // PDF manquant - rediriger vers la page show pour utiliser React
+                return redirect()->route('devis.show', $devis)
+                    ->with('error', '❌ PDF non trouvé. Veuillez d\'abord générer le PDF via le bouton "Sauvegarder PDF".');
             }
 
             if ($cheminPdf && file_exists($cheminPdf)) {
@@ -1331,12 +1255,9 @@ class DevisController extends Controller
             $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
 
             if (!$cheminPdf || !file_exists($cheminPdf)) {
-                // Générer le PDF s'il n'existe pas
-                $nomFichier = $this->devisPdfService->genererEtSauvegarder($devis);
-                $devis->pdf_file = $nomFichier;
-                $devis->save();
-
-                $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+                // PDF manquant - rediriger vers la page show pour utiliser React
+                return redirect()->route('devis.show', $devis)
+                    ->with('error', '❌ PDF non trouvé. Veuillez d\'abord générer le PDF via le bouton "Sauvegarder PDF".');
             }
 
             if ($cheminPdf && file_exists($cheminPdf)) {

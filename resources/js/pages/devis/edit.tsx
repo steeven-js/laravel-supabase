@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Save,
@@ -29,6 +29,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { route } from 'ziggy-js';
+import { pdf } from '@react-pdf/renderer';
+import DevisPdfPreview from '@/components/pdf/DevisPdfPreview';
 
 interface Client {
     id: number;
@@ -96,6 +99,7 @@ interface Devis {
     archive: boolean;
     lignes: LigneDevis[];
     client: Client;
+    administrateur?: Administrateur;
 }
 
 interface Props {
@@ -184,6 +188,7 @@ const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
 export default function DevisEdit({ devis, clients, services, administrateurs, madinia }: Props) {
     const [lignes, setLignes] = useState<LigneDevis[]>(devis.lignes || []);
     const [selectedClient, setSelectedClient] = useState<Client | null>(devis.client);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
     const { data, setData, patch, processing, errors } = useForm({
         numero_devis: devis.numero_devis || '',
@@ -271,6 +276,85 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
         return { sousTotal, totalTva, total };
     };
 
+    // Fonction pour générer et sauvegarder le PDF automatiquement
+    const generateAndSavePdf = async (updatedDevis: any) => {
+                try {
+            setIsGeneratingPdf(true);
+
+            // Vérifier que les données essentielles sont présentes
+            if (!updatedDevis || !updatedDevis.numero_devis || !updatedDevis.client) {
+                console.error('Données du devis manquantes pour la génération PDF', updatedDevis);
+                setIsGeneratingPdf(false);
+                return;
+            }
+
+            // Préparer les données sécurisées pour le PDF
+            const safeDevisData = {
+                ...updatedDevis,
+                montant_ht: Number(updatedDevis.montant_ht) || 0,
+                montant_ttc: Number(updatedDevis.montant_ttc) || 0,
+                taux_tva: Number(updatedDevis.taux_tva) || 0,
+                statut: updatedDevis.statut || 'brouillon',
+                date_devis: updatedDevis.date_devis || new Date().toISOString(),
+                date_validite: updatedDevis.date_validite || new Date().toISOString(),
+                lignes: (updatedDevis.lignes || []).map((ligne: any) => ({
+                    ...ligne,
+                    quantite: Number(ligne.quantite) || 1,
+                    prix_unitaire_ht: Number(ligne.prix_unitaire_ht) || 0,
+                    montant_ht: Number(ligne.montant_ht) || 0,
+                    montant_ttc: Number(ligne.montant_ttc) || 0,
+                    montant_tva: Number(ligne.montant_tva) || 0,
+                    taux_tva: Number(ligne.taux_tva) || 0,
+                })),
+                client: {
+                    ...updatedDevis.client,
+                    nom: updatedDevis.client.nom || '',
+                    prenom: updatedDevis.client.prenom || '',
+                    email: updatedDevis.client.email || ''
+                }
+            };
+
+            const safeMadiniaData = madinia || {
+                name: 'Madin.IA',
+                email: 'contact@madinia.fr'
+            };
+
+            // 1. Générer le PDF avec react-pdf/renderer
+            const pdfBlob = await pdf(<DevisPdfPreview devis={safeDevisData} madinia={safeMadiniaData} />).toBlob();
+
+            // 2. Convertir le blob en base64
+            const arrayBuffer = await pdfBlob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const binaryString = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+            const base64String = btoa(binaryString);
+
+            // 3. Envoyer vers Laravel via Inertia
+            router.post(
+                route('devis.save-react-pdf', updatedDevis.id),
+                {
+                    pdf_blob: base64String,
+                    filename: `${updatedDevis.numero_devis}.pdf`,
+                    type: 'devis',
+                },
+                {
+                    onSuccess: () => {
+                        console.log('PDF généré et sauvegardé automatiquement après modification');
+                    },
+                    onError: (errors: any) => {
+                        console.error('Erreur lors de la génération automatique du PDF:', errors);
+                        // Ne pas afficher d'erreur à l'utilisateur car c'est une action secondaire
+                    },
+                    onFinish: () => {
+                        setIsGeneratingPdf(false);
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Erreur lors de la génération automatique du PDF:', error);
+            setIsGeneratingPdf(false);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (lignes.length === 0) {
@@ -278,9 +362,29 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
             return;
         }
 
-        patch(`/devis/${devis.id}`, {
+                patch(`/devis/${devis.id}`, {
             onSuccess: () => {
                 toast.success('Devis modifié avec succès');
+
+                // Trouver l'administrateur sélectionné
+                const selectedAdministrateur = data.administrateur_id
+                    ? administrateurs.find(admin => admin.id.toString() === data.administrateur_id)
+                    : null;
+
+                // Construire le devis mis à jour avec les données du formulaire
+                const updatedDevis = {
+                    ...devis,
+                    ...data,
+                    client: selectedClient || devis.client,
+                    administrateur: selectedAdministrateur || devis.administrateur,
+                    lignes: lignes,
+                    // Calculer les totaux
+                    montant_ht: sousTotal,
+                    montant_ttc: total,
+                    montant_tva: totalTva
+                };
+
+                generateAndSavePdf(updatedDevis);
             },
             onError: () => {
                 toast.error('Une erreur est survenue lors de la modification');
@@ -820,13 +924,18 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
                         </Button>
                         <Button
                             type="submit"
-                            disabled={processing || lignes.length === 0}
+                            disabled={processing || lignes.length === 0 || isGeneratingPdf}
                             className="flex-1 sm:flex-none"
                         >
                             {processing ? (
                                 <>
                                     <Calculator className="mr-2 h-4 w-4 animate-spin" />
                                     Modification...
+                                </>
+                            ) : isGeneratingPdf ? (
+                                <>
+                                    <FileText className="mr-2 h-4 w-4 animate-spin" />
+                                    Génération PDF...
                                 </>
                             ) : (
                                 <>

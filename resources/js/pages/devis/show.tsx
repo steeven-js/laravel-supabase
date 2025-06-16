@@ -7,31 +7,26 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { route } from 'ziggy-js';
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import {
     ArrowLeft,
     Edit,
     FileText,
     CheckCircle,
-    XCircle,
     Clock,
-    AlertCircle,
     Receipt,
     Mail,
     MailCheck,
     MailX,
     Eye,
     Phone,
-    Printer,
     Send,
     Settings,
     X
 } from 'lucide-react';
-import { PDFDownloadLink, pdf, Document, Page, Text, PDFViewer } from '@react-pdf/renderer';
+import { PDFViewer } from '@react-pdf/renderer';
 import DevisPdfPreview from '@/components/pdf/DevisPdfPreview';
 import PdfSaveButton from '@/components/pdf/PdfSaveButton';
-import { Tooltip } from '@/components/ui/tooltip';
 
 interface LigneDevis {
     id: number;
@@ -341,75 +336,6 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
         // Ouvrir l'aperçu directement
         setIsPdfModalOpen(true);
     };
-
-    const handleSavePdf = async () => {
-        // Cette fonction est maintenant remplacée par PdfSaveButton
-        // Gardée pour compatibilité mais ne fait plus rien
-        console.log('Fonction handleSavePdf obsolète - utilisez PdfSaveButton');
-    };
-
-    // Préparer les données sécurisées pour le PDF
-    const getSafeDevisData = () => {
-        return {
-            ...devis,
-            // Convertir les strings en numbers pour les montants
-            montant_ht: Number(devis.montant_ht) || 0,
-            montant_ttc: Number(devis.montant_ttc) || 0,
-            taux_tva: Number(devis.taux_tva) || 0,
-            statut: devis.statut || 'brouillon',
-            date_devis: devis.date_devis || new Date().toISOString(),
-            date_validite: devis.date_validite || new Date().toISOString(),
-            // Traiter les lignes avec conversion des montants
-            lignes: (devis.lignes || []).map(ligne => ({
-                ...ligne,
-                quantite: Number(ligne.quantite) || 1,
-                prix_unitaire_ht: Number(ligne.prix_unitaire_ht) || 0,
-                montant_ht: Number(ligne.montant_ht) || 0,
-                montant_ttc: Number(ligne.montant_ttc) || 0,
-                montant_tva: Number(ligne.montant_tva) || 0,
-                taux_tva: Number(ligne.taux_tva) || 0,
-            })),
-            client: {
-                ...devis.client,
-                nom: devis.client.nom || '',
-                prenom: devis.client.prenom || '',
-                email: devis.client.email || ''
-            }
-        };
-    };
-
-    const getSafeMadiniaData = () => {
-        return madinia || {
-            name: 'Madin.IA',
-            email: 'contact@madinia.fr'
-        };
-    };
-
-    const renderDownload = (
-        <PDFDownloadLink
-            document={
-                devis ? <DevisPdfPreview devis={devis} madinia={madinia} /> : <span />
-            }
-            fileName={`${devis?.numero_devis || 'devis'}.pdf`}
-            style={{ textDecoration: 'none' }}
-        >
-            {({ loading }) => (
-                <Button variant="outline" size="sm" disabled={loading}>
-                    {loading ? (
-                        <>
-                            <Clock className="mr-2 h-4 w-4 animate-spin" />
-                            Génération...
-                        </>
-                    ) : (
-                        <>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Télécharger PDF
-                        </>
-                    )}
-                </Button>
-            )}
-        </PDFDownloadLink>
-    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs(devis)}>
@@ -1025,8 +951,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                 showToolbar={true}
                             >
                                 <DevisPdfPreview
-                                    devis={getSafeDevisData()}
-                                    madinia={getSafeMadiniaData()}
+                                    devis={devis}
+                                    madinia={madinia}
                                 />
                             </PDFViewer>
                         </div>
