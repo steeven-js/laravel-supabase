@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 import { PDFDownloadLink, pdf, Document, Page, Text, PDFViewer } from '@react-pdf/renderer';
 import DevisPdfPreview from '@/components/pdf/DevisPdfPreview';
+import PdfSaveButton from '@/components/pdf/PdfSaveButton';
 import { Tooltip } from '@/components/ui/tooltip';
 
 interface LigneDevis {
@@ -236,26 +238,6 @@ const breadcrumbs = (devis: Devis): BreadcrumbItem[] => [
 
 export default function DevisShow({ devis, historique, madinia, pdfStatus: initialPdfStatus }: Props) {
     const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
-    const [pdfStatus, setPdfStatus] = useState<any>(initialPdfStatus || null);
-
-    // Charger le statut du PDF au montage du composant si pas fourni initialement
-    useEffect(() => {
-        if (!initialPdfStatus) {
-            const fetchPdfStatus = async () => {
-                try {
-                    const response = await fetch(`/devis/${devis.id}/pdf-status`);
-                    if (response.ok) {
-                        const status = await response.json();
-                        setPdfStatus(status);
-                    }
-                } catch (error) {
-                    console.warn('Erreur lors de la récupération du statut PDF:', error);
-                }
-            };
-
-            fetchPdfStatus();
-        }
-    }, [devis.id, initialPdfStatus]);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('fr-FR', {
@@ -361,46 +343,9 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
     };
 
     const handleSavePdf = async () => {
-        // Vérifications de sécurité approfondies
-        if (!devis || !devis.numero_devis || !devis.client) {
-            console.error('Données du devis manquantes');
-            toast.error('Données du devis incomplètes.');
-            return;
-        }
-
-        try {
-            toast.loading('Vérification du PDF...');
-
-            // Vérifier/générer le PDF en arrière-plan
-            const response = await fetch(`/devis/${devis.id}/ensure-pdf`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                }
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.regenerated) {
-                    toast.success(`PDF mis à jour : ${result.message}`);
-                    // Mettre à jour le statut local
-                    setPdfStatus({
-                        exists: true,
-                        up_to_date: true,
-                        local_size: 0,
-                        last_modified: new Date().toISOString()
-                    });
-                } else {
-                    toast.success('PDF déjà à jour');
-                }
-            } else {
-                toast.error('Erreur lors de la vérification du PDF');
-            }
-        } catch (error) {
-            console.error('Erreur lors de la sauvegarde du PDF:', error);
-            toast.error('Erreur lors de la sauvegarde du PDF');
-        }
+        // Cette fonction est maintenant remplacée par PdfSaveButton
+        // Gardée pour compatibilité mais ne fait plus rien
+        console.log('Fonction handleSavePdf obsolète - utilisez PdfSaveButton');
     };
 
     // Préparer les données sécurisées pour le PDF
@@ -578,30 +523,19 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                     <Eye className="mr-2 h-4 w-4" />
                                     Aperçu PDF
                                 </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-10 px-4 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 relative"
-                                    onClick={handleSavePdf}
-                                >
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Sauvegarder PDF
-                                    {pdfStatus && (
-                                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${pdfStatus.exists && pdfStatus.up_to_date
-                                                ? 'bg-green-500'
-                                                : pdfStatus.exists && !pdfStatus.up_to_date
-                                                    ? 'bg-orange-500'
-                                                    : 'bg-red-500'
-                                            }`} title={
-                                                pdfStatus.exists && pdfStatus.up_to_date
-                                                    ? 'PDF à jour'
-                                                    : pdfStatus.exists && !pdfStatus.up_to_date
-                                                        ? 'PDF obsolète'
-                                                        : 'PDF manquant'
-                                            }></div>
-                                    )}
-                                </Button>
-                                {renderDownload}
+
+                                {/* Composant PdfSaveButton fonctionnel */}
+                                <div className="flex items-center">
+                                    <PdfSaveButton
+                                        pdfComponent={<DevisPdfPreview devis={devis} madinia={madinia} />}
+                                        saveRoute={route('devis.save-react-pdf', devis.id)}
+                                        filename={`${devis.numero_devis}.pdf`}
+                                        type="devis"
+                                        className="!bg-green-600 hover:!bg-green-700 active:!bg-green-800 focus:!border-green-900 focus:!ring-green-300"
+                                    >
+                                        Sauvegarder
+                                    </PdfSaveButton>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -832,23 +766,23 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                         </div>
 
                         {/* Date information */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-gray-50 p-4 rounded-lg">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-gray-50 p-4 rounded-lg">
                             <div>
                                 <p className="text-sm text-gray-600">Date de création</p>
                                 <p className="font-semibold">{formatDateShort(devis.date_devis)}</p>
                             </div>
-                            <div>
+                            {devis.date_envoi_client && (
+                                <div className="text-center">
+                                    <p className="text-sm text-gray-600">Date d'envoi</p>
+                                    <p className="font-semibold">{formatDateShort(devis.date_envoi_client)}</p>
+                                </div>
+                            )}
+                            <div className="text-right">
                                 <p className="text-sm text-gray-600">Date d'échéance</p>
                                 <p className={`font-semibold ${isExpired ? 'text-red-600' : ''}`}>
                                     {formatDateShort(devis.date_validite)}
                                 </p>
                             </div>
-                            {devis.date_envoi_client && (
-                                <div>
-                                    <p className="text-sm text-gray-600">Date d'envoi</p>
-                                    <p className="font-semibold">{formatDateShort(devis.date_envoi_client)}</p>
-                                </div>
-                            )}
                         </div>
 
                         {/* Object */}
