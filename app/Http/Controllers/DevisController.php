@@ -15,16 +15,35 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Exception;
 
+/**
+ * Contrôleur de gestion des devis
+ *
+ * Ce contrôleur gère toutes les opérations liées aux devis :
+ * - Création, modification et suppression de devis
+ * - Gestion des statuts (brouillon, envoyé, accepté, refusé, expiré)
+ * - Envoi des devis par email aux clients
+ * - Génération et gestion des PDF
+ * - Transformation des devis en factures
+ */
 class DevisController extends Controller
 {
     protected $devisPdfService;
 
+    /**
+     * Constructeur du contrôleur
+     * Injection du service de génération de PDF pour les devis
+     */
     public function __construct(DevisPdfService $devisPdfService)
     {
         $this->devisPdfService = $devisPdfService;
     }
+
     /**
      * Affiche la liste des devis
+     *
+     * @return \Inertia\Response
+     * Retourne la vue avec la liste des devis actifs, triés par date de création
+     * Chaque devis inclut les informations du client et de son entreprise
      */
     public function index()
     {
@@ -64,7 +83,14 @@ class DevisController extends Controller
     }
 
     /**
-     * Affiche le formulaire de création d'un devis
+     * Affiche le formulaire de création d'un nouveau devis
+     *
+     * @return \Inertia\Response
+     * Retourne la vue avec :
+     * - La liste des clients actifs
+     * - La liste des services disponibles
+     * - Les informations de l'entreprise Madinia
+     * - Un numéro de devis généré automatiquement
      */
     public function create()
     {
@@ -96,6 +122,17 @@ class DevisController extends Controller
 
     /**
      * Enregistre un nouveau devis
+     *
+     * @param Request $request Les données du formulaire
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     * Processus :
+     * 1. Validation des données
+     * 2. Génération du numéro de devis
+     * 3. Création du devis
+     * 4. Création des lignes de devis
+     * 5. Calcul des montants
+     * 6. Génération du PDF
      */
     public function store(Request $request)
     {
@@ -175,6 +212,15 @@ class DevisController extends Controller
 
     /**
      * Affiche les détails d'un devis
+     *
+     * @param Devis $devis Le devis à afficher
+     * @return \Inertia\Response
+     *
+     * Inclut :
+     * - Les informations détaillées du devis
+     * - L'historique des modifications
+     * - Le statut du PDF
+     * - Les informations de l'entreprise Madinia
      */
     public function show(Devis $devis)
     {
@@ -667,7 +713,19 @@ class DevisController extends Controller
     }
 
     /**
-     * Envoyer un devis au client par email
+     * Envoie un devis au client par email
+     *
+     * @param Request $request Les données de l'email
+     * @param Devis $devis Le devis à envoyer
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     * Processus :
+     * 1. Vérification que le devis peut être envoyé
+     * 2. Validation des données
+     * 3. Régénération du PDF pour s'assurer qu'il est à jour
+     * 4. Envoi de l'email au client
+     * 5. Envoi d'une copie à l'administrateur si demandé
+     * 6. Mise à jour des dates d'envoi
      */
     public function envoyerEmail(Request $request, Devis $devis)
     {
@@ -764,7 +822,16 @@ class DevisController extends Controller
     }
 
     /**
-     * Transformer un devis en facture - Afficher le modal de validation
+     * Transforme un devis en facture
+     *
+     * @param Devis $devis Le devis à transformer
+     * @return \Inertia\Response
+     *
+     * Vérifie que le devis peut être transformé (statut accepté)
+     * et affiche le formulaire de transformation avec :
+     * - Les informations du devis
+     * - Un numéro de facture généré automatiquement
+     * - Les dates par défaut
      */
     public function transformerEnFacture(Devis $devis)
     {
@@ -886,7 +953,15 @@ class DevisController extends Controller
     }
 
     /**
-     * Envoyer un email au client pour la nouvelle facture
+     * Envoie un email au client pour un devis
+     *
+     * @param array $donnees Les données nécessaires pour l'email
+     * @return void
+     *
+     * Processus :
+     * 1. Création de l'instance de mail
+     * 2. Envoi de l'email
+     * 3. Logging des informations
      */
     private function envoyerEmailClient(array $donnees)
     {
@@ -915,7 +990,15 @@ class DevisController extends Controller
     }
 
     /**
-     * Envoyer un email de confirmation à l'admin
+     * Envoie un email à l'administrateur pour un devis
+     *
+     * @param array $donnees Les données nécessaires pour l'email
+     * @return void
+     *
+     * Processus :
+     * 1. Création de l'instance de mail
+     * 2. Envoi de l'email
+     * 3. Logging des informations
      */
     private function envoyerEmailAdmin(array $donnees)
     {
@@ -950,7 +1033,18 @@ class DevisController extends Controller
     }
 
     /**
-     * Envoyer un email de notification au client lors de la création d'un devis
+     * Envoie un email au client pour un devis spécifique
+     *
+     * @param Devis $devis Le devis concerné
+     * @param string|null $messagePersonnalise Message personnalisé optionnel
+     * @param int|null $templateId ID du template d'email optionnel
+     * @return void
+     *
+     * Processus :
+     * 1. Vérification de la configuration mail
+     * 2. Régénération du PDF
+     * 3. Création et envoi de l'email
+     * 4. Mise à jour des dates d'envoi
      */
     private function envoyerEmailClientDevis(Devis $devis, ?string $messagePersonnalise, ?int $templateId = null)
     {
@@ -972,36 +1066,28 @@ class DevisController extends Controller
         ]);
 
         try {
-            // S'assurer que le PDF existe avant l'envoi de l'email
-            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
+            // Forcer la régénération du PDF à chaque envoi
+            Log::info('Régénération du PDF pour l\'envoi email...', [
+                'devis_numero' => $devis->numero_devis,
+            ]);
 
-            if (!$cheminPdf || !file_exists($cheminPdf)) {
-                Log::info('PDF non trouvé, génération en cours...', [
-                    'devis_numero' => $devis->numero_devis,
-                    'chemin_attendu' => $cheminPdf,
-                ]);
+            // Générer le PDF
+            $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
+            $devis->pdf_file = $nomFichierPdf;
+            $devis->save();
 
-                $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
-                $devis->pdf_file = $nomFichierPdf;
-                $devis->save();
+            Log::info('PDF régénéré pour l\'envoi email', [
+                'devis_numero' => $devis->numero_devis,
+                'fichier_pdf' => $nomFichierPdf,
+            ]);
 
-                Log::info('PDF généré pour l\'envoi email', [
-                    'devis_numero' => $devis->numero_devis,
-                    'fichier_pdf' => $nomFichierPdf,
-                ]);
-            } else {
-                Log::info('PDF existant trouvé', [
-                    'devis_numero' => $devis->numero_devis,
-                    'chemin_pdf' => $cheminPdf,
-                    'taille_fichier' => filesize($cheminPdf) . ' bytes',
-                ]);
-            }
-
+            // Créer l'instance de mail
             Log::info('Tentative de création de DevisClientMail', [
                 'devis_numero' => $devis->numero_devis,
                 'client_email' => $devis->client->email,
             ]);
 
+            // Créer l'instance de mail
             $mailInstance = new \App\Mail\DevisClientMail(
                 $devis,
                 $devis->client,
@@ -1009,74 +1095,77 @@ class DevisController extends Controller
                 $templateId
             );
 
-            Log::info('DevisClientMail créé avec succès', [
-                'mail_class' => get_class($mailInstance),
-                'implements_should_queue' => $mailInstance instanceof \Illuminate\Contracts\Queue\ShouldQueue,
-            ]);
+            // Préparer les destinataires
+            $to = [$devis->client->email];
+            $cc = ['d.brault@madin-ia.com'];
 
-            Log::info('Tentative d\'envoi via Mail::to()', [
-                'destination_email' => $devis->client->email,
-            ]);
+            // Envoyer l'email avec les destinataires appropriés
+            Mail::to($to)
+                ->cc($cc)
+                ->send($mailInstance);
 
-            Mail::to($devis->client->email)->send($mailInstance);
-
-            Log::info('Mail::send() exécuté sans exception', [
+            Log::info('Email de devis envoyé au client', [
                 'devis_numero' => $devis->numero_devis,
                 'client_email' => $devis->client->email,
-            ]);
-
-            // Vérifier l'état des queues si on utilise les queues
-            if ($mailInstance instanceof \Illuminate\Contracts\Queue\ShouldQueue) {
-                Log::info('Email mis en queue (ShouldQueue)', [
-                    'queue_connection' => config('queue.default'),
-                    'devis_numero' => $devis->numero_devis,
-                ]);
-            } else {
-                Log::info('Email envoyé directement (pas de queue)', [
-                    'devis_numero' => $devis->numero_devis,
-                ]);
-            }
-
-            Log::info('=== EMAIL CLIENT DEVIS ENVOYÉ AVEC SUCCÈS ===', [
-                'devis_numero' => $devis->numero_devis,
-                'client_email' => $devis->client->email
+                'ceo_cc' => true
             ]);
         } catch (\Exception $e) {
-            Log::error('=== ERREUR ENVOI EMAIL CLIENT DEVIS ===', [
+            Log::error('Erreur envoi email client devis', [
                 'devis_numero' => $devis->numero_devis,
-                'client_email' => $devis->client->email,
-                'error_message' => $e->getMessage(),
-                'error_code' => $e->getCode(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'error_trace' => $e->getTraceAsString(),
+                'error' => $e->getMessage()
             ]);
             throw $e;
         }
     }
 
     /**
-     * Envoyer un email de notification à l'admin lors de la création d'un devis
+     * Envoie un email à l'administrateur pour un devis spécifique
+     *
+     * @param Devis $devis Le devis concerné
+     * @return void
+     *
+     * Processus :
+     * 1. Création de l'instance de mail
+     * 2. Envoi de l'email
+     * 3. Mise à jour des dates d'envoi
      */
     private function envoyerEmailAdminDevis(Devis $devis)
     {
         try {
             $adminEmail = config('mail.admin_email');
+            $ceoEmail = 'd.brault@madin-ia.com';
 
             if (!$adminEmail) {
                 Log::warning('Email admin non configuré, envoi ignoré');
                 return;
             }
 
-            Mail::to($adminEmail)->send(
-                new \App\Mail\DevisAdminMail(
-                    $devis,
-                    $devis->client
-                )
+            // Créer l'instance de mail
+            $mailInstance = new \App\Mail\DevisAdminMail(
+                $devis,
+                $devis->client
             );
 
+            // Préparer les destinataires
+            $to = [$adminEmail];
+            $cc = [];
+
+            // Ajouter le CEO en CC seulement si ce n'est pas l'admin
+            if ($adminEmail !== $ceoEmail) {
+                $cc[] = $ceoEmail;
+            }
+
+            // Envoyer l'email avec les destinataires appropriés
+            Mail::to($to)
+                ->when(!empty($cc), function ($message) use ($cc) {
+                    return $message->cc($cc);
+                })
+                ->send($mailInstance);
+
             Log::info('Email de notification admin devis envoyé', [
-                'devis_numero' => $devis->numero_devis
+                'devis_numero' => $devis->numero_devis,
+                'admin_email' => $adminEmail,
+                'ceo_cc' => !empty($cc)
             ]);
         } catch (\Exception $e) {
             Log::error('Erreur envoi email admin devis', [
@@ -1159,9 +1248,17 @@ class DevisController extends Controller
     }
 
     /**
-     * Régénère le PDF d'un devis
+     * Génère et sauvegarde le PDF d'un devis
+     *
+     * @param Devis $devis Le devis concerné
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     * Processus :
+     * 1. Génération du PDF via le service dédié
+     * 2. Sauvegarde locale et/ou sur Supabase
+     * 3. Mise à jour des informations du devis
      */
-    public function regenererPdf(Devis $devis)
+    public function generateReactPdf(Devis $devis)
     {
         try {
             // Redirection vers une page React pour générer le PDF
@@ -1180,272 +1277,17 @@ class DevisController extends Controller
     }
 
     /**
-     * S'assure que le PDF existe et est à jour
-     */
-    public function ensurePdf(Devis $devis)
-    {
-        try {
-            // Toujours rediriger vers la génération React
-            return response()->json([
-                'status' => 'redirect_to_react',
-                'message' => 'Utilisez le bouton "Sauvegarder PDF" pour générer avec react-pdf/renderer'
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erreur lors de la vérification/génération PDF pour aperçu', [
-                'devis_id' => $devis->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Erreur lors de la vérification du PDF'
-            ], 500);
-        }
-    }
-
-    /**
-     * Génère automatiquement un PDF avec React PDF Renderer
-     */
-    public function generateReactPdf(Devis $devis)
-    {
-        try {
-            $devis->load(['client.entreprise', 'lignes.service', 'administrateur']);
-
-            // Récupérer les informations Madinia
-            $madinia = \App\Models\Madinia::getInstance();
-
-            // Construire les données formatées
-            $devisData = [
-                'numero_devis' => $devis->numero_devis,
-                'objet' => $devis->objet,
-                'statut' => $devis->statut,
-                'date_devis' => $devis->date_devis?->format('Y-m-d') ?? '',
-                'date_validite' => $devis->date_validite?->format('Y-m-d') ?? '',
-                'montant_ht' => (float) $devis->montant_ht,
-                'taux_tva' => (float) $devis->taux_tva,
-                'montant_ttc' => (float) $devis->montant_ttc,
-                'notes' => $devis->notes,
-                'client' => $devis->client ? [
-                    'nom' => $devis->client->nom,
-                    'prenom' => $devis->client->prenom,
-                    'email' => $devis->client->email,
-                    'telephone' => $devis->client->telephone,
-                    'adresse' => $devis->client->adresse,
-                    'ville' => $devis->client->ville,
-                    'code_postal' => $devis->client->code_postal,
-                    'entreprise' => $devis->client->entreprise ? [
-                        'nom' => $devis->client->entreprise->nom,
-                        'nom_commercial' => $devis->client->entreprise->nom_commercial,
-                        'adresse' => $devis->client->entreprise->adresse,
-                        'ville' => $devis->client->entreprise->ville,
-                        'code_postal' => $devis->client->entreprise->code_postal,
-                    ] : null
-                ] : null,
-                'administrateur' => $devis->administrateur ? [
-                    'name' => $devis->administrateur->name,
-                    'email' => $devis->administrateur->email,
-                ] : null,
-                'lignes' => $devis->lignes->map(function ($ligne) {
-                    return [
-                        'id' => $ligne->id,
-                        'quantite' => (float) $ligne->quantite,
-                        'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
-                        'taux_tva' => (float) $ligne->taux_tva,
-                        'montant_ht' => (float) $ligne->montant_ht,
-                        'montant_tva' => (float) $ligne->montant_tva,
-                        'montant_ttc' => (float) $ligne->montant_ttc,
-                        'ordre' => $ligne->ordre,
-                        'description_personnalisee' => $ligne->description_personnalisee,
-                        'service' => $ligne->service ? [
-                            'nom' => $ligne->service->nom,
-                            'description' => $ligne->service->description,
-                        ] : null
-                    ];
-                }),
-            ];
-
-            return Inertia::render('devis/generate-pdf', [
-                'devis' => $devisData,
-                'madinia' => $madinia ? [
-                    'name' => $madinia->name,
-                    'telephone' => $madinia->telephone,
-                    'email' => $madinia->email,
-                    'adresse' => $madinia->adresse,
-                    'pays' => $madinia->pays,
-                    'siret' => $madinia->siret,
-                    'numero_nda' => $madinia->numero_nda,
-                    'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
-                    'nom_banque' => $madinia->nom_banque,
-                    'numero_compte' => $madinia->numero_compte,
-                    'iban_bic_swift' => $madinia->iban_bic_swift,
-                ] : null,
-                'saveRoute' => route('devis.save-react-pdf', $devis->id),
-                'backRoute' => route('devis.show', $devis->id),
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Erreur génération PDF React', [
-                'devis_id' => $devis->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()
-                ->with('error', '❌ Erreur lors de la génération du PDF.');
-        }
-    }
-
-    /**
-     * Retourne le statut du PDF (existe, à jour, taille, etc.)
-     */
-    public function getPdfStatus(Devis $devis)
-    {
-        try {
-            $status = [
-                'exists' => false,
-                'up_to_date' => false,
-                'local_size' => 0,
-                'supabase_url' => null,
-                'last_modified' => null,
-            ];
-
-            // Vérifier existence locale
-            $cheminPdf = $this->devisPdfService->getCheminPdf($devis);
-            if ($cheminPdf && file_exists($cheminPdf)) {
-                $status['exists'] = true;
-                $status['local_size'] = filesize($cheminPdf);
-                $status['last_modified'] = date('Y-m-d H:i:s', filemtime($cheminPdf));
-
-                // Vérifier si à jour
-                $dateModifPdf = filemtime($cheminPdf);
-                $dateModifDevis = $devis->updated_at->timestamp;
-                $status['up_to_date'] = $dateModifDevis <= $dateModifPdf;
-            }
-
-            // URL Supabase
-            $status['supabase_url'] = $this->devisPdfService->getUrlSupabasePdf($devis);
-
-            return response()->json($status);
-
-        } catch (Exception $e) {
-            Log::error('Erreur lors de la récupération du statut PDF', [
-                'devis_id' => $devis->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'error' => 'Erreur lors de la récupération du statut'
-            ], 500);
-        }
-    }
-
-    /**
-     * Met à jour le PDF d'un devis avec le fichier généré depuis React PDF
-     */
-    public function updatePdfFromReact(Request $request, Devis $devis)
-    {
-        try {
-            $request->validate([
-                'pdf' => 'required|file|mimes:pdf|max:10240', // Max 10MB
-            ]);
-
-            $pdfFile = $request->file('pdf');
-
-            Log::info('Début mise à jour PDF depuis React', [
-                'devis_id' => $devis->id,
-                'numero_devis' => $devis->numero_devis,
-                'file_size' => $pdfFile->getSize(),
-            ]);
-
-            // Générer le nom de fichier
-            $timestamp = now()->format('Y-m-d_H-i-s');
-            $nomFichier = "devis_{$devis->numero_devis}_{$timestamp}.pdf";
-
-            // 1. Sauvegarder dans le stockage local Laravel
-            $pdfFile->storeAs('public/devis', $nomFichier);
-
-            Log::info('PDF sauvegardé localement', [
-                'devis_id' => $devis->id,
-                'nom_fichier' => $nomFichier,
-            ]);
-
-            // 2. Uploader vers Supabase Storage si configuré
-            $urlSupabase = null;
-            try {
-                $urlSupabase = $this->uploaderVersSupabase($pdfFile, $nomFichier);
-
-                Log::info('PDF uploadé vers Supabase', [
-                    'devis_id' => $devis->id,
-                    'url_supabase' => $urlSupabase,
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Erreur upload Supabase (non bloquant)', [
-                    'devis_id' => $devis->id,
-                    'error' => $e->getMessage(),
-                ]);
-                // Continue même si Supabase échoue
-            }
-
-            // 3. Mettre à jour la BDD
-            $devis->update([
-                'pdf_file' => $nomFichier,
-                'pdf_url' => $urlSupabase ?: Storage::url("public/devis/{$nomFichier}"),
-            ]);
-
-            Log::info('PDF mis à jour avec succès depuis React', [
-                'devis_id' => $devis->id,
-                'pdf_file' => $nomFichier,
-                'pdf_url' => $devis->pdf_url,
-            ]);
-
-            return redirect()->back()
-                ->with('success', '✅ PDF généré et sauvegardé avec succès !');
-
-        } catch (\Exception $e) {
-            Log::error('Erreur mise à jour PDF depuis React', [
-                'devis_id' => $devis->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->back()
-                ->with('error', '❌ Erreur lors de la mise à jour du PDF: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Upload le PDF vers Supabase Storage
-     */
-    private function uploaderVersSupabase($pdfFile, string $nomFichier): ?string
-    {
-        // Configuration Supabase
-        $supabaseUrl = config('services.supabase.url');
-        $supabaseKey = config('services.supabase.key');
-        $bucketName = config('services.supabase.storage_bucket', 'documents');
-
-        if (!$supabaseUrl || !$supabaseKey) {
-            throw new \Exception('Configuration Supabase manquante');
-        }
-
-        $chemin = "devis/{$nomFichier}";
-        $contenuPdf = $pdfFile->getContent();
-
-        // Upload vers Supabase
-        $response = Http::withHeaders([
-            'Authorization' => "Bearer {$supabaseKey}",
-            'Content-Type' => 'application/pdf',
-        ])->withBody($contenuPdf, 'application/pdf')
-        ->post("{$supabaseUrl}/storage/v1/object/{$bucketName}/{$chemin}");
-
-        if ($response->successful()) {
-            // URL publique du fichier
-            return "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$chemin}";
-        } else {
-            throw new \Exception('Erreur upload Supabase: ' . $response->body());
-        }
-    }
-
-    /**
-     * Sauvegarde un PDF généré par React PDF Renderer
+     * Sauvegarde un PDF généré par React
+     *
+     * @param Request $request Les données du PDF
+     * @param Devis $devis Le devis concerné
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Processus :
+     * 1. Validation des données
+     * 2. Sauvegarde locale du PDF
+     * 3. Upload sur Supabase si configuré
+     * 4. Mise à jour des informations du devis
      */
     public function saveReactPdf(Request $request, Devis $devis)
     {
@@ -1505,6 +1347,11 @@ class DevisController extends Controller
 
     /**
      * Sauvegarde un PDF localement
+     *
+     * @param string $pdfContent Contenu du PDF
+     * @param string $nomFichier Nom du fichier
+     * @param string $type Type de document (devis/facture)
+     * @return void
      */
     private function sauvegarderPdfLocal(string $pdfContent, string $nomFichier, string $type): void
     {
@@ -1525,7 +1372,12 @@ class DevisController extends Controller
     }
 
     /**
-     * Sauvegarde un PDF sur Supabase Storage
+     * Sauvegarde un PDF sur Supabase
+     *
+     * @param string $pdfContent Contenu du PDF
+     * @param string $nomFichier Nom du fichier
+     * @param string $type Type de document (devis/facture)
+     * @return string|null URL du PDF sur Supabase ou null en cas d'erreur
      */
     private function sauvegarderPdfSupabase(string $pdfContent, string $nomFichier, string $type): ?string
     {
@@ -1574,7 +1426,10 @@ class DevisController extends Controller
     }
 
     /**
-     * Récupère les données de statut PDF pour les pages show
+     * Récupère les informations de statut du PDF
+     *
+     * @param Devis $devis Le devis concerné
+     * @return array Informations sur le statut du PDF
      */
     private function getPdfStatusData(Devis $devis): array
     {
@@ -1583,6 +1438,7 @@ class DevisController extends Controller
                 'exists' => false,
                 'up_to_date' => false,
                 'local_size' => 0,
+                'supabase_url' => null,
                 'last_modified' => null,
             ];
 
@@ -1598,6 +1454,9 @@ class DevisController extends Controller
                 $dateModifDevis = $devis->updated_at->timestamp;
                 $status['up_to_date'] = $dateModifDevis <= $dateModifPdf;
             }
+
+            // URL Supabase
+            $status['supabase_url'] = $this->devisPdfService->getUrlSupabasePdf($devis);
 
             return $status;
 

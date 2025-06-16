@@ -109,7 +109,7 @@ export default function FacturesIndex({ factures }: Props) {
     const [statusFilter, setStatusFilter] = useState<'all' | 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee'>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [sortField, setSortField] = useState<keyof Facture>('date_facture');
+    const [sortField, setSortField] = useState<keyof Facture>('numero_facture');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [periodFilter, setPeriodFilter] = useState<'tous' | 'annee_courante' | 'mois_courant'>('mois_courant');
 

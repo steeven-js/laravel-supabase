@@ -473,30 +473,20 @@ class FactureController extends Controller
             // Charger les relations nécessaires
             $facture->load('client.entreprise', 'devis', 'administrateur');
 
-            // S'assurer que le PDF existe avant l'envoi de l'email
-            $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+            // Toujours régénérer le PDF avant l'envoi
+            Log::info('Régénération du PDF avant envoi email', [
+                'facture_numero' => $facture->numero_facture,
+            ]);
 
-            if (!$cheminPdf || !file_exists($cheminPdf)) {
-                Log::info('PDF non trouvé, génération en cours...', [
-                    'facture_numero' => $facture->numero_facture,
-                    'chemin_attendu' => $cheminPdf,
-                ]);
+            // Générer le PDF
+            $nomFichierPdf = $this->facturePdfService->genererEtSauvegarder($facture);
+            $facture->pdf_file = $nomFichierPdf;
+            $facture->save();
 
-                $nomFichierPdf = $this->facturePdfService->genererEtSauvegarder($facture);
-                $facture->pdf_file = $nomFichierPdf;
-                $facture->save();
-
-                Log::info('PDF généré pour l\'envoi email', [
-                    'facture_numero' => $facture->numero_facture,
-                    'fichier_pdf' => $nomFichierPdf,
-                ]);
-            } else {
-                Log::info('PDF existant trouvé', [
-                    'facture_numero' => $facture->numero_facture,
-                    'chemin_pdf' => $cheminPdf,
-                    'taille_fichier' => filesize($cheminPdf) . ' bytes',
-                ]);
-            }
+            Log::info('PDF régénéré pour l\'envoi email', [
+                'facture_numero' => $facture->numero_facture,
+                'fichier_pdf' => $nomFichierPdf,
+            ]);
 
             // Créer un devis fictif pour la compatibilité avec FactureClientMail
             $devis = $facture->devis ?? new \App\Models\Devis([
@@ -504,18 +494,33 @@ class FactureController extends Controller
                 'objet' => $facture->objet
             ]);
 
-            Mail::to($facture->client->email)->send(
-                new \App\Mail\FactureClientMail(
-                    $devis,
-                    $facture,
-                    $facture->client,
-                    $messagePersonnalise
-                )
+            // Créer l'instance de mail
+            Log::info('Tentative de création de FactureClientMail', [
+                'facture_numero' => $facture->numero_facture,
+                'client_email' => $facture->client->email,
+            ]);
+
+            // Créer l'instance de mail
+            $mailInstance = new \App\Mail\FactureClientMail(
+                $devis,
+                $facture,
+                $facture->client,
+                $messagePersonnalise
             );
+
+            // Préparer les destinataires
+            $to = [$facture->client->email];
+            $cc = ['d.brault@madin-ia.com'];
+
+            // Envoyer l'email avec les destinataires appropriés
+            Mail::to($to)
+                ->cc($cc)
+                ->send($mailInstance);
 
             Log::info('Email de facture envoyé au client', [
                 'facture_numero' => $facture->numero_facture,
-                'client_email' => $facture->client->email
+                'client_email' => $facture->client->email,
+                'ceo_cc' => true
             ]);
         } catch (\Exception $e) {
             Log::error('Erreur envoi email client facture', [
@@ -536,6 +541,7 @@ class FactureController extends Controller
             $facture->load('client.entreprise', 'devis', 'administrateur');
 
             $adminEmail = config('mail.admin_email');
+            $ceoEmail = 'd.brault@madin-ia.com';
 
             if (!$adminEmail) {
                 Log::warning('Email admin non configuré, envoi ignoré');
@@ -548,16 +554,33 @@ class FactureController extends Controller
                 'objet' => $facture->objet
             ]);
 
-            Mail::to($adminEmail)->send(
-                new \App\Mail\FactureAdminMail(
-                    $devis,
-                    $facture,
-                    $facture->client
-                )
+            // Créer l'instance de mail
+            $mailInstance = new \App\Mail\FactureAdminMail(
+                $devis,
+                $facture,
+                $facture->client
             );
 
+            // Préparer les destinataires
+            $to = [$adminEmail];
+            $cc = [];
+
+            // Ajouter le CEO en CC seulement si ce n'est pas l'admin
+            if ($adminEmail !== $ceoEmail) {
+                $cc[] = $ceoEmail;
+            }
+
+            // Envoyer l'email avec les destinataires appropriés
+            Mail::to($to)
+                ->when(!empty($cc), function ($message) use ($cc) {
+                    return $message->cc($cc);
+                })
+                ->send($mailInstance);
+
             Log::info('Email de notification admin facture envoyé', [
-                'facture_numero' => $facture->numero_facture
+                'facture_numero' => $facture->numero_facture,
+                'admin_email' => $adminEmail,
+                'ceo_cc' => !empty($cc)
             ]);
         } catch (\Exception $e) {
             Log::error('Erreur envoi email admin facture', [

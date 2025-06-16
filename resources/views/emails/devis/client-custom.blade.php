@@ -9,10 +9,6 @@ Le devis est disponible :
 - **En ligne** : [Télécharger le PDF]({{ $urlPdfSupabase }})
 @endif
 
-<x-mail::button :url="route('devis.show', $devis->id)">
-Voir le devis en ligne
-</x-mail::button>
-
 @if($urlPdfSupabase)
 <x-mail::button :url="$urlPdfSupabase" color="success">
 📄 Télécharger le PDF

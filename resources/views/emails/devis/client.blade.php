@@ -59,10 +59,6 @@ Le devis est disponible :
 
 Pour accepter ce devis ou pour toute question, n'hésitez pas à nous contacter.
 
-<x-mail::button :url="route('devis.show', $devis->id)">
-Voir le devis en ligne
-</x-mail::button>
-
 @if($urlPdfSupabase)
 <x-mail::button :url="$urlPdfSupabase" color="success">
 📄 Télécharger le PDF

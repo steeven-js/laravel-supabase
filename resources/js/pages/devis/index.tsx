@@ -146,7 +146,7 @@ export default function DevisIndex({ devis }: Props) {
     const [statusEnvoiFilter, setStatusEnvoiFilter] = useState<'all' | 'non_envoye' | 'envoye' | 'echec_envoi'>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    const [sortField, setSortField] = useState<keyof Devis>('date_devis');
+    const [sortField, setSortField] = useState<keyof Devis>('numero_devis');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [periodFilter, setPeriodFilter] = useState<'tous' | 'annee_courante' | 'mois_courant'>('mois_courant');
 
