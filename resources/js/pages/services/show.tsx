@@ -34,7 +34,11 @@ import {
     Eye,
     ExternalLink,
     Trash2,
-    AlertCircle
+    AlertCircle,
+    History,
+    Mail,
+    Clock,
+    RotateCcw
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -88,11 +92,30 @@ interface RecentFacture {
     statut: string;
 }
 
+interface HistoriqueAction {
+    id: number;
+    action: 'creation' | 'modification' | 'changement_statut' | 'envoi_email' | 'suppression' | 'archivage' | 'restauration' | 'transformation';
+    titre: string;
+    description?: string;
+    donnees_avant?: any;
+    donnees_apres?: any;
+    donnees_supplementaires?: any;
+    created_at: string;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    user_nom: string;
+    user_email: string;
+}
+
 interface Props {
     service: Service;
     stats: ServiceStats;
     recent_devis: RecentDevis[];
     recent_factures: RecentFacture[];
+    historique: HistoriqueAction[];
 }
 
 const breadcrumbs = (service: Service): BreadcrumbItem[] => [
@@ -110,8 +133,8 @@ const breadcrumbs = (service: Service): BreadcrumbItem[] => [
     },
 ];
 
-export default function ServiceShow({ service, stats, recent_devis, recent_factures }: Props) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'devis' | 'factures'>('overview');
+export default function ServiceShow({ service, stats, recent_devis, recent_factures, historique }: Props) {
+    const [activeTab, setActiveTab] = useState<'overview' | 'devis' | 'factures' | 'historique'>('overview');
     const [showStatusModal, setShowStatusModal] = useState(false);
 
     const formatPrice = (price: number) => {
@@ -136,6 +159,63 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
         toast.success(`${label} copié dans le presse-papiers`);
+    };
+
+    // Helper functions pour l'historique
+    const getActionIcon = (action: string) => {
+        switch (action) {
+            case 'creation':
+                return <FileText className="h-4 w-4" />;
+            case 'modification':
+                return <Edit className="h-4 w-4" />;
+            case 'changement_statut':
+                return <CheckCircle className="h-4 w-4" />;
+            case 'envoi_email':
+                return <Mail className="h-4 w-4" />;
+            case 'transformation':
+                return <RotateCcw className="h-4 w-4" />;
+            case 'suppression':
+                return <Trash2 className="h-4 w-4" />;
+            case 'archivage':
+                return <Package className="h-4 w-4" />;
+            case 'restauration':
+                return <RotateCcw className="h-4 w-4" />;
+            default:
+                return <Clock className="h-4 w-4" />;
+        }
+    };
+
+    const getActionColor = (action: string) => {
+        switch (action) {
+            case 'creation':
+                return 'bg-blue-100 text-blue-800';
+            case 'modification':
+                return 'bg-amber-100 text-amber-800';
+            case 'changement_statut':
+                return 'bg-green-100 text-green-800';
+            case 'envoi_email':
+                return 'bg-purple-100 text-purple-800';
+            case 'transformation':
+                return 'bg-emerald-100 text-emerald-800';
+            case 'suppression':
+                return 'bg-red-100 text-red-800';
+            case 'archivage':
+                return 'bg-gray-100 text-gray-800';
+            case 'restauration':
+                return 'bg-teal-100 text-teal-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const formatActionDate = (dateString: string) => {
+        return new Date(dateString).toLocaleString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     const handleToggleStatus = () => {
@@ -218,7 +298,8 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
     const tabs = [
         { id: 'overview', label: 'Vue d\'ensemble', icon: Info },
         { id: 'devis', label: 'Devis récents', icon: FileText, count: recent_devis.length },
-        { id: 'factures', label: 'Factures récentes', icon: Receipt, count: recent_factures.length }
+        { id: 'factures', label: 'Factures récentes', icon: Receipt, count: recent_factures.length },
+        { id: 'historique', label: 'Historique', icon: History, count: historique.length }
     ] as const;
 
     return (
@@ -725,6 +806,84 @@ export default function ServiceShow({ service, stats, recent_devis, recent_factu
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {activeTab === 'historique' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <History className="h-5 w-5" />
+                                Historique des actions
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Suivi de toutes les actions effectuées sur ce service ({historique.length})
+                            </p>
+                        </CardHeader>
+                        <CardContent>
+                            {historique.length > 0 ? (
+                                <div className="space-y-4">
+                                    {historique.map((action) => (
+                                        <div key={action.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                                            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${getActionColor(action.action)}`}>
+                                                {getActionIcon(action.action)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="font-medium text-gray-900">{action.titre}</h4>
+                                                    <span className="text-sm text-gray-500">{formatActionDate(action.created_at)}</span>
+                                                </div>
+                                                {action.description && (
+                                                    <p className="text-sm text-gray-600 mt-1">{action.description}</p>
+                                                )}
+                                                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                                                    <span>Par {action.user?.name || action.user_nom}</span>
+                                                    {action.donnees_supplementaires?.prix_ancien && action.donnees_supplementaires?.prix_nouveau && (
+                                                        <span>• Prix: {action.donnees_supplementaires.prix_ancien}€ → {action.donnees_supplementaires.prix_nouveau}€</span>
+                                                    )}
+                                                    {action.donnees_supplementaires?.statut_ancien && action.donnees_supplementaires?.statut_nouveau && (
+                                                        <span>• Statut: {action.donnees_supplementaires.statut_ancien} → {action.donnees_supplementaires.statut_nouveau}</span>
+                                                    )}
+                                                </div>
+                                                {(action.donnees_avant || action.donnees_apres) && (
+                                                    <details className="mt-2">
+                                                        <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                                                            Voir les détails
+                                                        </summary>
+                                                        <div className="mt-2 text-xs bg-white p-2 rounded border">
+                                                            {action.donnees_avant && (
+                                                                <div className="mb-2">
+                                                                    <span className="font-medium text-red-600">Avant :</span>
+                                                                    <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
+                                                                        {JSON.stringify(action.donnees_avant, null, 2)}
+                                                                    </pre>
+                                                                </div>
+                                                            )}
+                                                            {action.donnees_apres && (
+                                                                <div>
+                                                                    <span className="font-medium text-green-600">Après :</span>
+                                                                    <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
+                                                                        {JSON.stringify(action.donnees_apres, null, 2)}
+                                                                    </pre>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </details>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <History className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                                    <h3 className="mt-4 text-lg font-medium">Aucune action enregistrée</h3>
+                                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                                        Aucune action n'a encore été enregistrée pour ce service. Les actions futures apparaîtront ici automatiquement.
+                                    </p>
                                 </div>
                             )}
                         </CardContent>

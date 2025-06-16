@@ -18,7 +18,7 @@ class HistoriqueController extends Controller
     public function index(Request $request)
     {
         $query = Historique::with(['user', 'entite'])
-                          ->chronologique();
+            ->chronologique();
 
         // Filtres
         if ($request->has('entite_type') && $request->entite_type) {
@@ -60,9 +60,9 @@ class HistoriqueController extends Controller
     public function client(Client $client)
     {
         $historique = $client->historique()
-                            ->with('user')
-                            ->chronologique()
-                            ->paginate(20);
+            ->with('user')
+            ->chronologique()
+            ->paginate(20);
 
         return Inertia::render('historique/entite', [
             'entite' => $client,
@@ -77,9 +77,9 @@ class HistoriqueController extends Controller
     public function entreprise(Entreprise $entreprise)
     {
         $historique = $entreprise->historique()
-                                ->with('user')
-                                ->chronologique()
-                                ->paginate(20);
+            ->with('user')
+            ->chronologique()
+            ->paginate(20);
 
         return Inertia::render('historique/entite', [
             'entite' => $entreprise,
@@ -94,9 +94,9 @@ class HistoriqueController extends Controller
     public function devis(Devis $devis)
     {
         $historique = $devis->historique()
-                           ->with('user')
-                           ->chronologique()
-                           ->paginate(20);
+            ->with('user')
+            ->chronologique()
+            ->paginate(20);
 
         return Inertia::render('historique/entite', [
             'entite' => $devis->load('client'),
@@ -111,9 +111,9 @@ class HistoriqueController extends Controller
     public function facture(Facture $facture)
     {
         $historique = $facture->historique()
-                             ->with('user')
-                             ->chronologique()
-                             ->paginate(20);
+            ->with('user')
+            ->chronologique()
+            ->paginate(20);
 
         return Inertia::render('historique/entite', [
             'entite' => $facture->load('client'),
@@ -127,7 +127,7 @@ class HistoriqueController extends Controller
      */
     public function apiHistoriqueEntite(Request $request, $type, $id)
     {
-        $modelClass = match($type) {
+        $modelClass = match ($type) {
             'client' => Client::class,
             'entreprise' => Entreprise::class,
             'devis' => Devis::class,
@@ -138,10 +138,10 @@ class HistoriqueController extends Controller
         $entity = $modelClass::findOrFail($id);
 
         $historique = $entity->historique()
-                            ->with('user')
-                            ->chronologique()
-                            ->limit(10)
-                            ->get();
+            ->with('user')
+            ->chronologique()
+            ->limit(10)
+            ->get();
 
         return response()->json($historique);
     }
@@ -158,21 +158,21 @@ class HistoriqueController extends Controller
         $stats = [
             'total_actions' => Historique::where('created_at', '>=', $debut)->count(),
             'actions_par_type' => Historique::where('created_at', '>=', $debut)
-                                           ->selectRaw('action, COUNT(*) as count')
-                                           ->groupBy('action')
-                                           ->pluck('count', 'action'),
+                ->selectRaw('action, COUNT(*) as count')
+                ->groupBy('action')
+                ->pluck('count', 'action'),
             'actions_par_entite' => Historique::where('created_at', '>=', $debut)
-                                             ->selectRaw('entite_type, COUNT(*) as count')
-                                             ->groupBy('entite_type')
-                                             ->pluck('count', 'entite_type'),
+                ->selectRaw('entite_type, COUNT(*) as count')
+                ->groupBy('entite_type')
+                ->pluck('count', 'entite_type'),
             'utilisateurs_actifs' => Historique::where('created_at', '>=', $debut)
-                                              ->distinct('user_id')
-                                              ->count(),
+                ->distinct('user_id')
+                ->count(),
             'actions_par_jour' => Historique::where('created_at', '>=', $debut)
-                                           ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                                           ->groupBy('date')
-                                           ->orderBy('date')
-                                           ->pluck('count', 'date'),
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->pluck('count', 'date'),
         ];
 
         return Inertia::render('historique/statistiques', [

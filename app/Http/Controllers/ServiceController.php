@@ -91,17 +91,47 @@ class ServiceController extends Controller
         $service->load(['lignesDevis.devis', 'lignesFactures.facture']);
 
         $stats = [
-            'total_devis' => $service->lignesDevis->count(),
-            'total_factures' => $service->lignesFactures->count(),
-            'ca_total' => $service->lignesFactures->sum('montant_ttc'),
+            'lignes_devis_count' => $service->lignesDevis->count(),
+            'lignes_factures_count' => $service->lignesFactures->count(),
+            'chiffre_affaires_total' => $service->lignesFactures->sum('montant_ttc'),
+            'quantite_totale_vendue' => $service->lignesFactures->sum('quantite'),
+            'prix_moyen_vente' => $service->lignesFactures->count() > 0
+                ? $service->lignesFactures->avg('prix_unitaire_ht')
+                : 0,
             'derniere_utilisation' => $service->lignesDevis->concat($service->lignesFactures)
                                              ->sortByDesc('created_at')
                                              ->first()?->created_at,
         ];
 
+        // Récupérer l'historique des actions avec les utilisateurs
+        $historique = $service->historique()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($action) {
+                return [
+                    'id' => $action->id,
+                    'action' => $action->action,
+                    'titre' => $action->titre,
+                    'description' => $action->description,
+                    'donnees_avant' => $action->donnees_avant,
+                    'donnees_apres' => $action->donnees_apres,
+                    'donnees_supplementaires' => $action->donnees_supplementaires,
+                    'created_at' => $action->created_at->toISOString(),
+                    'user' => $action->user ? [
+                        'id' => $action->user->id,
+                        'name' => $action->user->name,
+                        'email' => $action->user->email,
+                    ] : null,
+                    'user_nom' => $action->user_nom,
+                    'user_email' => $action->user_email,
+                ];
+            });
+
         return Inertia::render('services/show', [
             'service' => $service,
             'stats' => $stats,
+            'historique' => $historique,
             'recent_devis' => $service->lignesDevis()
                                     ->with(['devis.client'])
                                     ->latest()

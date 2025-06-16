@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToastDemo } from '@/components/toast-demo';
@@ -10,7 +9,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import {
     Users, Building2, FileText, Receipt,
     AlertCircle, Database, RefreshCw, Plus, Eye, Euro,
-    CheckCircle, Clock, XCircle, BarChart3, PieChart, Activity,
+    BarChart3, PieChart, Activity,
     Briefcase, Calendar, Filter, TrendingUp
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
@@ -26,8 +25,6 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
-    LineChart,
-    Line
 } from 'recharts';
 
 interface DashboardStats {
@@ -70,6 +67,11 @@ interface Props {
     devis_data?: DevisItem[];
     factures_data?: FactureItem[];
     isLocal: boolean;
+    auth?: {
+        user?: {
+            role?: string;
+        };
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -120,49 +122,7 @@ const formatStatut = (type: 'devis' | 'facture', statut: string) => {
     }
 };
 
-const getStatusStyles = (type: 'devis' | 'facture', statut: string) => {
-    if (type === 'devis') {
-        switch (statut) {
-            case 'brouillon': return 'bg-gray-600 text-white hover:bg-gray-700';
-            case 'envoye': return 'bg-blue-600 text-white hover:bg-blue-700';
-            case 'accepte': return 'bg-green-600 text-white hover:bg-green-700';
-            case 'refuse': return 'bg-red-600 text-white hover:bg-red-700';
-            case 'expire': return 'bg-orange-600 text-white hover:bg-orange-700';
-            default: return 'bg-gray-600 text-white hover:bg-gray-700';
-        }
-    } else {
-        switch (statut) {
-            case 'brouillon': return 'bg-yellow-600 text-white hover:bg-yellow-700';
-            case 'envoyee': return 'bg-blue-600 text-white hover:bg-blue-700';
-            case 'payee': return 'bg-green-600 text-white hover:bg-green-700';
-            case 'en_retard': return 'bg-red-600 text-white hover:bg-red-700';
-            case 'annulee': return 'bg-gray-600 text-white hover:bg-gray-700';
-            default: return 'bg-gray-600 text-white hover:bg-gray-700';
-        }
-    }
-};
-
-const getStatusIcon = (type: 'devis' | 'facture', statut: string) => {
-    if (type === 'devis') {
-        switch (statut) {
-            case 'accepte': return <CheckCircle className="h-4 w-4" />;
-            case 'envoye': return <Clock className="h-4 w-4" />;
-            case 'refuse': return <XCircle className="h-4 w-4" />;
-            case 'expire': return <AlertCircle className="h-4 w-4" />;
-            default: return <FileText className="h-4 w-4" />;
-        }
-    } else {
-        switch (statut) {
-            case 'payee': return <CheckCircle className="h-4 w-4" />;
-            case 'envoyee': return <Clock className="h-4 w-4" />;
-            case 'en_retard': return <AlertCircle className="h-4 w-4" />;
-            case 'annulee': return <XCircle className="h-4 w-4" />;
-            default: return <Receipt className="h-4 w-4" />;
-        }
-    }
-};
-
-export default function Dashboard({ stats, devis_data = [], factures_data = [], isLocal }: Props) {
+export default function Dashboard({ stats, devis_data = [], factures_data = [], isLocal, auth }: Props) {
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
     const { post } = useForm();
 
@@ -357,8 +317,8 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
                         </p>
                     </div>
 
-                    {/* Boutons de développement - seulement en mode local */}
-                    {isLocal && (
+                    {/* Boutons de développement - seulement en mode local et pour les super admins */}
+                    {isLocal && auth?.user?.role === 'superadmin' && (
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
@@ -796,8 +756,8 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
                     </CardContent>
                 </Card>
 
-                {/* Démonstration des toasts Sonner */}
-                <ToastDemo />
+                {/* Démonstration des toasts Sonner - seulement pour les super admins */}
+                {auth?.user?.role === 'superadmin' && <ToastDemo />}
             </div>
         </AppLayout>
     );

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import {
     Building2,
@@ -26,7 +26,13 @@ import {
     Instagram,
     Linkedin,
     ExternalLink,
-    Save
+    Save,
+    Clock,
+    Edit,
+    AlertCircle,
+    RefreshCw,
+    Trash2,
+    Archive
 } from 'lucide-react';
 import { FormEventHandler } from 'react';
 import { toast } from 'sonner';
@@ -82,9 +88,28 @@ interface Madinia {
 interface Props {
     madinia: Madinia;
     users: User[];
+    historique: HistoriqueAction[];
 }
 
-export default function MadiniaShow({ madinia, users }: Props) {
+interface HistoriqueAction {
+    id: number;
+    action: 'creation' | 'modification' | 'changement_statut' | 'envoi_email' | 'suppression' | 'archivage' | 'restauration' | 'transformation';
+    titre: string;
+    description?: string;
+    donnees_avant?: any;
+    donnees_apres?: any;
+    donnees_supplementaires?: any;
+    created_at: string;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    user_nom: string;
+    user_email: string;
+}
+
+export default function MadiniaShow({ madinia, users, historique }: Props) {
     const { data, setData, patch, processing, errors, clearErrors } = useForm({
         name: madinia.name || '',
         contact_principal_id: madinia.contact_principal_id || null,
@@ -128,6 +153,61 @@ export default function MadiniaShow({ madinia, users }: Props) {
         });
     };
 
+    const getActionIcon = (action: string) => {
+        switch (action) {
+            case 'creation':
+                return <FileText className="h-4 w-4 text-white" />;
+            case 'modification':
+                return <Edit className="h-4 w-4 text-white" />;
+            case 'changement_statut':
+                return <RefreshCw className="h-4 w-4 text-white" />;
+            case 'envoi_email':
+                return <Mail className="h-4 w-4 text-white" />;
+            case 'suppression':
+                return <Trash2 className="h-4 w-4 text-white" />;
+            case 'archivage':
+                return <Archive className="h-4 w-4 text-white" />;
+            default:
+                return <AlertCircle className="h-4 w-4 text-white" />;
+        }
+    };
+
+    const getActionColor = (action: string) => {
+        switch (action) {
+            case 'creation':
+                return 'bg-green-500';
+            case 'modification':
+                return 'bg-blue-500';
+            case 'changement_statut':
+                return 'bg-orange-500';
+            case 'envoi_email':
+                return 'bg-purple-500';
+            case 'suppression':
+                return 'bg-red-500';
+            case 'archivage':
+                return 'bg-gray-500';
+            default:
+                return 'bg-gray-400';
+        }
+    };
+
+    const formatActionDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            return `Aujourd'hui à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+        } else if (diffDays === 1) {
+            return `Hier à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+        } else if (diffDays < 7) {
+            return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+        } else {
+            return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+    };
+
     const renderSocialIcon = (platform: string) => {
         switch (platform) {
             case 'facebook':
@@ -153,16 +233,14 @@ export default function MadiniaShow({ madinia, users }: Props) {
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg" />
                     <Card className="relative border-0 shadow-sm">
                         <CardContent className="p-6">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3">
-                                        <Building2 className="h-8 w-8 text-blue-600" />
-                                        <h1 className="text-3xl font-bold tracking-tight">{madinia.name}</h1>
-                                    </div>
-                                    <p className="text-muted-foreground">
-                                        {madinia.description || 'Gérez les informations de votre entreprise'}
-                                    </p>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3">
+                                    <Building2 className="h-8 w-8 text-blue-600" />
+                                    <h1 className="text-3xl font-bold tracking-tight">{madinia.name}</h1>
                                 </div>
+                                <p className="text-muted-foreground">
+                                    {madinia.description || 'Gérez les informations de votre entreprise'}
+                                </p>
                             </div>
 
                             {/* Badges de statut */}
@@ -592,6 +670,74 @@ export default function MadiniaShow({ madinia, users }: Props) {
                         </Button>
                     </div>
                 </form>
+
+                {/* Historique des actions */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Clock className="h-5 w-5" />
+                            Historique des modifications
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {historique.length > 0 ? (
+                            <div className="space-y-4">
+                                {historique.map((action) => (
+                                    <div key={action.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                                        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${getActionColor(action.action)}`}>
+                                            {getActionIcon(action.action)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-medium text-gray-900">{action.titre}</h4>
+                                                <span className="text-sm text-gray-500">{formatActionDate(action.created_at)}</span>
+                                            </div>
+                                            {action.description && (
+                                                <p className="text-sm text-gray-600 mt-1">{action.description}</p>
+                                            )}
+                                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                                                <span>Par {action.user?.name || action.user_nom}</span>
+                                                {action.donnees_supplementaires?.email_destinataire && (
+                                                    <span>• Envoyé à {action.donnees_supplementaires.email_destinataire}</span>
+                                                )}
+                                            </div>
+                                            {(action.donnees_avant || action.donnees_apres) && (
+                                                <details className="mt-2">
+                                                    <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                                                        Voir les détails des modifications
+                                                    </summary>
+                                                    <div className="mt-2 text-xs bg-white p-2 rounded border">
+                                                        {action.donnees_avant && (
+                                                            <div className="mb-2">
+                                                                <span className="font-medium text-red-600">Avant :</span>
+                                                                <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
+                                                                    {JSON.stringify(action.donnees_avant, null, 2)}
+                                                                </pre>
+                                                            </div>
+                                                        )}
+                                                        {action.donnees_apres && (
+                                                            <div>
+                                                                <span className="font-medium text-green-600">Après :</span>
+                                                                <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
+                                                                    {JSON.stringify(action.donnees_apres, null, 2)}
+                                                                </pre>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </details>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                <p>Aucune modification enregistrée pour l'entreprise</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </AppLayout>
     );

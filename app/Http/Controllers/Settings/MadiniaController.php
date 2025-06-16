@@ -24,6 +24,31 @@ class MadiniaController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Récupérer l'historique des actions avec les utilisateurs
+        $historique = $madinia->historique()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($action) {
+                return [
+                    'id' => $action->id,
+                    'action' => $action->action,
+                    'titre' => $action->titre,
+                    'description' => $action->description,
+                    'donnees_avant' => $action->donnees_avant,
+                    'donnees_apres' => $action->donnees_apres,
+                    'donnees_supplementaires' => $action->donnees_supplementaires,
+                    'created_at' => $action->created_at->toISOString(),
+                    'user' => $action->user ? [
+                        'id' => $action->user->id,
+                        'name' => $action->user->name,
+                        'email' => $action->user->email,
+                    ] : null,
+                    'user_nom' => $action->user_nom,
+                    'user_email' => $action->user_email,
+                ];
+            });
+
         return Inertia::render('madinia/show', [
             'madinia' => [
                 'id' => $madinia->id,
@@ -60,6 +85,7 @@ class MadiniaController extends Controller
                 'updated_at' => $madinia->updated_at,
             ],
             'users' => $users,
+            'historique' => $historique,
         ]);
     }
 

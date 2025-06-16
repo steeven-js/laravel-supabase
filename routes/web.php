@@ -213,18 +213,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Routes de développement (seulement en mode local)
 if (app()->environment('local')) {
-    Route::middleware(['auth', 'verified'])->prefix('dev')->name('dev.')->group(function () {
+    Route::middleware(['auth', 'verified', 'superadmin'])->prefix('dev')->name('dev.')->group(function () {
         Route::post('reset-keep-user', [App\Http\Controllers\DevDataController::class, 'resetKeepUser'])->name('reset-keep-user');
         Route::post('reset-all', [App\Http\Controllers\DevDataController::class, 'resetAll'])->name('reset-all');
         Route::post('generate-more', [App\Http\Controllers\DevDataController::class, 'generateMore'])->name('generate-more');
         Route::get('stats', [App\Http\Controllers\DevDataController::class, 'stats'])->name('stats');
-    });
-
-
-
-    // Route pour prévisualiser l'email Markdown (développement uniquement)
-    Route::get('preview-email', function () {
-        return new App\Mail\DevisEmail(App\Models\Devis::first(), 'Test sujet', 'Ceci est un test de contenu d\'email.', App\Models\User::first());
     });
 }
 
