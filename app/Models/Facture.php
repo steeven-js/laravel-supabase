@@ -65,9 +65,11 @@ class Facture extends Model
         // Calculer automatiquement les montants avant la sauvegarde
         static::saving(function ($facture) {
             // Seulement si les montants ne sont pas déjà calculés manuellement
-            if ($facture->isDirty(['montant_ht', 'taux_tva']) ||
+            if (
+                $facture->isDirty(['montant_ht', 'taux_tva']) ||
                 $facture->montant_tva == 0 ||
-                $facture->montant_ttc == 0) {
+                $facture->montant_ttc == 0
+            ) {
                 $facture->calculerMontants();
             }
         });
@@ -127,7 +129,7 @@ class Facture extends Model
     public function scopeEnRetard($query)
     {
         return $query->where('date_echeance', '<', now())
-                    ->whereIn('statut', ['envoyee', 'brouillon']);
+            ->whereIn('statut', ['envoyee', 'en_attente', 'brouillon']);
     }
 
     /**
@@ -144,7 +146,7 @@ class Facture extends Model
     public function getEstEnRetardAttribute(): bool
     {
         return $this->date_echeance < now() &&
-               in_array($this->statut, ['envoyee', 'brouillon']);
+            in_array($this->statut, ['envoyee', 'en_attente', 'brouillon']);
     }
 
     /**
@@ -182,8 +184,8 @@ class Facture extends Model
     {
         $annee = date('Y');
         $dernierNumero = static::where('numero_facture', 'LIKE', "FACT-{$annee}-%")
-                              ->orderBy('numero_facture', 'desc')
-                              ->first();
+            ->orderBy('numero_facture', 'desc')
+            ->first();
 
         if ($dernierNumero) {
             $dernierNum = (int) substr($dernierNumero->numero_facture, -4);
@@ -367,8 +369,9 @@ class Facture extends Model
      */
     public function getStatutFrAttribute(): string
     {
-        return match($this->statut) {
+        return match ($this->statut) {
             'brouillon' => 'Brouillon',
+            'en_attente' => 'En attente',
             'envoyee' => 'Envoyée',
             'payee' => 'Payée',
             'en_retard' => 'En retard',
@@ -382,7 +385,7 @@ class Facture extends Model
      */
     public function getStatutEnvoiFrAttribute(): string
     {
-        return match($this->statut_envoi) {
+        return match ($this->statut_envoi) {
             'non_envoyee' => 'Non envoyée',
             'envoyee' => 'Envoyée',
             'echec_envoi' => 'Échec d\'envoi',
@@ -398,7 +401,7 @@ class Facture extends Model
         // Une facture peut être envoyée si :
         // - Elle n'est pas payée, annulée ou archivée
         // - Peu importe le statut d'envoi (permet le renvoi)
-        return in_array($this->statut, ['brouillon', 'envoyee']) && !$this->archive;
+        return in_array($this->statut, ['brouillon', 'en_attente', 'envoyee']) && !$this->archive;
     }
 
     /**
@@ -406,8 +409,9 @@ class Facture extends Model
      */
     public function getCouleurStatutAttribute(): string
     {
-        return match($this->statut) {
+        return match ($this->statut) {
             'brouillon' => 'gray',
+            'en_attente' => 'yellow',
             'envoyee' => 'blue',
             'payee' => 'green',
             'en_retard' => 'red',

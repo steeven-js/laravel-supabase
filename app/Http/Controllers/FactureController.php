@@ -42,10 +42,28 @@ class FactureController extends Controller
     public function create()
     {
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
+        $services = \App\Models\Service::actif()->orderBy('nom')->get();
+        $administrateurs = \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get();
+        $madinia = \App\Models\Madinia::getInstance();
 
         return Inertia::render('factures/create', [
             'clients' => $clients,
-            'numero_facture' => Facture::genererNumeroFacture()
+            'services' => $services,
+            'administrateurs' => $administrateurs,
+            'numero_facture' => Facture::genererNumeroFacture(),
+            'madinia' => $madinia ? [
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'adresse' => $madinia->adresse,
+                'pays' => $madinia->pays,
+                'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
+            ] : null,
         ]);
     }
 
@@ -58,18 +76,38 @@ class FactureController extends Controller
             $validated = $request->validate([
                 'numero_facture' => 'required|string|unique:factures,numero_facture',
                 'client_id' => 'required|exists:clients,id',
+                'administrateur_id' => 'required|exists:users,id',
                 'date_facture' => 'required|date',
                 'date_echeance' => 'required|date|after:date_facture',
                 'objet' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'montant_ht' => 'required|numeric|min:0',
-                'taux_tva' => 'required|numeric|min:0|max:100',
                 'conditions_paiement' => 'nullable|string',
                 'notes' => 'nullable|string',
+                'lignes' => 'required|array|min:1',
+                'lignes.*.service_id' => 'nullable|exists:services,id',
+                'lignes.*.quantite' => 'required|numeric|min:0',
+                'lignes.*.prix_unitaire_ht' => 'required|numeric|min:0',
+                'lignes.*.taux_tva' => 'required|numeric|min:0|max:100',
+                'lignes.*.description_personnalisee' => 'nullable|string',
+                'lignes.*.ordre' => 'required|integer|min:1',
             ]);
 
-            $facture = new Facture($validated);
-            $facture->statut_envoi = 'non_envoyee'; // Statut par défaut
+            // Créer la facture
+            $facture = new Facture();
+            $facture->fill($validated);
+            $facture->statut = 'en_attente';
+            $facture->statut_envoi = 'non_envoyee';
+            $facture->save();
+
+            // Créer les lignes de facture
+            foreach ($validated['lignes'] as $ligneData) {
+                $ligne = new \App\Models\LigneFacture();
+                $ligne->facture_id = $facture->id;
+                $ligne->fill($ligneData);
+                $ligne->save(); // Les montants seront calculés automatiquement via le boot()
+            }
+
+            // Recalculer les montants de la facture
             $facture->calculerMontants();
             $facture->save();
 
@@ -90,7 +128,7 @@ class FactureController extends Controller
                 ]);
             }
 
-            return redirect()->route('factures.index')
+            return redirect()->route('factures.show', $facture)
                 ->with('success', '✅ Facture ' . $facture->numero_facture . ' créée avec succès !');
 
         } catch (ValidationException $e) {
@@ -110,7 +148,7 @@ class FactureController extends Controller
      */
     public function show(Facture $facture)
     {
-        $facture->load(['client.entreprise', 'devis', 'administrateur']);
+        $facture->load(['client.entreprise', 'devis', 'lignes.service', 'administrateur']);
 
         // Récupérer les informations de Madinia
         $madinia = \App\Models\Madinia::getInstance();
@@ -120,15 +158,20 @@ class FactureController extends Controller
             'id' => $facture->id,
             'numero_facture' => $facture->numero_facture,
             'devis_id' => $facture->devis_id,
+            'administrateur_id' => $facture->administrateur_id,
             'client_id' => $facture->client_id,
             'objet' => $facture->objet,
             'description' => $facture->description,
             'statut' => $facture->statut,
+            'statut_envoi' => $facture->statut_envoi,
             'date_facture' => $facture->date_facture?->format('Y-m-d') ?? '',
             'date_echeance' => $facture->date_echeance?->format('Y-m-d') ?? '',
             'date_paiement' => $facture->date_paiement?->format('Y-m-d') ?? null,
+            'date_envoi_client' => $facture->date_envoi_client?->toISOString(),
+            'date_envoi_admin' => $facture->date_envoi_admin?->toISOString(),
             'montant_ht' => (float) $facture->montant_ht,
             'taux_tva' => (float) $facture->taux_tva,
+            'montant_tva' => (float) $facture->montant_tva,
             'montant_ttc' => (float) $facture->montant_ttc,
             'conditions_paiement' => $facture->conditions_paiement,
             'notes' => $facture->notes,
@@ -137,27 +180,56 @@ class FactureController extends Controller
             'archive' => $facture->archive,
             'created_at' => $facture->created_at->toISOString(),
             'updated_at' => $facture->updated_at->toISOString(),
+            'peut_etre_envoyee' => $facture->peutEtreEnvoyee(),
+            'pdf_url_supabase' => $this->facturePdfService->getUrlSupabasePdf($facture),
+            'administrateur' => $facture->administrateur ? [
+                'id' => $facture->administrateur->id,
+                'name' => $facture->administrateur->name,
+                'email' => $facture->administrateur->email,
+            ] : null,
+            'lignes' => $facture->lignes->map(function ($ligne) {
+                return [
+                    'id' => $ligne->id,
+                    'service_id' => $ligne->service_id,
+                    'quantite' => (float) $ligne->quantite,
+                    'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
+                    'taux_tva' => (float) $ligne->taux_tva,
+                    'montant_ht' => (float) $ligne->montant_ht,
+                    'montant_tva' => (float) $ligne->montant_tva,
+                    'montant_ttc' => (float) $ligne->montant_ttc,
+                    'ordre' => $ligne->ordre,
+                    'description_personnalisee' => $ligne->description_personnalisee,
+                    'service' => $ligne->service ? [
+                        'id' => $ligne->service->id,
+                        'nom' => $ligne->service->nom,
+                        'description' => $ligne->service->description,
+                        'code' => $ligne->service->code,
+                        'unite' => $ligne->service->unite ? $ligne->service->unite->value : null,
+                    ] : null
+                ];
+            }),
             'client' => $facture->client ? [
                 'id' => $facture->client->id,
                 'nom' => $facture->client->nom,
                 'prenom' => $facture->client->prenom,
                 'email' => $facture->client->email,
                 'telephone' => $facture->client->telephone,
+                'adresse' => $facture->client->adresse,
+                'ville' => $facture->client->ville,
+                'code_postal' => $facture->client->code_postal,
                 'entreprise' => $facture->client->entreprise ? [
                     'id' => $facture->client->entreprise->id,
                     'nom' => $facture->client->entreprise->nom,
                     'nom_commercial' => $facture->client->entreprise->nom_commercial,
+                    'adresse' => $facture->client->entreprise->adresse,
+                    'ville' => $facture->client->entreprise->ville,
+                    'code_postal' => $facture->client->entreprise->code_postal,
                 ] : null
             ] : null,
             'devis' => $facture->devis ? [
                 'id' => $facture->devis->id,
                 'numero_devis' => $facture->devis->numero_devis,
             ] : null,
-            'administrateur' => $facture->administrateur ? [
-                'id' => $facture->administrateur->id,
-                'name' => $facture->administrateur->name,
-                'email' => $facture->administrateur->email,
-            ] : null
         ];
 
         // Vérifier le statut du PDF
@@ -165,7 +237,22 @@ class FactureController extends Controller
 
         return Inertia::render('factures/show', [
             'facture' => $factureFormatted,
-            'madinia' => $madinia,
+            'madinia' => [
+                'id' => $madinia->id,
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'site_web' => $madinia->site_web,
+                'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'pays' => $madinia->pays,
+                'adresse' => $madinia->adresse,
+                'description' => $madinia->description,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
+            ],
             'pdfStatus' => $pdfStatus
         ]);
     }
@@ -175,14 +262,18 @@ class FactureController extends Controller
      */
     public function edit(Facture $facture)
     {
-        $facture->load(['client.entreprise', 'devis']);
+        $facture->load(['client.entreprise', 'devis', 'lignes.service', 'administrateur']);
         $clients = Client::with('entreprise')->actifs()->orderBy('nom')->get();
+        $services = \App\Models\Service::actif()->orderBy('nom')->get();
+        $administrateurs = \App\Models\User::select('id', 'name', 'email')->orderBy('name')->get();
+        $madinia = \App\Models\Madinia::getInstance();
 
         // Construire manuellement les données pour éviter les problèmes de sérialisation
         $factureFormatted = [
             'id' => $facture->id,
             'numero_facture' => $facture->numero_facture,
             'devis_id' => $facture->devis_id,
+            'administrateur_id' => $facture->administrateur_id,
             'client_id' => $facture->client_id,
             'objet' => $facture->objet,
             'statut' => $facture->statut,
@@ -190,27 +281,78 @@ class FactureController extends Controller
             'date_echeance' => $facture->date_echeance?->format('Y-m-d') ?? '',
             'montant_ht' => (float) $facture->montant_ht,
             'taux_tva' => (float) $facture->taux_tva,
+            'montant_tva' => (float) $facture->montant_tva,
             'montant_ttc' => (float) $facture->montant_ttc,
             'notes' => $facture->notes,
             'description' => $facture->description,
             'conditions_paiement' => $facture->conditions_paiement,
             'archive' => $facture->archive,
+            'administrateur' => $facture->administrateur ? [
+                'id' => $facture->administrateur->id,
+                'name' => $facture->administrateur->name,
+                'email' => $facture->administrateur->email,
+            ] : null,
+            'lignes' => $facture->lignes->map(function ($ligne) {
+                return [
+                    'id' => $ligne->id,
+                    'service_id' => $ligne->service_id,
+                    'quantite' => (float) $ligne->quantite,
+                    'prix_unitaire_ht' => (float) $ligne->prix_unitaire_ht,
+                    'taux_tva' => (float) $ligne->taux_tva,
+                    'montant_ht' => (float) $ligne->montant_ht,
+                    'montant_tva' => (float) $ligne->montant_tva,
+                    'montant_ttc' => (float) $ligne->montant_ttc,
+                    'ordre' => $ligne->ordre,
+                    'description_personnalisee' => $ligne->description_personnalisee,
+                    'service' => $ligne->service ? [
+                        'id' => $ligne->service->id,
+                        'nom' => $ligne->service->nom,
+                        'code' => $ligne->service->code,
+                        'description' => $ligne->service->description,
+                        'prix_ht' => $ligne->service->prix_ht,
+                        'qte_defaut' => $ligne->service->qte_defaut,
+                        'unite' => $ligne->service->unite ? $ligne->service->unite->value : null,
+                    ] : null
+                ];
+            }),
             'client' => $facture->client ? [
                 'id' => $facture->client->id,
                 'nom' => $facture->client->nom,
                 'prenom' => $facture->client->prenom,
                 'email' => $facture->client->email,
+                'telephone' => $facture->client->telephone,
+                'adresse' => $facture->client->adresse,
+                'ville' => $facture->client->ville,
+                'code_postal' => $facture->client->code_postal,
                 'entreprise' => $facture->client->entreprise ? [
                     'id' => $facture->client->entreprise->id,
                     'nom' => $facture->client->entreprise->nom,
                     'nom_commercial' => $facture->client->entreprise->nom_commercial,
+                    'adresse' => $facture->client->entreprise->adresse,
+                    'ville' => $facture->client->entreprise->ville,
+                    'code_postal' => $facture->client->entreprise->code_postal,
                 ] : null
             ] : null
         ];
 
         return Inertia::render('factures/edit', [
             'facture' => $factureFormatted,
-            'clients' => $clients
+            'clients' => $clients,
+            'services' => $services,
+            'administrateurs' => $administrateurs,
+            'madinia' => $madinia ? [
+                'name' => $madinia->name,
+                'telephone' => $madinia->telephone,
+                'email' => $madinia->email,
+                'adresse' => $madinia->adresse,
+                'pays' => $madinia->pays,
+                'siret' => $madinia->siret,
+                'numero_nda' => $madinia->numero_nda,
+                'nom_compte_bancaire' => $madinia->nom_compte_bancaire,
+                'nom_banque' => $madinia->nom_banque,
+                'numero_compte' => $madinia->numero_compte,
+                'iban_bic_swift' => $madinia->iban_bic_swift,
+            ] : null,
         ]);
     }
 
@@ -222,28 +364,57 @@ class FactureController extends Controller
         try {
             $validated = $request->validate([
                 'numero_facture' => 'required|string|unique:factures,numero_facture,' . $facture->id,
+                'administrateur_id' => 'required|exists:users,id',
                 'client_id' => 'required|exists:clients,id',
                 'date_facture' => 'required|date',
                 'date_echeance' => 'required|date|after:date_facture',
-                'statut' => 'required|in:brouillon,envoyee,payee,en_retard,annulee',
+                'statut' => 'required|in:brouillon,en_attente,envoyee,payee,en_retard,annulee',
                 'objet' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'montant_ht' => 'required|numeric|min:0',
-                'taux_tva' => 'required|numeric|min:0|max:100',
                 'conditions_paiement' => 'nullable|string',
                 'notes' => 'nullable|string',
                 'archive' => 'boolean',
+                'lignes' => 'required|array|min:1',
+                'lignes.*.id' => 'nullable|exists:lignes_factures,id',
+                'lignes.*.service_id' => 'nullable|exists:services,id',
+                'lignes.*.quantite' => 'required|numeric|min:0',
+                'lignes.*.prix_unitaire_ht' => 'required|numeric|min:0',
+                'lignes.*.taux_tva' => 'required|numeric|min:0|max:100',
+                'lignes.*.description_personnalisee' => 'nullable|string',
+                'lignes.*.ordre' => 'required|integer|min:1',
             ]);
 
-            // Convertir explicitement les montants en float
-            if (isset($validated['montant_ht'])) {
-                $validated['montant_ht'] = (float) $validated['montant_ht'];
-            }
-            if (isset($validated['taux_tva'])) {
-                $validated['taux_tva'] = (float) $validated['taux_tva'];
+            // Mettre à jour la facture
+            $facture->fill($validated);
+            $facture->save();
+
+            // Gérer les lignes de facture
+            $lignesExistantes = $facture->lignes->keyBy('id');
+            $lignesTraitees = collect();
+
+            foreach ($validated['lignes'] as $ligneData) {
+                if (isset($ligneData['id']) && $lignesExistantes->has($ligneData['id'])) {
+                    // Mettre à jour ligne existante
+                    $ligne = $lignesExistantes->get($ligneData['id']);
+                    $ligne->fill($ligneData);
+                    $ligne->save();
+                    $lignesTraitees->push($ligneData['id']);
+                } else {
+                    // Créer nouvelle ligne
+                    $ligne = new \App\Models\LigneFacture();
+                    $ligne->facture_id = $facture->id;
+                    $ligne->fill($ligneData);
+                    $ligne->save();
+                }
             }
 
-            $facture->fill($validated);
+            // Supprimer les lignes qui ne sont plus présentes
+            $lignesASupprimer = $lignesExistantes->keys()->diff($lignesTraitees);
+            if ($lignesASupprimer->isNotEmpty()) {
+                \App\Models\LigneFacture::whereIn('id', $lignesASupprimer)->delete();
+            }
+
+            // Recalculer les montants de la facture
             $facture->calculerMontants();
             $facture->save();
 
@@ -320,7 +491,7 @@ class FactureController extends Controller
     {
         try {
             $validated = $request->validate([
-                'statut' => 'required|in:brouillon,envoyee,payee,en_retard,annulee',
+                'statut' => 'required|in:brouillon,en_attente,envoyee,payee,en_retard,annulee',
             ]);
 
             $ancienStatut = $facture->statut;
@@ -777,8 +948,8 @@ class FactureController extends Controller
                 throw new \Exception('Impossible de décoder le contenu PDF');
             }
 
-            // Générer le nom de fichier
-            $nomFichier = "facture_{$facture->numero_facture}_{$facture->id}.pdf";
+            // Générer le nom de fichier unifié
+            $nomFichier = "facture_{$facture->id}.pdf";
 
             // 1. Sauvegarder localement
             $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'factures');
@@ -946,7 +1117,7 @@ class FactureController extends Controller
 
             // Lire le contenu du PDF local
             $pdfContent = file_get_contents($cheminPdf);
-            $nomFichier = "facture_{$facture->numero_facture}_{$facture->id}.pdf";
+            $nomFichier = "facture_{$facture->id}.pdf";
 
             // Synchroniser vers Supabase
             $urlSupabase = $this->sauvegarderPdfSupabase($pdfContent, $nomFichier, 'factures');

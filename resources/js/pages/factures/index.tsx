@@ -41,7 +41,7 @@ interface Facture {
         numero_devis: string;
     };
     objet: string;
-    statut: 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
+    statut: 'brouillon' | 'en_attente' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
     date_facture: string;
     date_echeance: string;
     montant_ttc: number;
@@ -63,6 +63,8 @@ const getStatusStyles = (statut: string) => {
         case 'annulee':
             return 'bg-gray-600 text-white hover:bg-gray-700';
         case 'brouillon':
+            return 'bg-gray-600 text-white hover:bg-gray-700';
+        case 'en_attente':
             return 'bg-yellow-600 text-white hover:bg-yellow-700';
         default:
             return 'bg-gray-600 text-white hover:bg-gray-700';
@@ -81,6 +83,8 @@ const getStatusIcon = (statut: string) => {
             return <XCircle className="h-4 w-4" />;
         case 'brouillon':
             return <FileText className="h-4 w-4" />;
+        case 'en_attente':
+            return <Clock className="h-4 w-4" />;
         default:
             return <Receipt className="h-4 w-4" />;
     }
@@ -90,6 +94,8 @@ const formatStatut = (statut: string) => {
     switch (statut) {
         case 'brouillon':
             return 'Brouillon';
+        case 'en_attente':
+            return 'En attente';
         case 'envoyee':
             return 'Envoyée';
         case 'payee':
@@ -106,7 +112,7 @@ const formatStatut = (statut: string) => {
 export default function FacturesIndex({ factures }: Props) {
     const [selectedFactures, setSelectedFactures] = useState<number[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'brouillon' | 'en_attente' | 'envoyee' | 'payee' | 'en_retard' | 'annulee'>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [sortField, setSortField] = useState<keyof Facture>('numero_facture');
@@ -600,13 +606,14 @@ export default function FacturesIndex({ factures }: Props) {
                                         className="pl-8 w-full sm:w-[300px]"
                                     />
                                 </div>
-                                <Select value={statusFilter} onValueChange={(value: 'all' | 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee') => setStatusFilter(value)}>
+                                <Select value={statusFilter} onValueChange={(value: 'all' | 'brouillon' | 'en_attente' | 'envoyee' | 'payee' | 'en_retard' | 'annulee') => setStatusFilter(value)}>
                                     <SelectTrigger className="w-full sm:w-[140px]">
                                         <SelectValue placeholder="Statut" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Tous</SelectItem>
                                         <SelectItem value="brouillon">Brouillon</SelectItem>
+                                        <SelectItem value="en_attente">En attente</SelectItem>
                                         <SelectItem value="envoyee">Envoyée</SelectItem>
                                         <SelectItem value="payee">Payée</SelectItem>
                                         <SelectItem value="en_retard">En retard</SelectItem>
@@ -753,7 +760,7 @@ export default function FacturesIndex({ factures }: Props) {
                                                             <Eye className="h-4 w-4" />
                                                         </Link>
                                                     </Button>
-                                                    {facture.statut === 'brouillon' && (
+                                                    {['brouillon', 'en_attente'].includes(facture.statut) && (
                                                         <Button size="sm" variant="ghost" asChild>
                                                             <Link href={`/factures/${facture.id}/edit`}>
                                                                 <Edit className="h-4 w-4" />

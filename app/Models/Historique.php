@@ -124,7 +124,7 @@ class Historique extends Model
             'donnees_apres' => $donneesApres,
             'donnees_supplementaires' => $donneesSupplementaires,
             'user_id' => $user->id,
-            'user_nom' => $user->nom . ' ' . $user->prenom,
+            'user_nom' => $user->name,
             'user_email' => $user->email,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),

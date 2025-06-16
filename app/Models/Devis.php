@@ -199,8 +199,16 @@ class Devis extends Model
                 ['statut' => 'accepte', 'date_acceptation' => $this->date_acceptation->format('Y-m-d H:i:s')]
             );
 
-            // Envoyer les emails de confirmation d'acceptation
-            $this->envoyerEmailsAcceptation();
+            // Envoyer les emails de confirmation d'acceptation de manière asynchrone
+            try {
+                $this->envoyerEmailsAcceptation();
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Erreur lors de l\'envoi des emails d\'acceptation (non bloquant)', [
+                    'devis_numero' => $this->numero_devis,
+                    'error' => $e->getMessage()
+                ]);
+                // Ne pas faire échouer l'acceptation si l'email échoue
+            }
         }
 
         return $result;
@@ -412,32 +420,47 @@ class Devis extends Model
             // Charger les relations nécessaires
             $this->load('client.entreprise');
 
-            // Envoyer l'email de confirmation au client
-            \Illuminate\Support\Facades\Mail::to($this->client->email)->send(
-                new \App\Mail\DevisAccepteMail($this, $this->client)
-            );
-
-            \Illuminate\Support\Facades\Log::info('Email de confirmation d\'acceptation envoyé au client', [
+            \Illuminate\Support\Facades\Log::info('Début envoi emails acceptation devis', [
                 'devis_numero' => $this->numero_devis,
-                'client_email' => $this->client->email,
-                'client_nom' => $this->client->nom_complet
+                'client_email' => $this->client->email
             ]);
 
-            // Envoyer l'email de notification à l'admin
-            $adminEmail = config('mail.admin_email');
-            if ($adminEmail) {
-                \Illuminate\Support\Facades\Mail::to($adminEmail)->send(
-                    new \App\Mail\DevisAccepteAdminMail($this, $this->client)
+            // Configurer un timeout plus court pour les emails d'acceptation
+            $originalTimeout = config('mail.mailers.smtp.timeout', 60);
+            config(['mail.mailers.smtp.timeout' => 15]);
+
+            try {
+                // Envoyer l'email de confirmation au client
+                \Illuminate\Support\Facades\Mail::to($this->client->email)->send(
+                    new \App\Mail\DevisAccepteMail($this, $this->client)
                 );
 
-                \Illuminate\Support\Facades\Log::info('Email de notification d\'acceptation envoyé à l\'admin', [
+                \Illuminate\Support\Facades\Log::info('Email de confirmation d\'acceptation envoyé au client', [
                     'devis_numero' => $this->numero_devis,
-                    'admin_email' => $adminEmail
+                    'client_email' => $this->client->email,
+                    'client_nom' => $this->client->nom_complet
                 ]);
-            } else {
-                \Illuminate\Support\Facades\Log::warning('Email admin non configuré, notification d\'acceptation non envoyée', [
-                    'devis_numero' => $this->numero_devis
-                ]);
+
+                // Envoyer l'email de notification à l'admin
+                $adminEmail = config('mail.admin_email');
+                if ($adminEmail) {
+                    \Illuminate\Support\Facades\Mail::to($adminEmail)->send(
+                        new \App\Mail\DevisAccepteAdminMail($this, $this->client)
+                    );
+
+                    \Illuminate\Support\Facades\Log::info('Email de notification d\'acceptation envoyé à l\'admin', [
+                        'devis_numero' => $this->numero_devis,
+                        'admin_email' => $adminEmail
+                    ]);
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('Email admin non configuré, notification d\'acceptation non envoyée', [
+                        'devis_numero' => $this->numero_devis
+                    ]);
+                }
+
+            } finally {
+                // Restaurer le timeout original
+                config(['mail.mailers.smtp.timeout' => $originalTimeout]);
             }
 
         } catch (\Exception $e) {
@@ -447,8 +470,8 @@ class Devis extends Model
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Ne pas faire échouer l'acceptation du devis si l'envoi d'email échoue
-            // L'acceptation reste valide même si l'email n'est pas envoyé
+            // Relancer l'exception pour qu'elle soit catchée par la méthode accepter()
+            throw $e;
         }
     }
 }

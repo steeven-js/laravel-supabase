@@ -30,7 +30,7 @@ class DevisClientMail extends Mailable
     public function __construct(
         Devis $devis,
         Client $client,
-        string $messagePersonnalise = null,
+        ?string $messagePersonnalise = null,
         int $templateId = null
     ) {
         $this->devis = $devis;

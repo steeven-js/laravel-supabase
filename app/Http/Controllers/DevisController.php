@@ -624,13 +624,48 @@ class DevisController extends Controller
     public function accepter(Devis $devis)
     {
         try {
-            $devis->accepter();
+            Log::info('Début acceptation devis via interface', [
+                'devis_id' => $devis->getKey(),
+                'devis_numero' => $devis->numero_devis,
+                'user_id' => \Illuminate\Support\Facades\Auth::id()
+            ]);
 
-            return redirect()->back()
-                ->with('success', '✅ Devis ' . $devis->numero_devis . ' accepté avec succès !');
+            $result = $devis->accepter();
+
+            if ($result) {
+                Log::info('Devis accepté avec succès via interface', [
+                    'devis_id' => $devis->getKey(),
+                    'devis_numero' => $devis->numero_devis
+                ]);
+
+                return redirect()->back()
+                    ->with('success', '✅ Devis ' . $devis->numero_devis . ' accepté avec succès !');
+            } else {
+                Log::error('Échec de l\'acceptation de devis via interface', [
+                    'devis_id' => $devis->getKey(),
+                    'devis_numero' => $devis->numero_devis
+                ]);
+
+                return back()
+                    ->with('error', '❌ Échec de l\'acceptation du devis.');
+            }
+
         } catch (Exception $e) {
+            Log::error('Erreur lors de l\'acceptation de devis via interface', [
+                'devis_id' => $devis->getKey(),
+                'devis_numero' => $devis->numero_devis,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Si l'erreur est liée aux emails, proposer une solution alternative
+            if (str_contains($e->getMessage(), 'timeout') || str_contains($e->getMessage(), 'Connection') || str_contains($e->getMessage(), 'SMTP')) {
+                return back()
+                    ->with('error', '❌ Problème de connexion email. Le devis peut être accepté manuellement via les commandes administrateur.');
+            }
+
             return back()
-                ->with('error', '❌ Une erreur est survenue lors de l\'acceptation du devis.');
+                ->with('error', '❌ Une erreur est survenue lors de l\'acceptation du devis : ' . $e->getMessage());
         }
     }
 
@@ -798,7 +833,7 @@ class DevisController extends Controller
         ]);
 
         Log::info('Données validées pour envoi email', [
-            'devis_id' => $devis->id,
+            'devis_id' => $devis->getKey(),
             'message_client_length' => strlen($validated['message_client'] ?? ''),
             'envoyer_copie_admin' => $validated['envoyer_copie_admin'] ?? false,
             'template_id' => $validated['template_id'] ?? null,

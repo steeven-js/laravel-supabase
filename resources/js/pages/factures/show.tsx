@@ -59,7 +59,7 @@ interface Facture {
     };
     objet: string;
     description?: string;
-    statut: 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
+    statut: 'brouillon' | 'en_attente' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
     date_facture: string;
     date_echeance: string;
     date_paiement?: string;
@@ -114,6 +114,8 @@ const getStatusStyles = (statut: string) => {
         case 'annulee':
             return 'bg-gray-100 text-gray-800 border-gray-200';
         case 'brouillon':
+            return 'bg-gray-100 text-gray-800 border-gray-200';
+        case 'en_attente':
             return 'bg-yellow-100 text-yellow-800 border-yellow-200';
         default:
             return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -128,6 +130,10 @@ const getStatusIcon = (statut: string) => {
             return <Clock className="h-4 w-4" />;
         case 'en_retard':
             return <AlertCircle className="h-4 w-4" />;
+        case 'en_attente':
+            return <Clock className="h-4 w-4" />;
+        case 'brouillon':
+            return <FileText className="h-4 w-4" />;
         case 'annulee':
             return <XCircle className="h-4 w-4" />;
         default:
@@ -139,6 +145,8 @@ const formatStatut = (statut: string) => {
     switch (statut) {
         case 'brouillon':
             return 'Brouillon';
+        case 'en_attente':
+            return 'En attente';
         case 'envoyee':
             return 'Envoyée';
         case 'payee':
@@ -255,6 +263,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
 
     const statutOptions = [
         { value: 'brouillon', label: 'Brouillon', icon: '📝' },
+        { value: 'en_attente', label: 'En attente', icon: '⏳' },
         { value: 'envoyee', label: 'Envoyée', icon: '📧' },
         { value: 'payee', label: 'Payée', icon: '✅' },
         { value: 'en_retard', label: 'En retard', icon: '⚠️' },
@@ -491,7 +500,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             {/* Actions principales */}
                             <div className="flex flex-wrap items-center gap-2">
-                                {facture.statut === 'brouillon' && (
+                                {['brouillon', 'en_attente'].includes(facture.statut) && (
                                     <Button asChild className="h-10 px-4">
                                         <Link href={`/factures/${facture.id}/edit`}>
                                             <Edit className="mr-2 h-4 w-4" />
@@ -650,6 +659,24 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                                     </div>
                                     <div className="text-sm text-red-500">
                                         Paiement en retard
+                                    </div>
+                                </div>
+                            </div>
+                        ) : facture.statut === 'en_attente' ? (
+                            // Facture en attente
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-yellow-700">⏳ Facture en attente</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Cette facture a été créée et attend d'être traitée
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-yellow-600">
+                                        {formatPrice(facture.montant_ttc)}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        Montant TTC
                                     </div>
                                 </div>
                             </div>

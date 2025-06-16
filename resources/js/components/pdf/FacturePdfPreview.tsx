@@ -22,6 +22,18 @@ const fDateSimple = (dateString: string) => {
     });
 };
 
+// Fonction utilitaire pour formater les unités
+const formatUnite = (unite: string | undefined, quantite: number) => {
+    if (!unite) return '';
+
+    // Retourner directement l'unité pour les types spéciaux
+    if (['forfait', 'licence', 'unité'].includes(unite)) {
+        return unite;
+    }
+
+    return quantite > 1 ? `${unite}s` : unite;
+};
+
 // Configuration des polices - Utilisation des polices par défaut
 // Font.register supprimé pour éviter les erreurs de chargement
 
@@ -301,6 +313,7 @@ interface FacturePdfPreviewProps {
             service?: {
                 nom: string;
                 description: string;
+                unite?: string;
             };
         }>;
         client: {
@@ -514,7 +527,7 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
                             </Text>
                         </View>
                         <Text style={styles.cellQuantity}>
-                            {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
+                            {ligne.quantite || 1} {formatUnite(ligne.service?.unite || 'heure', ligne.quantite || 1)}
                         </Text>
                         <Text style={styles.cellPrice}>
                             {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
@@ -599,29 +612,17 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
                     )}
                 </View>
                 <View style={styles.footerRight}>
-                    <Text style={styles.footerTitle}>COORDONNÉES BANCAIRES</Text>
-                    {madinia?.nom_banque && (
-                        <Text style={styles.footerText}>
-                            {madinia.nom_banque}
-                        </Text>
-                    )}
-                    {madinia?.nom_compte_bancaire && (
-                        <Text style={styles.footerText}>
-                            Titulaire: {madinia.nom_compte_bancaire}
-                        </Text>
-                    )}
-                    {madinia?.numero_compte && (
-                        <Text style={styles.footerText}>
-                            N° Compte: {madinia.numero_compte}
-                        </Text>
-                    )}
-                    {madinia?.iban_bic_swift && (
-                        <Text style={styles.footerText}>
-                            IBAN/BIC: {madinia.iban_bic_swift}
-                        </Text>
-                    )}
-                    <Text style={[styles.footerText, { marginTop: 4 }]}>
+                    <Text style={styles.footerTitle}>CONTACT</Text>
+                    <Text style={styles.footerText}>
                         Contact: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+                    </Text>
+                    {madinia?.telephone && (
+                        <Text style={styles.footerText}>
+                            Tél: {madinia.telephone}
+                        </Text>
+                    )}
+                    <Text style={styles.footerText}>
+                        Web: https://madinia.fr
                     </Text>
                 </View>
             </View>

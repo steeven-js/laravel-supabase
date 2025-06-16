@@ -32,7 +32,7 @@ class FactureClientMail extends Mailable
         Devis $devis,
         Facture $facture,
         Client $client,
-        string $messagePersonnalise = null
+        ?string $messagePersonnalise = null
     ) {
         $this->devis = $devis;
         $this->facture = $facture;

@@ -31,7 +31,7 @@ interface Facture {
     client_id: number;
     objet: string;
     description?: string;
-    statut: 'brouillon' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
+    statut: 'brouillon' | 'en_attente' | 'envoyee' | 'payee' | 'en_retard' | 'annulee';
     date_facture: string;
     date_echeance: string;
     montant_ht: number;
@@ -135,6 +135,8 @@ export default function FactureEdit({ facture, clients }: Props) {
             case 'annulee':
                 return 'bg-gray-100 text-gray-800 border-gray-200';
             case 'brouillon':
+                return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'en_attente':
                 return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             default:
                 return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -145,6 +147,8 @@ export default function FactureEdit({ facture, clients }: Props) {
         switch (statut) {
             case 'brouillon':
                 return 'Brouillon';
+            case 'en_attente':
+                return 'En attente';
             case 'envoyee':
                 return 'Envoyée';
             case 'payee':
@@ -196,8 +200,8 @@ export default function FactureEdit({ facture, clients }: Props) {
                     </div>
                 </div>
 
-                {/* Alerte si pas en brouillon */}
-                {facture.statut !== 'brouillon' && (
+                {/* Alerte si pas en brouillon ou en attente */}
+                {!['brouillon', 'en_attente'].includes(facture.statut) && (
                     <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
                         <CardContent className="p-4">
                             <p className="text-amber-800 dark:text-amber-200 text-sm">
