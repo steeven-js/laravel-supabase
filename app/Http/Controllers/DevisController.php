@@ -158,10 +158,10 @@ class DevisController extends Controller
             // Générer automatiquement le numéro de devis
             $validated['numero_devis'] = Devis::genererNumeroDevis();
 
-            // Créer le devis
+            // Créer le devis avec le statut par défaut "en_attente"
             $devis = new Devis();
             $devis->fill($validated);
-            $devis->statut = 'brouillon';
+            $devis->statut = 'en_attente';
             $devis->statut_envoi = 'non_envoye';
             $devis->save();
 
@@ -197,7 +197,91 @@ class DevisController extends Controller
             }
 
             return redirect()->route('devis.show', $devis)
-                ->with('success', '✅ Devis ' . $devis->numero_devis . ' créé avec succès !');
+                ->with('success', '✅ Devis ' . $devis->numero_devis . ' créé avec succès et placé en attente !');
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput()
+                ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
+        } catch (Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', '❌ Une erreur est survenue lors de la création du devis.');
+        }
+    }
+
+    /**
+     * Enregistre un nouveau devis en statut brouillon
+     *
+     * @param Request $request Les données du formulaire
+     * @return \Illuminate\Http\RedirectResponse
+     *
+     * Processus identique au store() mais avec statut "brouillon"
+     */
+    public function storeBrouillon(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'client_id' => 'required|exists:clients,id',
+                'administrateur_id' => 'required|exists:users,id',
+                'date_devis' => 'required|date',
+                'date_validite' => 'required|date|after:date_devis',
+                'objet' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'conditions' => 'nullable|string',
+                'notes' => 'nullable|string',
+                'lignes' => 'required|array|min:1',
+                'lignes.*.service_id' => 'nullable|exists:services,id',
+                'lignes.*.quantite' => 'required|numeric|min:0',
+                'lignes.*.prix_unitaire_ht' => 'required|numeric|min:0',
+                'lignes.*.taux_tva' => 'required|numeric|min:0|max:100',
+                'lignes.*.description_personnalisee' => 'nullable|string',
+                'lignes.*.ordre' => 'required|integer|min:1',
+            ]);
+
+            // Générer automatiquement le numéro de devis
+            $validated['numero_devis'] = Devis::genererNumeroDevis();
+
+            // Créer le devis avec le statut "brouillon"
+            $devis = new Devis();
+            $devis->fill($validated);
+            $devis->statut = 'brouillon';
+            $devis->statut_envoi = 'non_envoye';
+            $devis->save();
+
+            // Créer les lignes de devis
+            foreach ($validated['lignes'] as $ligneData) {
+                $ligne = new \App\Models\LigneDevis();
+                $ligne->devis_id = $devis->id;
+                $ligne->fill($ligneData);
+                $ligne->save(); // Les montants seront calculés automatiquement via le boot()
+            }
+
+            // Recalculer les montants du devis
+            $devis->calculerMontants();
+            $devis->save();
+
+            // Générer et sauvegarder le PDF
+            try {
+                $nomFichierPdf = $this->devisPdfService->genererEtSauvegarder($devis);
+                $devis->pdf_file = $nomFichierPdf;
+                // L'URL Supabase est déjà mise à jour dans le service
+                $devis->save();
+
+                Log::info('PDF généré lors de la création du devis en brouillon', [
+                    'devis_id' => $devis->id,
+                    'fichier_pdf' => $nomFichierPdf,
+                    'url_supabase' => $devis->pdf_url
+                ]);
+            } catch (Exception $e) {
+                Log::error('Erreur génération PDF lors création devis brouillon', [
+                    'devis_id' => $devis->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            return redirect()->route('devis.show', $devis)
+                ->with('success', '📝 Devis ' . $devis->numero_devis . ' enregistré comme brouillon !');
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
@@ -610,7 +694,7 @@ class DevisController extends Controller
     public function changerStatut(Request $request, Devis $devis)
     {
         $request->validate([
-            'statut' => 'required|in:brouillon,envoye,accepte,refuse,expire'
+            'statut' => 'required|in:brouillon,en_attente,envoye,accepte,refuse,expire'
         ]);
 
         try {
@@ -633,6 +717,7 @@ class DevisController extends Controller
 
             $messages = [
                 'brouillon' => '📝 Devis ' . $devis->numero_devis . ' remis en brouillon.',
+                'en_attente' => '⏳ Devis ' . $devis->numero_devis . ' mis en attente.',
                 'envoye' => '📧 Devis ' . $devis->numero_devis . ' marqué comme envoyé.',
                 'accepte' => '✅ Devis ' . $devis->numero_devis . ' accepté avec succès !',
                 'refuse' => '⛔ Devis ' . $devis->numero_devis . ' refusé.',

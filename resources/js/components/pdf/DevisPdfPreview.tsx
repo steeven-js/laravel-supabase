@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Fonction utilitaire pour formater la devise dans le PDF avec espaces pour les milliers
 const fCurrencyPDF = (value: number | string | null | undefined) => {
@@ -35,7 +35,7 @@ const useStyles = () =>
                     lineHeight: 1.4,
                     fontFamily: 'Helvetica',
                     backgroundColor: 'transparent',
-                    padding: '30px 30px 80px 30px',
+                    padding: '30px 30px 100px 30px', // Plus d'espace en bas pour éviter les débordements
                 },
                 // Header
                 header: {
@@ -49,6 +49,16 @@ const useStyles = () =>
                 },
                 logoSection: {
                     flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                },
+                logo: {
+                    width: 120,
+                    height: 'auto',
+                    marginRight: 15,
+                },
+                companyInfo: {
+                    flexDirection: 'column',
                 },
                 companyTitle: {
                     fontSize: 18,
@@ -83,6 +93,7 @@ const useStyles = () =>
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     marginBottom: 20,
+                    wrap: false, // Empêche la coupure de cette section
                 },
                 infoBox: {
                     width: '48%',
@@ -113,6 +124,7 @@ const useStyles = () =>
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     marginBottom: 20,
+                    wrap: false, // Empêche la coupure de cette section
                 },
                 dateBox: {
                     width: '48%',
@@ -151,6 +163,7 @@ const useStyles = () =>
                     padding: 8,
                     borderBottomWidth: 1,
                     borderBottomColor: '#E9ECEF',
+                    wrap: false, // Empêche la coupure de l'en-tête
                 },
                 tableRow: {
                     flexDirection: 'row',
@@ -158,6 +171,9 @@ const useStyles = () =>
                     borderBottomWidth: 1,
                     borderBottomColor: '#E9ECEF',
                     minHeight: 40,
+                    wrap: true, // Permet le passage à la page suivante
+                    orphans: 2, // Évite les lignes orphelines
+                    widows: 2, // Évite les lignes veuves
                 },
                 tableRowLast: {
                     borderBottomWidth: 0,
@@ -206,6 +222,7 @@ const useStyles = () =>
                 summarySection: {
                     alignItems: 'flex-end',
                     marginTop: 20,
+                    wrap: false, // Empêche la coupure du résumé
                 },
                 summaryTable: {
                     width: '40%',
@@ -238,15 +255,13 @@ const useStyles = () =>
                     fontWeight: 700,
                     color: '#000000',
                 },
-                // Footer
+                // Footer - Retiré le positionnement absolu pour permettre le flux naturel
                 footer: {
-                    position: 'absolute',
-                    bottom: 30,
-                    left: 30,
-                    right: 30,
+                    marginTop: 30,
                     borderTopWidth: 1,
                     borderTopColor: '#E9ECEF',
                     paddingTop: 15,
+                    wrap: false, // Empêche la coupure du footer
                 },
                 footerContent: {
                     flexDirection: 'row',
@@ -269,6 +284,20 @@ const useStyles = () =>
                     fontSize: 8,
                     color: '#666666',
                     marginBottom: 2,
+                },
+                // Styles pour les pages multiples
+                pageBreak: {
+                    break: true,
+                },
+                continuationHeader: {
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: '#666666',
+                    textAlign: 'center',
+                    marginBottom: 15,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E9ECEF',
+                    paddingBottom: 8,
                 },
             }),
         []
@@ -379,6 +408,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
     const formatStatut = (statut: string): string => {
         const statuts = {
             brouillon: 'Brouillon',
+            en_attente: 'En attente',
             envoye: 'Envoyé',
             accepte: 'Accepté',
             refuse: 'Refusé',
@@ -390,8 +420,10 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
     const renderHeader = (
         <View style={styles.header}>
             <View style={styles.logoSection}>
-                <Text style={styles.companyTitle}>{madinia?.name || 'MADIN.IA'}</Text>
-                <Text style={styles.logoSubtitle}>Intelligence Artificielle</Text>
+                <Image
+                    style={styles.logo}
+                    src="/logo/logo-1-small.png"
+                />
             </View>
 
             <View style={styles.statusSection}>
@@ -619,16 +651,145 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
         </View>
     );
 
+    // Fonction pour diviser les lignes de devis en chunks pour pagination
+    const chunkArray = (array: any[], chunkSize: number) => {
+        const chunks = [];
+        for (let i = 0; i < array.length; i += chunkSize) {
+            chunks.push(array.slice(i, i + chunkSize));
+        }
+        return chunks;
+    };
+
+    // Calculer le nombre de lignes par page (approximativement)
+    const lignesParPage = 12; // Ajustable selon l'espace disponible
+    const lignes = devis.lignes && devis.lignes.length > 0 ? devis.lignes : [];
+    const chunksLignes = lignes.length > lignesParPage ? chunkArray(lignes, lignesParPage) : [lignes];
+
+    // Fonction pour créer le tableau avec un subset de lignes
+    const renderTableWithLines = (lignesChunk: any[], isFirstPage: boolean, isLastPage: boolean, chunkIndex: number) => (
+        <View style={styles.tableSection}>
+            {isFirstPage && <Text style={styles.tableTitle}>Détails du devis</Text>}
+            {!isFirstPage && (
+                <Text style={styles.continuationHeader}>
+                    Détails du devis (suite - page {chunkIndex + 1})
+                </Text>
+            )}
+            <View style={styles.table}>
+                {/* En-tête du tableau */}
+                <View style={styles.tableHeader}>
+                    <Text style={styles.cellNum}>#</Text>
+                    <Text style={[styles.cellDescription, { fontSize: 9, fontWeight: 700 }]}>
+                        Description
+                    </Text>
+                    <Text style={[styles.cellQuantity, { fontSize: 9, fontWeight: 700 }]}>
+                        Quantité
+                    </Text>
+                    <Text style={[styles.cellPrice, { fontSize: 9, fontWeight: 700 }]}>
+                        Prix unitaire
+                    </Text>
+                    <Text style={[styles.cellTotal, { fontSize: 9, fontWeight: 700 }]}>
+                        Total
+                    </Text>
+                </View>
+
+                {/* Lignes du tableau pour ce chunk */}
+                {lignesChunk.length > 0 ? lignesChunk.map((ligne, index) => {
+                    const globalIndex = chunkIndex * lignesParPage + index;
+                    const isLastInChunk = index === lignesChunk.length - 1;
+                    const isLastInDocument = isLastPage && isLastInChunk;
+
+                    return (
+                        <View
+                            key={ligne.id || globalIndex}
+                            style={[
+                                styles.tableRow,
+                                isLastInDocument ? styles.tableRowLast : {},
+                            ]}
+                        >
+                            <Text style={styles.cellNum}>{globalIndex + 1}</Text>
+                            <View style={styles.cellDescription}>
+                                <Text style={styles.descriptionTitle}>
+                                    {ligne.service?.nom || `Phase ${globalIndex + 1} - Service personnalisé`}
+                                </Text>
+                                <Text style={styles.descriptionDetail}>
+                                    {ligne.description_personnalisee ||
+                                        ligne.service?.description ||
+                                        'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'}
+                                </Text>
+                            </View>
+                            <Text style={styles.cellQuantity}>
+                                {ligne.quantite || 1} {(ligne.quantite || 1) > 1 ? 'heures' : 'heure'}
+                            </Text>
+                            <Text style={styles.cellPrice}>
+                                {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
+                            </Text>
+                            <Text style={styles.cellTotal}>
+                                {fCurrencyPDF(ligne.montant_ht || 0)}
+                            </Text>
+                        </View>
+                    );
+                }) : (
+                    <View style={styles.tableRow}>
+                        <Text style={styles.cellNum}>1</Text>
+                        <View style={styles.cellDescription}>
+                            <Text style={styles.descriptionTitle}>Service personnalisé</Text>
+                            <Text style={styles.descriptionDetail}>Prestation de service</Text>
+                        </View>
+                        <Text style={styles.cellQuantity}>1 heure</Text>
+                        <Text style={styles.cellPrice}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
+                        <Text style={styles.cellTotal}>{fCurrencyPDF(devis.montant_ht || 0)}</Text>
+                    </View>
+                )}
+            </View>
+        </View>
+    );
+
     return (
         <Document>
-            <Page size="A4" style={styles.page}>
-                {renderHeader}
-                {renderInfo}
-                {renderDates}
-                {renderTable}
-                {renderSummary}
-                {renderFooter}
-            </Page>
+            {chunksLignes.map((chunk, chunkIndex) => {
+                const isFirstPage = chunkIndex === 0;
+                const isLastPage = chunkIndex === chunksLignes.length - 1;
+
+                return (
+                    <Page key={chunkIndex} size="A4" style={styles.page}>
+                        {/* En-tête sur chaque page */}
+                        {isFirstPage ? renderHeader : (
+                            <View style={styles.header}>
+                                <View style={styles.logoSection}>
+                                    <Image
+                                        style={styles.logo}
+                                        src="/logo/logo-1-small.png"
+                                    />
+                                </View>
+                                <View style={styles.statusSection}>
+                                    <Text style={styles.devisNumber}>
+                                        {devis.numero_devis} (page {chunkIndex + 1}/{chunksLignes.length})
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* Contenu de la première page */}
+                        {isFirstPage && (
+                            <>
+                                {renderInfo}
+                                {renderDates}
+                            </>
+                        )}
+
+                        {/* Tableau pour cette page */}
+                        {renderTableWithLines(chunk, isFirstPage, isLastPage, chunkIndex)}
+
+                        {/* Résumé et footer seulement sur la dernière page */}
+                        {isLastPage && (
+                            <>
+                                {renderSummary}
+                                {renderFooter}
+                            </>
+                        )}
+                    </Page>
+                );
+            })}
         </Document>
     );
 }

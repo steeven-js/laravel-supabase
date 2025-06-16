@@ -55,7 +55,7 @@ interface Devis {
     numero_devis: string;
     administrateur_id?: number;
     objet: string;
-    statut: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire';
+    statut: 'brouillon' | 'en_attente' | 'envoye' | 'accepte' | 'refuse' | 'expire';
     statut_envoi: 'non_envoye' | 'envoye' | 'echec_envoi';
     date_devis: string;
     date_validite: string;
@@ -150,6 +150,8 @@ const getStatusStyles = (statut: string) => {
             return 'bg-green-100 text-green-800 border-green-200';
         case 'envoye':
             return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'en_attente':
+            return 'bg-amber-100 text-amber-800 border-amber-200';
         case 'refuse':
             return 'bg-red-100 text-red-800 border-red-200';
         case 'expire':
@@ -167,6 +169,8 @@ const formatStatut = (statut: string) => {
             return 'Brouillon';
         case 'envoye':
             return 'Envoyé';
+        case 'en_attente':
+            return 'En attente';
         case 'accepte':
             return 'Accepté';
         case 'refuse':
@@ -272,6 +276,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
 
     const statutOptions = [
         { value: 'brouillon', label: 'Brouillon', icon: '📝' },
+        { value: 'en_attente', label: 'En attente', icon: '⏳' },
         { value: 'envoye', label: 'Envoyé', icon: '📧' },
         { value: 'accepte', label: 'Accepté', icon: '✅' },
         { value: 'refuse', label: 'Refusé', icon: '⛔' },
@@ -343,7 +348,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
         });
     };
 
-        const handlePreviewPdf = () => {
+    const handlePreviewPdf = () => {
         // Vérifications de sécurité
         if (!devis || !devis.numero_devis || !devis.client) {
             console.error('Données du devis manquantes');
@@ -562,7 +567,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                 )}
                             </div>
 
-                                                        {/* Actions PDF */}
+                            {/* Actions PDF */}
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button
                                     variant="outline"
@@ -582,19 +587,18 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                     <FileText className="mr-2 h-4 w-4" />
                                     Sauvegarder PDF
                                     {pdfStatus && (
-                                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-                                            pdfStatus.exists && pdfStatus.up_to_date
+                                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${pdfStatus.exists && pdfStatus.up_to_date
                                                 ? 'bg-green-500'
                                                 : pdfStatus.exists && !pdfStatus.up_to_date
-                                                ? 'bg-orange-500'
-                                                : 'bg-red-500'
-                                        }`} title={
-                                            pdfStatus.exists && pdfStatus.up_to_date
-                                                ? 'PDF à jour'
-                                                : pdfStatus.exists && !pdfStatus.up_to_date
-                                                ? 'PDF obsolète'
-                                                : 'PDF manquant'
-                                        }></div>
+                                                    ? 'bg-orange-500'
+                                                    : 'bg-red-500'
+                                            }`} title={
+                                                pdfStatus.exists && pdfStatus.up_to_date
+                                                    ? 'PDF à jour'
+                                                    : pdfStatus.exists && !pdfStatus.up_to_date
+                                                        ? 'PDF obsolète'
+                                                        : 'PDF manquant'
+                                            }></div>
                                     )}
                                 </Button>
                                 {renderDownload}
@@ -668,6 +672,16 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                     </p>
                                 </div>
                             </div>
+                        ) : devis.statut === 'en_attente' ? (
+                            // Devis en attente
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-1 text-amber-700">⏳ Devis en attente</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Ce devis est en attente de validation ou d'envoi au client
+                                    </p>
+                                </div>
+                            </div>
                         ) : devis.statut === 'refuse' ? (
                             // Devis refusé
                             <div className="flex items-center justify-between">
@@ -709,12 +723,17 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                                        <FileText className="h-6 w-6 text-white" />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-2xl font-bold text-green-600">DEVIS</h1>
-                                        <p className="text-sm text-gray-600">Document commercial</p>
+                                    <div className="w-36 h-12 flex items-center justify-center">
+                                        <img
+                                            src="/logo/logo-1-small.svg"
+                                            alt="Logo"
+                                            className="h-10 dark:hidden"
+                                        />
+                                        <img
+                                            src="/logo/logo-1-small-darkmode.svg"
+                                            alt="Logo"
+                                            className="h-10 hidden dark:block"
+                                        />
                                     </div>
                                 </div>
                             </div>

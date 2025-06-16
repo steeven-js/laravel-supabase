@@ -262,6 +262,7 @@ class Devis extends Model
     {
         return match($this->statut) {
             'brouillon' => 'Brouillon',
+            'en_attente' => 'En attente',
             'envoye' => 'Envoyé',
             'accepte' => 'Accepté',
             'refuse' => 'Refusé',
@@ -367,9 +368,9 @@ class Devis extends Model
     public function peutEtreEnvoye(): bool
     {
         // Peut être envoyé si :
-        // - Le statut permet l'envoi (brouillon ou envoyé)
+        // - Le statut permet l'envoi (brouillon, en_attente ou envoyé)
         // - ET ce n'est pas un devis accepté, refusé ou expiré (ceux-ci ne doivent plus être modifiés)
-        return in_array($this->statut, ['brouillon', 'envoye']);
+        return in_array($this->statut, ['brouillon', 'en_attente', 'envoye']);
     }
 
     /**

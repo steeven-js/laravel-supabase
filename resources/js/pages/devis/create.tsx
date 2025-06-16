@@ -200,7 +200,24 @@ export default function DevisCreate({ clients, services, administrateurs, numero
 
         post('/devis', {
             onSuccess: () => {
-                toast.success('Devis créé avec succès');
+                toast.success('Devis créé avec succès et placé en attente');
+            },
+            onError: () => {
+                toast.error('Une erreur est survenue lors de la création');
+            }
+        });
+    };
+
+    const handleSubmitBrouillon = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (lignes.length === 0) {
+            toast.error('Veuillez ajouter au moins une ligne au devis');
+            return;
+        }
+
+        post('/devis/store-brouillon', {
+            onSuccess: () => {
+                toast.success('Devis enregistré comme brouillon');
             },
             onError: () => {
                 toast.error('Une erreur est survenue lors de la création');
@@ -671,6 +688,26 @@ export default function DevisCreate({ clients, services, administrateurs, numero
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleSubmitBrouillon}
+                            disabled={processing || lignes.length === 0}
+                            className="flex-1 sm:flex-none"
+                        >
+                            {processing ? (
+                                <>
+                                    <Calculator className="mr-2 h-4 w-4 animate-spin" />
+                                    Création...
+                                </>
+                            ) : (
+                                <>
+                                    <Edit3 className="mr-2 h-4 w-4" />
+                                    Enregistrer comme brouillon
+                                </>
+                            )}
+                        </Button>
+
                         <Button
                             type="submit"
                             disabled={processing || lignes.length === 0}

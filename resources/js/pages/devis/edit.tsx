@@ -84,7 +84,7 @@ interface Devis {
     administrateur_id?: number;
     client_id: number;
     objet: string;
-    statut: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | 'expire';
+    statut: 'brouillon' | 'en_attente' | 'envoye' | 'accepte' | 'refuse' | 'expire';
     date_devis: string;
     date_validite: string;
     montant_ht: number;

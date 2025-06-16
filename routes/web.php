@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les devis
     Route::resource('devis', DevisController::class)->parameters(['devis' => 'devis']);
+    Route::post('devis/store-brouillon', [DevisController::class, 'storeBrouillon'])->name('devis.store-brouillon');
 
     // Actions spéciales pour les devis
     Route::patch('devis/{devis}/accepter', [DevisController::class, 'accepter'])->name('devis.accepter');

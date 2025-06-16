@@ -59,6 +59,8 @@ const getStatusStyles = (statut: string) => {
             return 'bg-green-600 text-white hover:bg-green-700';
         case 'envoye':
             return 'bg-blue-600 text-white hover:bg-blue-700';
+        case 'en_attente':
+            return 'bg-amber-600 text-white hover:bg-amber-700';
         case 'refuse':
             return 'bg-red-600 text-white hover:bg-red-700';
         case 'expire':
@@ -76,6 +78,8 @@ const getStatusIcon = (statut: string) => {
             return <CheckCircle className="h-4 w-4" />;
         case 'envoye':
             return <Clock className="h-4 w-4" />;
+        case 'en_attente':
+            return <Clock className="h-4 w-4" />;
         case 'refuse':
             return <XCircle className="h-4 w-4" />;
         case 'expire':
@@ -91,6 +95,8 @@ const formatStatut = (statut: string) => {
             return 'Brouillon';
         case 'envoye':
             return 'Envoyé';
+        case 'en_attente':
+            return 'En attente';
         case 'accepte':
             return 'Accepté';
         case 'refuse':
