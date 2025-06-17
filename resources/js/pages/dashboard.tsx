@@ -286,7 +286,7 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
 
     // Composant Tooltip personnalisé
     const CustomTooltip = ({ active, payload, label }: any) => {
-        if (active && payload && payload.length) {
+        if (active && payload?.length) {
             return (
                 <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
                     <p className="font-medium">{label}</p>

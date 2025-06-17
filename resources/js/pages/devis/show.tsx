@@ -327,7 +327,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
 
     const handlePreviewPdf = () => {
         // Vérifications de sécurité
-        if (!devis || !devis.numero_devis || !devis.client) {
+        if (!devis?.numero_devis || !devis.client) {
             console.error('Données du devis manquantes');
             alert('Données du devis incomplètes. Impossible de générer l\'aperçu.');
             return;

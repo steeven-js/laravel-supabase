@@ -289,7 +289,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
             setIsGeneratingPdf(true);
 
             // Vérifier que les données essentielles sont présentes
-            if (!updatedDevis || !updatedDevis.numero_devis || !updatedDevis.client) {
+            if (!updatedDevis?.numero_devis || !updatedDevis.client) {
                 console.error('Données du devis manquantes pour la génération PDF', updatedDevis);
                 setIsGeneratingPdf(false);
                 return;

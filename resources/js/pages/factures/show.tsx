@@ -271,7 +271,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
 
     const handlePreviewPdf = () => {
         // Vérifications de sécurité
-        if (!facture || !facture.numero_facture || !facture.client) {
+        if (!facture?.numero_facture || !facture.client) {
             console.error('Données de la facture manquantes');
             alert('Données de la facture incomplètes. Impossible de générer l\'aperçu.');
             return;
@@ -283,7 +283,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
 
     const handleSavePdf = async () => {
         // Vérifications de sécurité approfondies
-        if (!facture || !facture.numero_facture || !facture.client) {
+        if (!facture?.numero_facture || !facture.client) {
             console.error('Données de la facture manquantes');
             toast.error('Données de la facture incomplètes.');
             return;

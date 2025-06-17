@@ -70,14 +70,14 @@ export default function EntreprisesIndex({ entreprises }: Props) {
 
     // Filtrer et trier les entreprises
     const filteredAndSortedEntreprises = useMemo(() => {
-        let filtered = entreprises.filter(entreprise => {
+        const filtered = entreprises.filter(entreprise => {
             const matchesSearch =
                 entreprise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (entreprise.nom_commercial && entreprise.nom_commercial.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (entreprise.nom_commercial?.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 entreprise.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (entreprise.telephone && entreprise.telephone.includes(searchTerm)) ||
-                (entreprise.ville && entreprise.ville.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (entreprise.secteur_activite && entreprise.secteur_activite.toLowerCase().includes(searchTerm.toLowerCase()));
+                (entreprise.telephone?.includes(searchTerm)) ||
+                (entreprise.ville?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (entreprise.secteur_activite?.toLowerCase().includes(searchTerm.toLowerCase()));
 
             const matchesStatus =
                 statusFilter === 'all' ||

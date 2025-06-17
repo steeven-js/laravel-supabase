@@ -71,16 +71,16 @@ export default function ClientsIndex({ clients }: Props) {
 
     // Filtrer et trier les clients
     const filteredAndSortedClients = useMemo(() => {
-        let filtered = clients.filter(client => {
+        const filtered = clients.filter(client => {
             const matchesSearch =
                 client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (client.telephone && client.telephone.includes(searchTerm)) ||
-                (client.ville && client.ville.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (client.telephone?.includes(searchTerm)) ||
+                (client.ville?.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 (client.entreprise && (
                     client.entreprise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (client.entreprise.nom_commercial && client.entreprise.nom_commercial.toLowerCase().includes(searchTerm.toLowerCase()))
+                    (client.entreprise.nom_commercial?.toLowerCase().includes(searchTerm.toLowerCase()))
                 ));
 
             const matchesStatus =

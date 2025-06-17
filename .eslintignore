@@ -1,0 +1,27 @@
+# Dossiers Laravel à ignorer
+/vendor/
+/storage/
+/bootstrap/cache/
+/bootstrap/ssr/
+/public/
+
+# Dossiers de build et cache
+/node_modules/
+/dist/
+*.log
+
+# Fichiers de configuration
+*.config.js
+*.config.ts
+vite.config.ts
+tailwind.config.js
+
+# Base de données
+/database/
+
+# Fichiers PHP (ESLint ne sert qu'au frontend)
+*.php
+
+# Autres
+.env*
+*.min.js

@@ -241,7 +241,7 @@ export default function DevisIndex({ devis }: Props) {
 
     // Filtrer et trier les devis
     const filteredAndSortedDevis = useMemo(() => {
-        let filtered = devis.filter(item => {
+        const filtered = devis.filter(item => {
             const matchesSearch =
                 item.numero_devis.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.objet.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,7 +250,7 @@ export default function DevisIndex({ devis }: Props) {
                 item.client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (item.client.entreprise && (
                     item.client.entreprise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (item.client.entreprise.nom_commercial && item.client.entreprise.nom_commercial.toLowerCase().includes(searchTerm.toLowerCase()))
+                    (item.client.entreprise.nom_commercial?.toLowerCase().includes(searchTerm.toLowerCase()))
                 ));
 
             const matchesStatus =

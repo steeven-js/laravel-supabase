@@ -204,7 +204,7 @@ export default function FacturesIndex({ factures }: Props) {
 
     // Filtrer et trier les factures
     const filteredAndSortedFactures = useMemo(() => {
-        let filtered = factures.filter(item => {
+        const filtered = factures.filter(item => {
             const matchesSearch =
                 item.numero_facture.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.objet.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -212,7 +212,7 @@ export default function FacturesIndex({ factures }: Props) {
                 item.client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (item.client.entreprise && (
                     item.client.entreprise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (item.client.entreprise.nom_commercial && item.client.entreprise.nom_commercial.toLowerCase().includes(searchTerm.toLowerCase()))
+                    (item.client.entreprise.nom_commercial?.toLowerCase().includes(searchTerm.toLowerCase()))
                 ));
 
             const matchesStatus =
