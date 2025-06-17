@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Fonction utilitaire pour formater la devise dans le PDF avec espaces pour les milliers
 const fCurrencyPDF = (value: number | string | null | undefined) => {
@@ -22,16 +22,36 @@ const fDateSimple = (dateString: string) => {
     });
 };
 
-// Fonction utilitaire pour formater les unités
-const formatUnite = (unite: string | undefined, quantite: number) => {
-    if (!unite) return '';
+// Fonction utilitaire pour tronquer intelligemment les descriptions
+const tronquerDescription = (description: string, maxLength: number = 200) => {
+    if (!description || description.length <= maxLength) return description;
 
-    // Retourner directement l'unité pour les types spéciaux
-    if (['forfait', 'licence', 'unité'].includes(unite)) {
-        return unite;
+    // Tronquer au dernier mot complet avant la limite
+    const tronque = description.substring(0, maxLength);
+    const dernierEspace = tronque.lastIndexOf(' ');
+
+    if (dernierEspace > maxLength * 0.8) { // Si on peut tronquer près d'un mot
+        return tronque.substring(0, dernierEspace) + '...';
     }
 
-    return quantite > 1 ? `${unite}s` : unite;
+    return tronque + '...';
+};
+
+// Fonction utilitaire pour formater les unités
+const formatUnite = (quantite: number, unite?: string): string => {
+    if (!unite) return quantite <= 1 ? 'unité' : 'unités';
+
+    const unites = {
+        heure: quantite <= 1 ? 'heure' : 'heures',
+        journee: quantite <= 1 ? 'journée' : 'journées',
+        semaine: quantite <= 1 ? 'semaine' : 'semaines',
+        mois: 'mois',
+        unite: quantite <= 1 ? 'unité' : 'unités',
+        forfait: quantite <= 1 ? 'forfait' : 'forfaits',
+        licence: quantite <= 1 ? 'licence' : 'licences',
+    };
+
+    return unites[unite as keyof typeof unites] || (quantite <= 1 ? 'unité' : 'unités');
 };
 
 // Configuration des polices - Utilisation des polices par défaut
@@ -47,7 +67,7 @@ const useStyles = () =>
                     lineHeight: 1.4,
                     fontFamily: 'Helvetica',
                     backgroundColor: 'transparent',
-                    padding: '30px 30px 80px 30px',
+                    padding: '30px 30px 100px 30px', // Plus d'espace en bas pour éviter les débordements
                 },
                 // Header
                 header: {
@@ -61,6 +81,16 @@ const useStyles = () =>
                 },
                 logoSection: {
                     flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                },
+                logo: {
+                    width: 120,
+                    height: 'auto',
+                    marginRight: 15,
+                },
+                companyInfo: {
+                    flexDirection: 'column',
                 },
                 companyTitle: {
                     fontSize: 18,
@@ -76,8 +106,8 @@ const useStyles = () =>
                     alignItems: 'flex-end',
                 },
                 statusBadge: {
-                    backgroundColor: '#FFF3CD',
-                    color: '#856404',
+                    backgroundColor: '#D1ECF1',
+                    color: '#0C5460',
                     padding: '4px 8px',
                     fontSize: 10,
                     fontWeight: 700,
@@ -95,6 +125,7 @@ const useStyles = () =>
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     marginBottom: 20,
+                    wrap: false, // Empêche la coupure de cette section
                 },
                 infoBox: {
                     width: '48%',
@@ -125,6 +156,7 @@ const useStyles = () =>
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     marginBottom: 20,
+                    wrap: false, // Empêche la coupure de cette section
                 },
                 dateBox: {
                     width: '48%',
@@ -163,6 +195,7 @@ const useStyles = () =>
                     padding: 8,
                     borderBottomWidth: 1,
                     borderBottomColor: '#E9ECEF',
+                    wrap: false, // Empêche la coupure de l'en-tête
                 },
                 tableRow: {
                     flexDirection: 'row',
@@ -170,6 +203,9 @@ const useStyles = () =>
                     borderBottomWidth: 1,
                     borderBottomColor: '#E9ECEF',
                     minHeight: 40,
+                    wrap: false, // Empêche les coupures de ligne
+                    orphans: 3, // Évite les lignes orphelines
+                    widows: 3, // Évite les lignes veuves
                 },
                 tableRowLast: {
                     borderBottomWidth: 0,
@@ -213,11 +249,14 @@ const useStyles = () =>
                     fontSize: 8,
                     color: '#666666',
                     lineHeight: 1.3,
+                    maxLines: 3, // Limite à 3 lignes pour éviter les débordements
                 },
                 // Summary
                 summarySection: {
                     alignItems: 'flex-end',
-                    marginTop: 20,
+                    marginTop: 15,
+                    marginBottom: 10,
+                    wrap: false, // Empêche la coupure du résumé
                 },
                 summaryTable: {
                     width: '40%',
@@ -250,37 +289,43 @@ const useStyles = () =>
                     fontWeight: 700,
                     color: '#000000',
                 },
-                // Footer
+                // Footer - Réorganisé pour une ligne horizontale
                 footer: {
-                    position: 'absolute',
-                    bottom: 30,
-                    left: 30,
-                    right: 30,
+                    marginTop: 10,
                     borderTopWidth: 1,
                     borderTopColor: '#E9ECEF',
-                    paddingTop: 15,
+                    paddingTop: 8,
+                    wrap: false, // Empêche la coupure du footer
                 },
                 footerContent: {
                     flexDirection: 'row',
-                    justifyContent: 'space-between',
-                },
-                footerLeft: {
-                    width: '65%',
-                },
-                footerRight: {
-                    width: '30%',
-                    textAlign: 'right',
-                },
-                footerTitle: {
-                    fontSize: 9,
-                    fontWeight: 700,
-                    color: '#000000',
-                    marginBottom: 4,
+                    justifyContent: 'center',
+                    flexWrap: 'wrap',
                 },
                 footerText: {
-                    fontSize: 8,
+                    fontSize: 7,
                     color: '#666666',
-                    marginBottom: 2,
+                    textAlign: 'center',
+                    marginHorizontal: 4,
+                },
+                footerSeparator: {
+                    fontSize: 7,
+                    color: '#666666',
+                    marginHorizontal: 2,
+                },
+                // Styles pour les pages multiples
+                pageBreak: {
+                    break: true,
+                },
+                continuationHeader: {
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: '#666666',
+                    textAlign: 'center',
+                    marginBottom: 15,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#E9ECEF',
+                    paddingBottom: 8,
                 },
             }),
         []
@@ -399,6 +444,7 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
     const formatStatut = (statut: string): string => {
         const statuts = {
             brouillon: 'Brouillon',
+            en_attente: 'En attente',
             envoyee: 'Envoyée',
             payee: 'Payée',
             en_retard: 'En retard',
@@ -410,8 +456,10 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
     const renderHeader = (
         <View style={styles.header}>
             <View style={styles.logoSection}>
-                <Text style={styles.companyTitle}>{madinia?.name || 'MADIN.IA'}</Text>
-                <Text style={styles.logoSubtitle}>Intelligence Artificielle</Text>
+                <Image
+                    style={styles.logo}
+                    src="/logo/logo-1-small.png"
+                />
             </View>
 
             <View style={styles.statusSection}>
@@ -485,75 +533,6 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
         </View>
     );
 
-    const renderTable = (
-        <View style={styles.tableSection}>
-            <Text style={styles.tableTitle}>Détails de la facture</Text>
-            <View style={styles.table}>
-                {/* En-tête du tableau */}
-                <View style={styles.tableHeader}>
-                    <Text style={styles.cellNum}>#</Text>
-                    <Text style={[styles.cellDescription, { fontSize: 9, fontWeight: 700 }]}>
-                        Description
-                    </Text>
-                    <Text style={[styles.cellQuantity, { fontSize: 9, fontWeight: 700 }]}>
-                        Quantité
-                    </Text>
-                    <Text style={[styles.cellPrice, { fontSize: 9, fontWeight: 700 }]}>
-                        Prix unitaire
-                    </Text>
-                    <Text style={[styles.cellTotal, { fontSize: 9, fontWeight: 700 }]}>
-                        Total
-                    </Text>
-                </View>
-
-                {/* Lignes du tableau */}
-                {(facture.lignes && facture.lignes.length > 0) ? facture.lignes.map((ligne, index) => (
-                    <View
-                        key={ligne.id || index}
-                        style={[
-                            styles.tableRow,
-                            index === (facture.lignes?.length || 0) - 1 ? styles.tableRowLast : {},
-                        ]}
-                    >
-                        <Text style={styles.cellNum}>{index + 1}</Text>
-                        <View style={styles.cellDescription}>
-                            <Text style={styles.descriptionTitle}>
-                                {ligne.service?.nom || `Phase ${index + 1} - Service personnalisé`}
-                            </Text>
-                            <Text style={styles.descriptionDetail}>
-                                {ligne.description_personnalisee ||
-                                    ligne.service?.description ||
-                                    'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'}
-                            </Text>
-                        </View>
-                        <Text style={styles.cellQuantity}>
-                            {ligne.quantite || 1} {formatUnite(ligne.service?.unite || 'heure', ligne.quantite || 1)}
-                        </Text>
-                        <Text style={styles.cellPrice}>
-                            {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
-                        </Text>
-                        <Text style={styles.cellTotal}>
-                            {fCurrencyPDF(ligne.montant_ht || 0)}
-                        </Text>
-                    </View>
-                )) : (
-                    <View style={styles.tableRow}>
-                        <Text style={styles.cellNum}>1</Text>
-                        <View style={styles.cellDescription}>
-                            <Text style={styles.descriptionTitle}>Service personnalisé</Text>
-                            <Text style={styles.descriptionDetail}>
-                                {facture.description || 'Prestation de service'}
-                            </Text>
-                        </View>
-                        <Text style={styles.cellQuantity}>1 heure</Text>
-                        <Text style={styles.cellPrice}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
-                        <Text style={styles.cellTotal}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
-                    </View>
-                )}
-            </View>
-        </View>
-    );
-
     const renderSummary = (
         <View style={styles.summarySection}>
             <View style={styles.summaryTable}>
@@ -577,68 +556,261 @@ export function FacturePdfPreview({ facture, madinia }: FacturePdfPreviewProps) 
         </View>
     );
 
+
     const renderFooter = (
         <View style={styles.footer}>
             <View style={styles.footerContent}>
-                <View style={styles.footerLeft}>
-                    <Text style={styles.footerTitle}>INFORMATIONS LÉGALES</Text>
                     {madinia?.name && (
-                        <Text style={styles.footerText}>
-                            {madinia.name}
-                        </Text>
+                    <>
+                        <Text style={styles.footerText}>{madinia.name}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
                     )}
                     {madinia?.adresse && (
-                        <Text style={styles.footerText}>
-                            {madinia.adresse}
-                        </Text>
-                    )}
-                    {madinia?.pays && (
-                        <Text style={styles.footerText}>
-                            {madinia.pays}
-                        </Text>
+                    <>
+                        <Text style={styles.footerText}>{madinia.adresse}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
                     )}
                     {madinia?.siret && (
-                        <Text style={styles.footerText}>
-                            SIRET: {madinia.siret}
-                        </Text>
+                    <>
+                        <Text style={styles.footerText}>SIRET: {madinia.siret}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
                     )}
                     {madinia?.numero_nda && (
+                    <>
+                        <Text style={styles.footerText}>N° DA: {madinia.numero_nda}</Text>
+                        <Text style={styles.footerSeparator}>•</Text>
+                    </>
+                )}
                         <Text style={styles.footerText}>
-                            N° DA: {madinia.numero_nda}
+                    Contact: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
                         </Text>
-                    )}
                     {facture.notes && (
-                        <Text style={[styles.footerText, { marginTop: 4 }]}>{facture.notes}</Text>
+                    <>
+                        <Text style={styles.footerSeparator}>•</Text>
+                        <Text style={styles.footerText}>{facture.notes}</Text>
+                    </>
                     )}
                 </View>
-                <View style={styles.footerRight}>
-                    <Text style={styles.footerTitle}>CONTACT</Text>
-                    <Text style={styles.footerText}>
-                        Contact: {facture.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+        </View>
+    );
+
+    // Calculer dynamiquement le nombre de lignes par page
+    const lignes = facture.lignes && facture.lignes.length > 0 ? facture.lignes : [];
+
+    // Fonction pour estimer la hauteur d'une ligne selon sa description
+    const estimerHauteurLigne = (ligne: any) => {
+        const description = ligne.description_personnalisee || ligne.service?.description || '';
+        const longueurDescription = description.length;
+
+        // Hauteur de base : 40px
+        // Hauteur supplémentaire selon la longueur de la description
+        if (longueurDescription > 150) return 70; // Description très longue
+        if (longueurDescription > 80) return 55;  // Description longue
+        return 40; // Description normale
+    };
+
+    // Calculer les chunks de manière intelligente selon la hauteur estimée
+    const calculerChunksIntelligents = (lignesArray: any[]) => {
+        const chunks = [];
+        let chunkActuel: any[] = [];
+        let hauteurChunkActuel = 0;
+        // Hauteur disponible pour le tableau sur une page complète (plus d'espace sans section bancaire)
+        const hauteurMaxParPageComplete = 650;
+        // Hauteur disponible pour le tableau sur la première page (avec info client/dates, plus d'espace sans section bancaire)
+        const hauteurMaxPremierePageAvecInfo = 450;
+
+        lignesArray.forEach((ligne, index) => {
+            const hauteurLigne = estimerHauteurLigne(ligne);
+            const estPremiereIteration = chunks.length === 0;
+            const hauteurMax = estPremiereIteration ? hauteurMaxPremierePageAvecInfo : hauteurMaxParPageComplete;
+
+            // Si ajouter cette ligne dépasse la hauteur max OU on a déjà le nombre max de lignes
+            const maxLignes = estPremiereIteration ? 12 : 18; // Plus de lignes possibles sans section bancaire
+            if ((hauteurChunkActuel + hauteurLigne > hauteurMax && chunkActuel.length > 0) || chunkActuel.length >= maxLignes) {
+                chunks.push(chunkActuel);
+                chunkActuel = [ligne];
+                hauteurChunkActuel = hauteurLigne;
+            } else {
+                chunkActuel.push(ligne);
+                hauteurChunkActuel += hauteurLigne;
+            }
+        });
+
+        // Ajouter le dernier chunk s'il n'est pas vide
+        if (chunkActuel.length > 0) {
+            chunks.push(chunkActuel);
+        }
+
+        return chunks.length > 0 ? chunks : [lignesArray];
+    };
+
+    const chunksLignes = lignes.length > 8 ? calculerChunksIntelligents(lignes) : [lignes];
+
+    // Déterminer si on a besoin d'une page séparée pour la section finale
+    const hauteurEstimeeDernierChunk = chunksLignes[chunksLignes.length - 1]?.reduce((total, ligne) => total + estimerHauteurLigne(ligne), 0) || 0;
+    const hauteurSectionFinale = 120; // Résumé + footer seulement (pas de section bancaire pour factures)
+    const espaceDisponibleDernierePage = chunksLignes.length === 1 ? 450 : 650; // Plus d'espace disponible sans section bancaire
+
+    const needsSeparateFinalPage = (hauteurEstimeeDernierChunk + hauteurSectionFinale) > espaceDisponibleDernierePage;
+
+    // Fonction pour créer le tableau avec un subset de lignes
+    const renderTableWithLines = (lignesChunk: any[], isFirstPage: boolean, isLastTablePage: boolean, chunkIndex: number) => (
+        <View style={styles.tableSection}>
+            {isFirstPage && <Text style={styles.tableTitle}>Détails de la facture</Text>}
+            {!isFirstPage && (
+                <Text style={styles.continuationHeader}>
+                    Détails de la facture (suite - page {chunkIndex + 1})
+                </Text>
+            )}
+            <View style={styles.table}>
+                {/* En-tête du tableau */}
+                <View style={styles.tableHeader}>
+                    <Text style={styles.cellNum}>#</Text>
+                    <Text style={[styles.cellDescription, { fontSize: 9, fontWeight: 700 }]}>
+                        Description
                     </Text>
-                    {madinia?.telephone && (
-                        <Text style={styles.footerText}>
-                            Tél: {madinia.telephone}
+                    <Text style={[styles.cellQuantity, { fontSize: 9, fontWeight: 700 }]}>
+                        Quantité
+                    </Text>
+                    <Text style={[styles.cellPrice, { fontSize: 9, fontWeight: 700 }]}>
+                        Prix unitaire
                         </Text>
-                    )}
-                    <Text style={styles.footerText}>
-                        Web: https://madinia.fr
+                    <Text style={[styles.cellTotal, { fontSize: 9, fontWeight: 700 }]}>
+                        Total
                     </Text>
                 </View>
+
+                {/* Lignes du tableau pour ce chunk */}
+                {lignesChunk.length > 0 ? lignesChunk.map((ligne, index) => {
+                    // Calculer l'index global en comptant toutes les lignes des chunks précédents
+                    const globalIndex = chunksLignes.slice(0, chunkIndex).reduce((total, chunk) => total + chunk.length, 0) + index;
+                    const isLastInChunk = index === lignesChunk.length - 1;
+                    const isLastInDocument = isLastTablePage && isLastInChunk;
+
+                    return (
+                        <View
+                            key={ligne.id || globalIndex}
+                            style={[
+                                styles.tableRow,
+                                isLastInDocument ? styles.tableRowLast : {},
+                            ]}
+                        >
+                            <Text style={styles.cellNum}>{globalIndex + 1}</Text>
+                            <View style={styles.cellDescription}>
+                                <Text style={styles.descriptionTitle}>
+                                    {ligne.service?.nom || `Phase ${globalIndex + 1} - Service personnalisé`}
+                                </Text>
+                                <Text style={styles.descriptionDetail}>
+                                    {tronquerDescription(
+                                        ligne.description_personnalisee ||
+                                        ligne.service?.description ||
+                                        'Configuration des environnements de développement et mise en place de l\'architecture basée sur votre cahier des charges'
+                                    )}
+                                </Text>
+                            </View>
+                            <Text style={styles.cellQuantity}>
+                                {ligne.quantite || 1} {formatUnite(ligne.quantite || 1, ligne.service?.unite)}
+                            </Text>
+                            <Text style={styles.cellPrice}>
+                                {fCurrencyPDF(ligne.prix_unitaire_ht || 0)}
+                            </Text>
+                            <Text style={styles.cellTotal}>
+                                {fCurrencyPDF(ligne.montant_ht || 0)}
+                            </Text>
+                        </View>
+                    );
+                }) : (
+                    <View style={styles.tableRow}>
+                        <Text style={styles.cellNum}>1</Text>
+                        <View style={styles.cellDescription}>
+                            <Text style={styles.descriptionTitle}>Service personnalisé</Text>
+                            <Text style={styles.descriptionDetail}>
+                                {tronquerDescription(facture.description || 'Prestation de service')}
+                            </Text>
+                        </View>
+                        <Text style={styles.cellQuantity}>1 unité</Text>
+                        <Text style={styles.cellPrice}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
+                        <Text style={styles.cellTotal}>{fCurrencyPDF(facture.montant_ht || 0)}</Text>
+                    </View>
+                )}
             </View>
         </View>
     );
 
     return (
         <Document>
-            <Page size="A4" style={styles.page}>
-                {renderHeader}
+            {chunksLignes.map((chunk, chunkIndex) => {
+                const isFirstPage = chunkIndex === 0;
+                const isLastTablePage = chunkIndex === chunksLignes.length - 1;
+                const shouldShowFinalSections = isLastTablePage && !needsSeparateFinalPage;
+
+                return (
+                    <Page key={chunkIndex} size="A4" style={styles.page}>
+                        {/* En-tête sur chaque page */}
+                        {isFirstPage ? renderHeader : (
+                            <View style={styles.header}>
+                                <View style={styles.logoSection}>
+                                    <Image
+                                        style={styles.logo}
+                                        src="/logo/logo-1-small.png"
+                                    />
+                                </View>
+                                <View style={styles.statusSection}>
+                                    <Text style={styles.factureNumber}>
+                                        {facture.numero_facture} (page {chunkIndex + 1}/{needsSeparateFinalPage ? chunksLignes.length + 1 : chunksLignes.length})
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* Contenu de la première page */}
+                        {isFirstPage && (
+                            <>
                 {renderInfo}
                 {renderDates}
-                {renderTable}
+                            </>
+                        )}
+
+                        {/* Tableau pour cette page */}
+                        {renderTableWithLines(chunk, isFirstPage, isLastTablePage, chunkIndex)}
+
+                        {/* Résumé et footer si on n'a pas besoin d'une page séparée */}
+                        {shouldShowFinalSections && (
+                            <>
+                                {renderSummary}
+                                {renderFooter}
+                            </>
+                        )}
+                    </Page>
+                );
+            })}
+
+            {/* Page séparée pour les sections finales si nécessaire */}
+            {needsSeparateFinalPage && (
+                <Page size="A4" style={styles.page}>
+                    {/* En-tête simplifié */}
+                    <View style={styles.header}>
+                        <View style={styles.logoSection}>
+                            <Image
+                                style={styles.logo}
+                                src="/logo/logo-1-small.png"
+                            />
+                        </View>
+                        <View style={styles.statusSection}>
+                            <Text style={styles.factureNumber}>
+                                {facture.numero_facture} (page {chunksLignes.length + 1}/{chunksLignes.length + 1})
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Sections finales sur page dédiée */}
                 {renderSummary}
                 {renderFooter}
             </Page>
+            )}
         </Document>
     );
 }

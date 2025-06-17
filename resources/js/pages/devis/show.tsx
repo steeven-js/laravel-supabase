@@ -343,7 +343,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 {/* Bouton retour */}
-                <div>
+                <div className="px-16">
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/devis">
                             <ArrowLeft className="mr-2 h-4 w-4" />
