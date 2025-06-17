@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
@@ -15,10 +14,8 @@ import {
     Clock,
     AlertCircle,
     Mail,
-    Download,
     Eye,
     Phone,
-    Printer,
     Send,
     FileText,
     Settings,
@@ -32,6 +29,27 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import FacturePdfPreview from '@/components/pdf/FacturePdfPreview';
+import PdfSaveButton from '@/components/pdf/PdfSaveButton';
+
+interface LigneFacture {
+    id: number;
+    service_id?: number;
+    quantite: number;
+    prix_unitaire_ht: number;
+    taux_tva: number;
+    montant_ht: number;
+    montant_tva: number;
+    montant_ttc: number;
+    ordre: number;
+    description_personnalisee?: string;
+    service?: {
+        id: number;
+        nom: string;
+        description: string;
+        code?: string;
+        unite?: string;
+    };
+}
 
 interface Facture {
     id: number;
@@ -72,6 +90,7 @@ interface Facture {
     reference_paiement?: string;
     created_at: string;
     updated_at: string;
+    lignes: LigneFacture[];
 }
 
 interface Madinia {
@@ -119,25 +138,6 @@ const getStatusStyles = (statut: string) => {
             return 'bg-yellow-100 text-yellow-800 border-yellow-200';
         default:
             return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-};
-
-const getStatusIcon = (statut: string) => {
-    switch (statut) {
-        case 'payee':
-            return <CheckCircle className="h-4 w-4" />;
-        case 'envoyee':
-            return <Clock className="h-4 w-4" />;
-        case 'en_retard':
-            return <AlertCircle className="h-4 w-4" />;
-        case 'en_attente':
-            return <Clock className="h-4 w-4" />;
-        case 'brouillon':
-            return <FileText className="h-4 w-4" />;
-        case 'annulee':
-            return <XCircle className="h-4 w-4" />;
-        default:
-            return <Receipt className="h-4 w-4" />;
     }
 };
 
@@ -205,21 +205,20 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
         }).format(price);
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+    const formatUnite = (unite: string | undefined, quantite: number): string => {
+        if (!unite) return '';
+
+        // Types spéciaux qui ne prennent pas de pluriel
+        if (['forfait', 'licence', 'unité'].includes(unite)) {
+            return unite;
+        }
+
+        // Ajouter 's' pour le pluriel si quantité > 1
+        return quantite > 1 ? `${unite}s` : unite;
     };
 
     const formatDateShort = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('fr-FR');
-    };
-
-    const copyToClipboard = (text: string, label: string) => {
-        navigator.clipboard.writeText(text);
-        toast.success(`${label} copié dans le presse-papiers`);
     };
 
     const isRetard = () => {
@@ -415,7 +414,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 {/* Bouton retour */}
-                <div className="px-4">
+                <div className="px-16">
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/factures">
                             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -525,65 +524,28 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                             </div>
 
                             {/* Actions PDF */}
-                            <div className="flex flex-col gap-2 min-w-0">
-                                {/* Première ligne - Actions principales */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-10 px-4 bg-green-50 border-green-200 text-green-700 hover:bg-green-100 relative"
-                                        onClick={handleSavePdf}
-                                    >
-                                        <FileText className="mr-2 h-4 w-4" />
-                                        Sauvegarder PDF
-                                        {pdfStatus && (
-                                            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-                                                pdfStatus.exists && pdfStatus.up_to_date
-                                                    ? 'bg-green-500'
-                                                    : pdfStatus.exists && !pdfStatus.up_to_date
-                                                    ? 'bg-orange-500'
-                                                    : 'bg-red-500'
-                                            }`} title={
-                                                pdfStatus.exists && pdfStatus.up_to_date
-                                                    ? 'PDF à jour'
-                                                    : pdfStatus.exists && !pdfStatus.up_to_date
-                                                    ? 'PDF obsolète'
-                                                    : 'PDF manquant'
-                                            }></div>
-                                        )}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                                        onClick={handlePreviewPdf}
-                                    >
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        Aperçu PDF
-                                    </Button>
-                                    {renderDownload}
-                                </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                    onClick={handlePreviewPdf}
+                                >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Aperçu PDF
+                                </Button>
 
-                                {/* Seconde ligne - Actions avancées */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 px-3 text-xs bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
-                                        onClick={handleRegeneratePdf}
+                                {/* Composant PdfSaveButton fonctionnel */}
+                                <div className="flex items-center">
+                                    <PdfSaveButton
+                                        pdfComponent={<FacturePdfPreview facture={facture} madinia={madinia} />}
+                                        saveRoute={route('factures.save-react-pdf', facture.id)}
+                                        filename={`${facture.id}.pdf`}
+                                        type="facture"
+                                        className="!bg-green-600 hover:!bg-green-700 active:!bg-green-800 focus:!border-green-900 focus:!ring-green-300"
                                     >
-                                        <RefreshCw className="mr-1 h-3 w-3" />
-                                        Régénérer
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 px-3 text-xs bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
-                                        onClick={handleSyncSupabase}
-                                    >
-                                        <Cloud className="mr-1 h-3 w-3" />
-                                        Sync Supabase
-                                    </Button>
+                                        Sauvegarder
+                                    </PdfSaveButton>
                                 </div>
                             </div>
                         </div>
@@ -745,12 +707,17 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                                        <Receipt className="h-6 w-6 text-white" />
-                                    </div>
-                                    <div>
-                                        <h1 className="text-2xl font-bold text-green-600">FACTURE</h1>
-                                        <p className="text-sm text-gray-600">Document comptable</p>
+                                    <div className="w-36 h-12 flex items-center justify-center">
+                                        <img
+                                            src="/logo/logo-1-small.svg"
+                                            alt="Logo"
+                                            className="h-10 dark:hidden"
+                                        />
+                                        <img
+                                            src="/logo/logo-1-small-darkmode.svg"
+                                            alt="Logo"
+                                            className="h-10 hidden dark:block"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -895,28 +862,62 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        <tr className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                1
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">
-                                                <div className="font-medium">
-                                                    Prestation de service
-                                                </div>
-                                                <div className="text-gray-500 text-xs mt-1">
-                                                    {facture.description || 'Service personnalisé'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                                1
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {formatPrice(facture.montant_ht)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                                                {formatPrice(facture.montant_ht)}
-                                            </td>
-                                        </tr>
+                                        {facture.lignes && facture.lignes.length > 0 ? (
+                                            facture.lignes
+                                                .sort((a, b) => a.ordre - b.ordre)
+                                                .map((ligne, index) => (
+                                                    <tr key={ligne.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {ligne.ordre}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900">
+                                                            <div className="font-medium">
+                                                                {ligne.service?.nom || 'Service personnalisé'}
+                                                            </div>
+                                                            <div className="text-gray-500 text-xs mt-1">
+                                                                {ligne.description_personnalisee || ligne.service?.description || 'Service personnalisé'}
+                                                            </div>
+                                                            {ligne.service?.unite && (
+                                                                <div className="text-gray-400 text-xs mt-1">
+                                                                    Unité : {formatUnite(ligne.service.unite, ligne.quantite)}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                                            {ligne.quantite}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                            {formatPrice(ligne.prix_unitaire_ht)}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                                                            {formatPrice(ligne.montant_ttc)}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                        ) : (
+                                            <tr className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    1
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-900">
+                                                    <div className="font-medium">
+                                                        Prestation de service
+                                                    </div>
+                                                    <div className="text-gray-500 text-xs mt-1">
+                                                        {facture.description || 'Service personnalisé'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                                    1
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    {formatPrice(facture.montant_ht)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                                                    {formatPrice(facture.montant_ht)}
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
