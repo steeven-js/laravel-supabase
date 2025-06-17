@@ -949,7 +949,7 @@ class FactureController extends Controller
             }
 
             // Générer le nom de fichier unifié
-            $nomFichier = "facture_{$facture->id}.pdf";
+            $nomFichier = "facture_{$facture->numero_facture}_{$facture->id}.pdf";
 
             // 1. Sauvegarder localement
             $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'factures');

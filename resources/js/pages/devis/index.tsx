@@ -689,7 +689,7 @@ export default function DevisIndex({ devis }: Props) {
                                             </TableCell>
                                             <TableCell>
                                                 <Badge className={`${getStatusStyles(item.statut)} border-0`}>
-                                                    <span className="flex items-center gap-1">
+                                                    <span className="flex items-center gap-1 whitespace-nowrap">
                                                         {getStatusIcon(item.statut)}
                                                         {formatStatut(item.statut)}
                                                     </span>

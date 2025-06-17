@@ -180,7 +180,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{type}/{id}', [App\Http\Controllers\HistoriqueController::class, 'apiHistoriqueEntite'])->name('entite');
     });
 
-        // Routes d'administration - Protégées par middleware superadmin (accès réservé aux Super Admins)
+    // Routes d'administration - Protégées par middleware superadmin (accès réservé aux Super Admins)
     Route::middleware(['superadmin'])->prefix('admin')->name('admin.')->group(function () {
         // Dashboard admin
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');

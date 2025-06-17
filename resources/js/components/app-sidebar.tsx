@@ -48,29 +48,30 @@ const mainNavItems: NavItem[] = [
         href: '/email-templates',
         icon: Mail,
     },
-
     {
         title: 'Utilisateurs',
         href: '/admin/users',
         icon: Users,
+        requiresSuperAdmin: true,
     },
-
     {
         title: 'Monitoring',
         href: '/admin/monitoring',
         icon: Monitor,
+        requiresSuperAdmin: true,
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
+        href: 'https://github.com/steeven-js/laravel-supabase',
         icon: Folder,
+        requiresSuperAdmin: true,
     },
     {
         title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
+        href: 'https://laravel-supabase-docs.vercel.app',
         icon: BookOpen,
     },
 ];
@@ -80,9 +81,23 @@ export function AppSidebar() {
     const auth = (props as any).auth;
     const user = auth?.user;
 
-    // Utiliser directement les éléments de navigation principaux
-    // Les liens admin sont maintenant inclus dans mainNavItems
-    const navigationItems = [...mainNavItems];
+    // Filtrer les éléments de navigation en fonction du rôle de l'utilisateur
+    const navigationItems = mainNavItems.filter(item => {
+        // Si l'élément nécessite un super admin
+        if (item.requiresSuperAdmin) {
+            return user?.user_role?.name === 'super_admin';
+        }
+        // Sinon, l'élément est accessible à tous les utilisateurs connectés
+        return true;
+    });
+
+    // Filtrer également les éléments du footer
+    const filteredFooterItems = footerNavItems.filter(item => {
+        if (item.requiresSuperAdmin) {
+            return user?.user_role?.name === 'super_admin';
+        }
+        return true;
+    });
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -103,7 +118,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                <NavFooter items={filteredFooterItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
