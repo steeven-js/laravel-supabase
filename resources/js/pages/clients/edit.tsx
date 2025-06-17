@@ -172,7 +172,7 @@ export default function ClientsEdit({ client, entreprises }: Props) {
         <AppLayout breadcrumbs={breadcrumbs(client)}>
             <Head title={`Modifier ${client.prenom} ${client.nom}`} />
 
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <div className="page-container">
                 {/* Bouton retour */}
                 <div>
                     <Button variant="outline" size="sm" asChild>
@@ -184,19 +184,18 @@ export default function ClientsEdit({ client, entreprises }: Props) {
                 </div>
 
                 {/* En-tête avec indicateur de modifications */}
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg" />
-                    <Card className="relative border-0 shadow-sm">
+                <div className="page-header">
+                    <Card className="page-header-card">
                         <CardContent className="p-6">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-start gap-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-3 flex-wrap">
-                                            <h1 className="text-3xl font-bold tracking-tight">
+                                            <h1 className="page-title">
                                                 Modifier {client.prenom} {client.nom}
                                             </h1>
                                             {showUnsavedChanges && (
-                                                <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+                                                <Badge variant="outline" className="badge-warning">
                                                     <AlertCircle className="h-3 w-3 mr-1" />
                                                     Modifications non sauvegardées
                                                 </Badge>

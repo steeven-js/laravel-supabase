@@ -227,16 +227,15 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Madin.IA - Informations de l'entreprise" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <div className="page-container">
                 {/* En-tête avec informations de l'entreprise */}
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg" />
-                    <Card className="relative border-0 shadow-sm">
+                <div className="page-header">
+                    <Card className="page-header-card">
                         <CardContent className="p-6">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
-                                    <Building2 className="h-8 w-8 text-blue-600" />
-                                    <h1 className="text-3xl font-bold tracking-tight">{madinia.name}</h1>
+                                    <Building2 className="page-title-icon" />
+                                    <h1 className="page-title">{madinia.name}</h1>
                                 </div>
                                 <p className="text-muted-foreground">
                                     {madinia.description || 'Gérez les informations de votre entreprise'}
@@ -245,7 +244,7 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
 
                             {/* Badges de statut */}
                             <div className="flex flex-wrap gap-2 mt-4">
-                                <Badge variant={madinia.infos_legales_completes ? "default" : "secondary"}>
+                                <Badge className={madinia.infos_legales_completes ? "badge-success" : "badge-neutral"}>
                                     {madinia.infos_legales_completes ? (
                                         <CheckCircle className="w-3 h-3 mr-1" />
                                     ) : (
@@ -253,7 +252,7 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                                     )}
                                     Informations légales {madinia.infos_legales_completes ? 'complètes' : 'incomplètes'}
                                 </Badge>
-                                <Badge variant={madinia.infos_bancaires_completes ? "default" : "secondary"}>
+                                <Badge className={madinia.infos_bancaires_completes ? "badge-success" : "badge-neutral"}>
                                     {madinia.infos_bancaires_completes ? (
                                         <CheckCircle className="w-3 h-3 mr-1" />
                                     ) : (
@@ -264,7 +263,7 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
 
                                 {/* Badge contact principal */}
                                 {madinia.contact_principal && (
-                                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                                    <Badge variant="outline" className="badge-contact">
                                         <User className="w-3 h-3 mr-1" />
                                         Contact: {madinia.contact_principal.name}
                                     </Badge>
@@ -272,10 +271,10 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                             </div>
 
                             {/* Informations rapides */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                            <div className="grid-3 mt-6">
                                 {madinia.email && (
-                                    <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
-                                        <Mail className="h-5 w-5 text-blue-600" />
+                                    <div className="info-card">
+                                        <Mail className="info-icon-email" />
                                         <div>
                                             <div className="text-sm font-medium">{madinia.email}</div>
                                             <div className="text-xs text-muted-foreground">Email entreprise</div>
@@ -284,8 +283,8 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                                 )}
 
                                 {madinia.telephone && (
-                                    <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
-                                        <Phone className="h-5 w-5 text-green-600" />
+                                    <div className="info-card">
+                                        <Phone className="info-icon-phone" />
                                         <div>
                                             <div className="text-sm font-medium">{madinia.telephone}</div>
                                             <div className="text-xs text-muted-foreground">Téléphone</div>
@@ -294,8 +293,8 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                                 )}
 
                                 {madinia.site_web && (
-                                    <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
-                                        <Globe className="h-5 w-5 text-purple-600" />
+                                    <div className="info-card">
+                                        <Globe className="info-icon-web" />
                                         <div>
                                             <a
                                                 href={madinia.site_web}
@@ -315,28 +314,28 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                     </Card>
                 </div>
 
-                <form onSubmit={submit} className="space-y-6">
+                <form onSubmit={submit} className="form-sections">
                     {/* Identité de l'entreprise */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Building2 className="h-5 w-5" />
+                            <CardTitle className="section-title">
+                                <Building2 className="section-icon" />
                                 Identité de l'entreprise
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <CardContent className="section-content">
+                            <div className="grid-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Nom de l'entreprise *</Label>
                                     <Input
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className={errors.name ? 'border-red-500' : ''}
+                                        className={errors.name ? 'input-error' : ''}
                                         placeholder="Nom de votre entreprise"
                                     />
                                     {errors.name && (
-                                        <p className="text-sm text-red-500">{errors.name}</p>
+                                        <p className="error-text">{errors.name}</p>
                                     )}
                                 </div>
 
@@ -385,13 +384,13 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                     {/* Coordonnées */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Phone className="h-5 w-5" />
+                            <CardTitle className="section-title">
+                                <Phone className="section-icon" />
                                 Coordonnées
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <CardContent className="section-content">
+                            <div className="grid-3">
                                 <div className="space-y-2">
                                     <Label htmlFor="telephone">Téléphone</Label>
                                     <Input
@@ -513,15 +512,15 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                     {/* Réseaux sociaux */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
+                            <CardTitle className="section-title">
+                                <Users className="section-icon" />
                                 Réseaux sociaux
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <CardContent className="section-content">
+                            <div className="grid-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="facebook" className="flex items-center gap-2">
+                                    <Label htmlFor="facebook" className="label-with-icon">
                                         <Facebook className="h-4 w-4" />
                                         Facebook
                                     </Label>

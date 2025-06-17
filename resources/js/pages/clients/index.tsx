@@ -190,29 +190,29 @@ export default function ClientsIndex({ clients }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Clients" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <div className="page-container">
                 {/* En-tête */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
+                        <h1 className="page-title">Clients</h1>
                         <p className="text-muted-foreground">
                             Gérez vos clients et leurs informations
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="form-actions">
                         {selectedClients.length > 0 && (
                             <>
-                                <Button variant="outline" size="sm" onClick={handleDeleteSelected}>
+                                <Button variant="outline" size="sm" onClick={handleDeleteSelected} className="btn-icon">
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Supprimer ({selectedClients.length})
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="btn-icon">
                                     <Download className="mr-2 h-4 w-4" />
                                     Exporter
                                 </Button>
                             </>
                         )}
-                        <Button asChild>
+                        <Button asChild className="btn-icon">
                             <Link href="/clients/create">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Nouveau client
@@ -224,19 +224,19 @@ export default function ClientsIndex({ clients }: Props) {
                 {/* Filtres et recherche */}
                 <Card>
                     <CardHeader className="pb-4">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="flex items-center gap-2">
-                                <Filter className="h-5 w-5" />
+                        <div className="form-row sm:justify-between">
+                            <CardTitle className="section-title">
+                                <Filter className="section-icon" />
                                 Filtres & Recherche
                             </CardTitle>
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <div className="form-actions">
+                                <div className="input-with-icon">
+                                    <Search className="input-icon-left" />
                                     <Input
                                         placeholder="Rechercher des clients..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-8 w-full sm:w-[300px]"
+                                        className="input-with-left-icon w-full sm:w-[300px]"
                                     />
                                 </div>
                                 <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
@@ -340,9 +340,9 @@ export default function ClientsIndex({ clients }: Props) {
                                                 ) : '-'}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={client.actif ? 'default' : 'secondary'}>
-                                                    {client.actif ? 'Actif' : 'Inactif'}
-                                                </Badge>
+                                                                                <Badge className={client.actif ? 'badge-success' : 'badge-neutral'}>
+                                    {client.actif ? 'Actif' : 'Inactif'}
+                                </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1 table-actions">
@@ -369,12 +369,10 @@ export default function ClientsIndex({ clients }: Props) {
                                     ))}
                                     {paginatedClients.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="text-center py-12">
-                                                <div className="text-muted-foreground">
-                                                    <Users className="mx-auto h-12 w-12 mb-4" />
-                                                    <h3 className="font-medium mb-2">Aucun client trouvé</h3>
-                                                    <p>Aucun client ne correspond à vos critères de recherche</p>
-                                                </div>
+                                            <TableCell colSpan={8} className="empty-state">
+                                                <Users className="empty-state-icon" />
+                                                <h3 className="font-medium mb-2">Aucun client trouvé</h3>
+                                                <p>Aucun client ne correspond à vos critères de recherche</p>
                                                 <Button asChild className="mt-4">
                                                     <Link href="/clients/create">
                                                         <Plus className="mr-2 h-4 w-4" />
