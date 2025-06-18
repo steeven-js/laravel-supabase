@@ -15,12 +15,15 @@ class ClientEmail extends Model
         'user_id',
         'objet',
         'contenu',
+        'cc',
+        'attachments',
         'statut',
         'date_envoi',
     ];
 
     protected $casts = [
         'date_envoi' => 'datetime',
+        'attachments' => 'array',
     ];
 
     public function client(): BelongsTo

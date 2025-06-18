@@ -146,11 +146,117 @@ class ClientController extends Controller
      */
     public function sendEmail(Request $request, Client $client)
     {
+        Log::info('=== DÉBUT SENDMAIL DEBUG ===', [
+            'client_id' => $client->id,
+            'request_all' => $request->except(['attachments']), // Exclure les fichiers du log pour éviter les erreurs
+            'request_files' => $request->allFiles(),
+            'request_method' => $request->method(),
+            'has_attachments' => $request->hasFile('attachments'),
+            'attachments_count' => $request->hasFile('attachments') ? count($request->file('attachments')) : 0
+        ]);
+
         try {
             $validated = $request->validate([
                 'objet' => 'required|string|max:255',
                 'contenu' => 'required|string',
+                'cc' => 'nullable|string',
+                'attachments' => 'nullable|array',
+                'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,txt|max:25600', // 25MB max par fichier
+            ], [
+                'attachments.*.file' => 'Chaque pièce jointe doit être un fichier valide.',
+                'attachments.*.mimes' => 'Les types de fichiers autorisés sont : PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG, TXT.',
+                'attachments.*.max' => 'Chaque fichier ne peut pas dépasser 25MB.',
             ]);
+
+            // Traiter les adresses CC
+            $ccEmails = [];
+            if (!empty($validated['cc'])) {
+                $ccEmails = array_map('trim', explode(',', $validated['cc']));
+                // Valider chaque adresse email
+                foreach ($ccEmails as $email) {
+                    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        return back()
+                            ->withErrors(['cc' => "L'adresse email '{$email}' n'est pas valide."])
+                            ->with('error', '❌ Erreur de validation. Veuillez vérifier les adresses CC.');
+                    }
+                }
+            }
+
+            // Traiter les pièces jointes
+            $attachmentsInfo = [];
+            $attachmentPaths = [];
+
+            Log::info('=== DÉBUT TRAITEMENT PIÈCES JOINTES ===', [
+                'has_files' => $request->hasFile('attachments'),
+                'files_data' => $request->allFiles(),
+                'request_attachments' => $request->file('attachments')
+            ]);
+
+            if ($request->hasFile('attachments')) {
+                // S'assurer que le dossier exists
+                $attachmentDir = storage_path('app/private/client_emails/attachments');
+                if (!file_exists($attachmentDir)) {
+                    mkdir($attachmentDir, 0755, true);
+                    Log::info('Dossier pièces jointes créé', ['path' => $attachmentDir]);
+                }
+
+                foreach ($request->file('attachments') as $index => $file) {
+                    Log::info('Traitement du fichier', [
+                        'index' => $index,
+                        'original_name' => $file->getClientOriginalName(),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'is_valid' => $file->isValid(),
+                        'error' => $file->getError()
+                    ]);
+
+                    if (!$file->isValid()) {
+                        Log::error('Fichier invalide', [
+                            'index' => $index,
+                            'error' => $file->getError(),
+                            'error_message' => $file->getErrorMessage()
+                        ]);
+                        continue;
+                    }
+
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $fileName = 'email_attachment_' . time() . '_' . $index . '.' . $extension;
+
+                    try {
+                        // Stocker le fichier dans storage/app/private/client_emails/attachments
+                        $path = $file->storeAs('client_emails/attachments', $fileName, 'local');
+
+                        Log::info('Fichier stocké avec succès', [
+                            'original_name' => $originalName,
+                            'stored_path' => $path,
+                            'full_path' => storage_path('app/private/' . $path)
+                        ]);
+
+                        $attachmentsInfo[] = [
+                            'original_name' => $originalName,
+                            'stored_name' => $fileName,
+                            'path' => $path,
+                            'size' => $file->getSize(),
+                            'mime_type' => $file->getMimeType(),
+                        ];
+
+                        $attachmentPaths[] = storage_path('app/private/' . $path);
+                    } catch (Exception $e) {
+                        Log::error('Erreur lors du stockage du fichier', [
+                            'original_name' => $originalName,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        throw new Exception("Erreur lors du stockage du fichier {$originalName}: " . $e->getMessage());
+                    }
+                }
+
+                Log::info('=== FIN TRAITEMENT PIÈCES JOINTES ===', [
+                    'total_files' => count($attachmentsInfo),
+                    'attachment_paths' => $attachmentPaths
+                ]);
+            }
 
             // Enregistrer l'email dans la base de données
             $clientEmail = ClientEmail::create([
@@ -158,31 +264,46 @@ class ClientController extends Controller
                 'user_id' => Auth::id(),
                 'objet' => $validated['objet'],
                 'contenu' => $validated['contenu'],
+                'cc' => $validated['cc'] ?? null,
+                'attachments' => $attachmentsInfo,
                 'statut' => 'envoye',
                 'date_envoi' => now(),
             ]);
 
-                        try {
+            try {
                 // Envoi réel de l'email avec Mailable
                 Log::info('=== DÉBUT ENVOI EMAIL CLIENT ===', [
                     'client_id' => $client->id,
                     'client_email' => $client->email,
                     'user_id' => Auth::id(),
-                    'objet' => $validated['objet']
+                    'objet' => $validated['objet'],
+                    'cc_emails' => $ccEmails,
+                    'attachments_count' => count($attachmentsInfo),
+                    'attachment_paths' => $attachmentPaths
                 ]);
 
-                Mail::to($client->email)->send(
-                    new ClientEmailMailable(
-                        $client,
-                        Auth::user(),
-                        $validated['objet'],
-                        $validated['contenu']
-                    )
+                                $mailInstance = new ClientEmailMailable(
+                    $client,
+                    Auth::user(),
+                    $validated['objet'],
+                    $validated['contenu'],
+                    $attachmentPaths
                 );
+
+                // Créer l'instance de mail avec ou sans CC
+                $mail = Mail::to($client->email);
+
+                if (!empty($ccEmails)) {
+                    $mail->cc($ccEmails);
+                }
+
+                $mail->send($mailInstance);
 
                 Log::info('Email client envoyé avec succès', [
                     'client_email' => $client->email,
-                    'objet' => $validated['objet']
+                    'objet' => $validated['objet'],
+                    'cc_count' => count($ccEmails),
+                    'attachments_count' => count($attachmentsInfo)
                 ]);
 
             } catch (Exception $e) {
@@ -199,19 +320,47 @@ class ClientController extends Controller
                 throw $e;
             }
 
-            // Envoyer notification pour l'envoi d'email au client
-            $client->sendCustomNotification('email_sent',
-                "Un email a été envoyé à {$client->prenom} {$client->nom} avec l'objet : \"{$validated['objet']}\""
-            );
+            // Préparer le message de notification
+            $notificationMessage = "Un email a été envoyé à {$client->prenom} {$client->nom} avec l'objet : \"{$validated['objet']}\"";
+            if (!empty($ccEmails)) {
+                $notificationMessage .= " (CC: " . implode(', ', $ccEmails) . ")";
+            }
+            if (!empty($attachmentsInfo)) {
+                $notificationMessage .= " (" . count($attachmentsInfo) . " pièce(s) jointe(s))";
+            }
 
-            return back()->with('success', '📧 Email envoyé avec succès à ' . $client->nom_complet);
+            // Envoyer notification pour l'envoi d'email au client
+            $client->sendCustomNotification('email_sent', $notificationMessage);
+
+            $successMessage = '📧 Email envoyé avec succès à ' . $client->nom_complet;
+            if (!empty($ccEmails)) {
+                $successMessage .= ' (avec ' . count($ccEmails) . ' destinataire(s) en copie)';
+            }
+            if (!empty($attachmentsInfo)) {
+                $successMessage .= ' (avec ' . count($attachmentsInfo) . ' pièce(s) jointe(s))';
+            }
+
+            return back()->with('success', $successMessage);
 
         } catch (ValidationException $e) {
+            Log::error('Erreur de validation lors de l\'envoi d\'email', [
+                'client_id' => $client->id,
+                'errors' => $e->errors(),
+                'input' => $request->except(['attachments']) // Exclure les fichiers pour éviter les erreurs de sérialisation
+            ]);
+
             return back()
                 ->withErrors($e->errors())
                 ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
 
         } catch (Exception $e) {
+            Log::error('Erreur générale lors de l\'envoi d\'email', [
+                'client_id' => $client->id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'input' => $request->except(['attachments']) // Exclure les fichiers pour éviter les erreurs de sérialisation
+            ]);
+
             return back()
                 ->with('error', '❌ Erreur lors de l\'envoi de l\'email. Veuillez réessayer.');
         }

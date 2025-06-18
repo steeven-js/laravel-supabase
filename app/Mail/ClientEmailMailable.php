@@ -20,6 +20,7 @@ class ClientEmailMailable extends Mailable
     public User $user;
     public string $objet;
     public string $contenu;
+    public array $attachmentPaths;
 
     /**
      * Create a new message instance.
@@ -28,12 +29,14 @@ class ClientEmailMailable extends Mailable
         Client $client,
         User $user,
         string $objet,
-        string $contenu
+        string $contenu,
+        array $attachmentPaths = []
     ) {
         $this->client = $client;
         $this->user = $user;
         $this->objet = $objet;
         $this->contenu = $contenu;
+        $this->attachmentPaths = $attachmentPaths;
     }
 
     /**
@@ -80,6 +83,38 @@ class ClientEmailMailable extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+
+        Log::info('Ajout des pièces jointes', [
+            'nombre_fichiers' => count($this->attachmentPaths),
+            'paths' => $this->attachmentPaths
+        ]);
+
+        foreach ($this->attachmentPaths as $path) {
+            if (file_exists($path)) {
+                // Extraire le nom original du fichier à partir du path
+                $originalName = basename($path);
+
+                Log::info('Ajout pièce jointe', [
+                    'path' => $path,
+                    'original_name' => $originalName,
+                    'file_exists' => file_exists($path),
+                    'file_size' => filesize($path)
+                ]);
+
+                $attachments[] = \Illuminate\Mail\Mailables\Attachment::fromPath($path)
+                    ->as($originalName);
+            } else {
+                Log::warning('Fichier de pièce jointe non trouvé', [
+                    'path' => $path
+                ]);
+            }
+        }
+
+        Log::info('Pièces jointes traitées', [
+            'nombre_attachments' => count($attachments)
+        ]);
+
+        return $attachments;
     }
 }

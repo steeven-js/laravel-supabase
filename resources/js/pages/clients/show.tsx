@@ -52,7 +52,9 @@ import {
     RotateCcw,
     ListTodo,
     GripVertical,
-    X
+    X,
+    Paperclip,
+    Upload
 } from 'lucide-react';
 import {
     DndContext,
@@ -105,6 +107,14 @@ interface Client {
         id: number;
         objet: string;
         contenu: string;
+        cc?: string;
+        attachments?: Array<{
+            original_name: string;
+            stored_name: string;
+            path: string;
+            size: number;
+            mime_type: string;
+        }>;
         date_envoi: string;
         statut: 'envoye' | 'echec';
         user: {
@@ -219,8 +229,10 @@ export default function ClientsShow({ client, historique, auth }: Props) {
     const [isComposingEmail, setIsComposingEmail] = useState(false);
     const [emailForm, setEmailForm] = useState({
         objet: '',
-        contenu: ''
+        contenu: '',
+        cc: ''
     });
+    const [attachments, setAttachments] = useState<File[]>([]);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
 
     // États pour les opportunités
@@ -397,18 +409,78 @@ export default function ClientsShow({ client, historique, auth }: Props) {
             return;
         }
 
+        // Vérifier la taille des pièces jointes (max 25MB au total)
+        const totalSize = attachments.reduce((sum, file) => sum + file.size, 0);
+        const maxSize = 25 * 1024 * 1024; // 25MB
+        if (totalSize > maxSize) {
+            toast.error('La taille totale des pièces jointes ne peut pas dépasser 25MB');
+            return;
+        }
+
+        // Vérifier les types de fichiers autorisés
+        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/jpg', 'image/png', 'text/plain'];
+
+        for (const file of attachments) {
+            if (!allowedTypes.includes(file.type)) {
+                toast.error(`Le type de fichier "${file.type}" n'est pas autorisé pour le fichier "${file.name}"`);
+                return;
+            }
+        }
+
         setIsSendingEmail(true);
 
         try {
-            await router.post(`/clients/${client.id}/send-email`, emailForm, {
+            const formData = new FormData();
+            formData.append('objet', emailForm.objet);
+            formData.append('contenu', emailForm.contenu);
+            if (emailForm.cc.trim()) {
+                formData.append('cc', emailForm.cc);
+            }
+
+            // Ajouter les pièces jointes avec logs de débogage
+            console.log('Ajout des pièces jointes:', attachments.length);
+            attachments.forEach((file, index) => {
+                console.log(`Fichier ${index}:`, {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                });
+                formData.append(`attachments[${index}]`, file);
+            });
+
+            // Afficher le contenu du FormData
+            console.log('FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+
+            await router.post(`/clients/${client.id}/send-email`, formData, {
+                forceFormData: true,
                 onSuccess: () => {
                     toast.success('Email envoyé avec succès !');
-                    setEmailForm({ objet: '', contenu: '' });
+                    setEmailForm({ objet: '', contenu: '', cc: '' });
+                    setAttachments([]);
                     setIsComposingEmail(false);
                 },
                 onError: (errors) => {
                     console.error('Erreur lors de l\'envoi:', errors);
-                    toast.error('Erreur lors de l\'envoi de l\'email');
+
+                    // Afficher des messages d'erreur plus spécifiques
+                    if (errors.attachments) {
+                        if (Array.isArray(errors.attachments)) {
+                            errors.attachments.forEach((error, index) => {
+                                toast.error(`Pièce jointe ${index + 1}: ${error}`);
+                            });
+                        } else {
+                            toast.error(`Pièces jointes: ${errors.attachments}`);
+                        }
+                    } else if (typeof errors === 'string') {
+                        toast.error(errors);
+                    } else if (errors.message) {
+                        toast.error(errors.message);
+                    } else {
+                        toast.error('Erreur lors de l\'envoi de l\'email');
+                    }
                 },
                 onFinish: () => {
                     setIsSendingEmail(false);
@@ -1225,8 +1297,8 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${activeTab === tab.id
-                                                ? 'bg-background text-foreground shadow-sm'
-                                                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                                            ? 'bg-background text-foreground shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                                             }`}
                                     >
                                         <Icon className="h-4 w-4" />
@@ -1897,6 +1969,19 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                         <span><strong>De :</strong> {auth.user.name}</span>
                                     </div>
                                     <div className="space-y-2">
+                                        <Label htmlFor="email-cc">CC</Label>
+                                        <Input
+                                            id="email-cc"
+                                            value={emailForm.cc}
+                                            onChange={(e) => setEmailForm(prev => ({ ...prev, cc: e.target.value }))}
+                                            placeholder="email1@exemple.com, email2@exemple.com..."
+                                            disabled={isSendingEmail}
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Séparez plusieurs adresses par des virgules
+                                        </p>
+                                    </div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="email-subject">Objet</Label>
                                         <Input
                                             id="email-subject"
@@ -1917,6 +2002,80 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                             disabled={isSendingEmail}
                                         />
                                     </div>
+
+                                    {/* Pièces jointes */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email-attachments">Pièces jointes</Label>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    id="email-attachments"
+                                                    type="file"
+                                                    multiple
+                                                    onChange={(e) => {
+                                                        const files = Array.from(e.target.files || []);
+                                                        setAttachments(prev => [...prev, ...files]);
+                                                        e.target.value = ''; // Reset input pour permettre d'ajouter le même fichier
+                                                    }}
+                                                    disabled={isSendingEmail}
+                                                    className="hidden"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => document.getElementById('email-attachments')?.click()}
+                                                    disabled={isSendingEmail}
+                                                >
+                                                    <Paperclip className="mr-2 h-4 w-4" />
+                                                    Ajouter des fichiers
+                                                </Button>
+                                                {attachments.length > 0 && (
+                                                    <span className="text-sm text-muted-foreground">
+                                                        {attachments.length} fichier(s) sélectionné(s)
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Liste des fichiers sélectionnés */}
+                                            {attachments.length > 0 && (
+                                                <div className="space-y-2 max-h-32 overflow-y-auto border rounded-lg p-3 bg-muted/20">
+                                                    {attachments.map((file, index) => (
+                                                        <div key={`${file.name}-${index}`} className="flex items-center justify-between text-sm">
+                                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                <Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                                <span className="truncate">{file.name}</span>
+                                                                <span className="text-muted-foreground flex-shrink-0">
+                                                                    ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                                                                </span>
+                                                            </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setAttachments(prev => prev.filter((_, i) => i !== index));
+                                                                }}
+                                                                disabled={isSendingEmail}
+                                                                className="text-destructive hover:text-destructive flex-shrink-0"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                    <div className="border-t pt-2 mt-2">
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Taille totale: {(attachments.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(2)} MB / 25 MB max
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Taille maximale: 25MB au total. Formats acceptés: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG
+                                            </p>
+                                        </div>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <Button
                                             onClick={handleSendEmail}
@@ -1936,10 +2095,11 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            onClick={() => {
-                                                setIsComposingEmail(false);
-                                                setEmailForm({ objet: '', contenu: '' });
-                                            }}
+                                                                        onClick={() => {
+                                setIsComposingEmail(false);
+                                setEmailForm({ objet: '', contenu: '', cc: '' });
+                                setAttachments([]);
+                            }}
                                             disabled={isSendingEmail}
                                         >
                                             Annuler
@@ -1986,12 +2146,44 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                                                     </>
                                                                 )}
                                                             </Badge>
+                                                            {email.cc && (
+                                                                <span className="text-xs">
+                                                                    CC: {email.cc}
+                                                                </span>
+                                                            )}
+                                                            {email.attachments && email.attachments.length > 0 && (
+                                                                <span className="flex items-center gap-1 text-xs">
+                                                                    <Paperclip className="h-3 w-3" />
+                                                                    {email.attachments.length} pièce(s) jointe(s)
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="text-sm text-muted-foreground bg-muted/30 rounded p-3">
                                                     <p className="whitespace-pre-wrap">{email.contenu}</p>
                                                 </div>
+
+                                                {/* Affichage détaillé des pièces jointes */}
+                                                {email.attachments && email.attachments.length > 0 && (
+                                                    <div className="text-sm bg-blue-50 border border-blue-200 rounded p-3">
+                                                        <p className="font-medium text-blue-800 mb-2 flex items-center gap-1">
+                                                            <Paperclip className="h-4 w-4" />
+                                                            Pièces jointes ({email.attachments.length})
+                                                        </p>
+                                                        <div className="space-y-1">
+                                                            {email.attachments.map((attachment, index) => (
+                                                                <div key={index} className="flex items-center gap-2 text-blue-700">
+                                                                    <span className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0" />
+                                                                    <span className="font-medium">{attachment.original_name}</span>
+                                                                    <span className="text-blue-600">
+                                                                        ({(attachment.size / 1024 / 1024).toFixed(2)} MB)
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -2102,8 +2294,8 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                                     <div className="flex justify-between text-xs text-muted-foreground mt-3">
                                                         <span>0%</span>
                                                         <span className={`font-medium ${opportunityForm.probabilite <= 33 ? 'text-red-600' :
-                                                                opportunityForm.probabilite <= 66 ? 'text-orange-600' :
-                                                                    'text-green-600'
+                                                            opportunityForm.probabilite <= 66 ? 'text-orange-600' :
+                                                                'text-green-600'
                                                             }`}>
                                                             {opportunityForm.probabilite <= 33 ? 'Faible' :
                                                                 opportunityForm.probabilite <= 66 ? 'Moyenne' :
