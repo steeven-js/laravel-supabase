@@ -533,17 +533,41 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                         <Text style={styles.infoName}>
                             {(devis.client?.prenom || '')} {(devis.client?.nom || '')}
                         </Text>
-                        {devis.client?.entreprise && (
-                            <Text style={styles.infoText}>
-                                {devis.client.entreprise.nom_commercial || devis.client.entreprise.nom || ''}
-                            </Text>
+
+                        {/* Informations entreprise si elle existe */}
+                        {devis.client?.entreprise ? (
+                            <>
+                                <Text style={[styles.infoText, { fontWeight: 700, marginTop: 1 }]}>
+                                    {devis.client.entreprise.nom_commercial || devis.client.entreprise.nom || ''}
+                                </Text>
+                                {devis.client.entreprise.nom_commercial &&
+                                    devis.client.entreprise.nom &&
+                                    devis.client.entreprise.nom_commercial !== devis.client.entreprise.nom && (
+                                        <Text style={[styles.infoText, { fontSize: 6, color: '#666666' }]}>
+                                            {devis.client.entreprise.nom}
+                                        </Text>
+                                    )}
+                                {devis.client.entreprise.adresse && (
+                                    <Text style={styles.infoText}>{devis.client.entreprise.adresse}</Text>
+                                )}
+                                {(devis.client.entreprise.code_postal || devis.client.entreprise.ville) && (
+                                    <Text style={styles.infoText}>
+                                        {devis.client.entreprise.code_postal || ''} {devis.client.entreprise.ville || ''}
+                                    </Text>
+                                )}
+                            </>
+                        ) : (
+                            /* Adresse personnelle si pas d'entreprise */
+                            <>
+                                {devis.client?.adresse && <Text style={styles.infoText}>{devis.client.adresse}</Text>}
+                                {(devis.client?.code_postal || devis.client?.ville) && (
+                                    <Text style={styles.infoText}>
+                                        {devis.client.code_postal || ''} {devis.client.ville || ''}
+                                    </Text>
+                                )}
+                            </>
                         )}
-                        {devis.client?.adresse && <Text style={styles.infoText}>{devis.client.adresse}</Text>}
-                        {(devis.client?.code_postal || devis.client?.ville) && (
-                            <Text style={styles.infoText}>
-                                {devis.client.code_postal || ''} {devis.client.ville || ''}
-                            </Text>
-                        )}
+
                         <Text style={styles.infoText}>Email: {devis.client?.email || ''}</Text>
                         {devis.client?.telephone && (
                             <Text style={styles.infoText}>Tél: {devis.client.telephone}</Text>

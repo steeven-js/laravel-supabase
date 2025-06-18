@@ -582,35 +582,66 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
                                         </div>
 
                                         {selectedClient && (
-                                            <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm space-y-1">
-                                                <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {selectedClient.prenom} {selectedClient.nom}
-                                                </p>
-                                                {selectedClient.entreprise && (
-                                                    <p className="text-gray-600 dark:text-gray-400">
-                                                        {selectedClient.entreprise.nom_commercial || selectedClient.entreprise.nom}
+                                            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg text-sm space-y-3">
+                                                {/* Informations du contact */}
+                                                <div className="pb-2 border-b border-gray-200 dark:border-gray-600">
+                                                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Contact</h4>
+                                                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {selectedClient.prenom} {selectedClient.nom}
                                                     </p>
-                                                )}
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                    <span className="text-gray-600 dark:text-gray-400">{selectedClient.email}</span>
-                                                </div>
-                                                {selectedClient.telephone && (
-                                                    <div className="flex items-center gap-2">
-                                                        <Phone className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                        <span className="text-gray-600 dark:text-gray-400">{selectedClient.telephone}</span>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                        <span className="text-gray-600 dark:text-gray-400">{selectedClient.email}</span>
                                                     </div>
-                                                )}
-                                                {(selectedClient.adresse || selectedClient.ville) && (
-                                                    <div className="flex items-start gap-2">
-                                                        <MapPin className="h-3 w-3 text-gray-400 dark:text-gray-500 mt-0.5" />
-                                                        <div className="text-gray-600 dark:text-gray-400">
-                                                            {selectedClient.adresse && <div>{selectedClient.adresse}</div>}
-                                                            {(selectedClient.code_postal || selectedClient.ville) && (
-                                                                <div>{selectedClient.code_postal} {selectedClient.ville}</div>
-                                                            )}
+                                                    {selectedClient.telephone && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <Phone className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                            <span className="text-gray-600 dark:text-gray-400">{selectedClient.telephone}</span>
                                                         </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Informations de l'entreprise */}
+                                                {selectedClient.entreprise ? (
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Entreprise</h4>
+                                                        <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                                                            {selectedClient.entreprise.nom_commercial || selectedClient.entreprise.nom}
+                                                        </p>
+                                                        {selectedClient.entreprise.nom_commercial && selectedClient.entreprise.nom &&
+                                                         selectedClient.entreprise.nom_commercial !== selectedClient.entreprise.nom && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                                Raison sociale : {selectedClient.entreprise.nom}
+                                                            </p>
+                                                        )}
+                                                        {(selectedClient.entreprise.adresse || selectedClient.entreprise.ville) && (
+                                                            <div className="flex items-start gap-2 mt-1">
+                                                                <MapPin className="h-3 w-3 text-gray-400 dark:text-gray-500 mt-0.5" />
+                                                                <div className="text-gray-600 dark:text-gray-400">
+                                                                    {selectedClient.entreprise.adresse && <div>{selectedClient.entreprise.adresse}</div>}
+                                                                    {(selectedClient.entreprise.code_postal || selectedClient.entreprise.ville) && (
+                                                                        <div>{selectedClient.entreprise.code_postal} {selectedClient.entreprise.ville}</div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
+                                                ) : (
+                                                    /* Adresse personnelle si pas d'entreprise */
+                                                    (selectedClient.adresse || selectedClient.ville) && (
+                                                        <div>
+                                                            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Adresse personnelle</h4>
+                                                            <div className="flex items-start gap-2">
+                                                                <MapPin className="h-3 w-3 text-gray-400 dark:text-gray-500 mt-0.5" />
+                                                                <div className="text-gray-600 dark:text-gray-400">
+                                                                    {selectedClient.adresse && <div>{selectedClient.adresse}</div>}
+                                                                    {(selectedClient.code_postal || selectedClient.ville) && (
+                                                                        <div>{selectedClient.code_postal} {selectedClient.ville}</div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )
                                                 )}
                                             </div>
                                         )}
