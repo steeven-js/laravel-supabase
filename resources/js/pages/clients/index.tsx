@@ -59,6 +59,30 @@ export default function ClientsIndex({ clients }: Props) {
     }>({ isOpen: false, client: null });
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Fonctions pour gérer les changements avec reset de pagination
+    const handleSearchChange = (value: string) => {
+        setSearchTerm(value);
+        setCurrentPage(1); // Reset pagination quand on cherche
+    };
+
+    const handleStatusFilterChange = (value: 'all' | 'active' | 'inactive') => {
+        setStatusFilter(value);
+        setCurrentPage(1); // Reset pagination quand on filtre
+    };
+
+    const handleCityFilterChange = (value: string) => {
+        setCityFilter(value);
+        setCurrentPage(1); // Reset pagination quand on filtre
+    };
+
+    // Fonction pour effacer tous les filtres
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setCityFilter('all');
+        setCurrentPage(1);
+    };
+
     // Obtenir les villes uniques pour le filtre
     const uniqueCities = useMemo(() => {
         const cities = clients
@@ -71,17 +95,18 @@ export default function ClientsIndex({ clients }: Props) {
 
     // Filtrer et trier les clients
     const filteredAndSortedClients = useMemo(() => {
+        const searchTermLower = searchTerm.toLowerCase().trim();
+
         const filtered = clients.filter(client => {
-            const matchesSearch =
-                client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (client.telephone?.includes(searchTerm)) ||
-                (client.ville?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (client.entreprise && (
-                    client.entreprise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (client.entreprise.nom_commercial?.toLowerCase().includes(searchTerm.toLowerCase()))
-                ));
+            // Recherche améliorée - si pas de terme de recherche, afficher tout
+            const matchesSearch = !searchTermLower ||
+                (client.nom?.toLowerCase().includes(searchTermLower)) ||
+                (client.prenom?.toLowerCase().includes(searchTermLower)) ||
+                (client.email?.toLowerCase().includes(searchTermLower)) ||
+                (client.telephone?.toLowerCase().includes(searchTermLower)) ||
+                (client.ville?.toLowerCase().includes(searchTermLower)) ||
+                (client.entreprise?.nom?.toLowerCase().includes(searchTermLower)) ||
+                (client.entreprise?.nom_commercial?.toLowerCase().includes(searchTermLower));
 
             const matchesStatus =
                 statusFilter === 'all' ||
@@ -94,21 +119,23 @@ export default function ClientsIndex({ clients }: Props) {
             return matchesSearch && matchesStatus && matchesCity;
         });
 
-        // Tri
+        // Tri amélioré
         filtered.sort((a, b) => {
-            let aValue = a[sortField];
-            let bValue = b[sortField];
+            let aValue: any = a[sortField];
+            let bValue: any = b[sortField];
 
-            if (sortField === 'nom' || sortField === 'prenom') {
-                aValue = (aValue as string).toLowerCase();
-                bValue = (bValue as string).toLowerCase();
+            // Traitement spécial pour les chaînes de caractères
+            if (sortField === 'nom' || sortField === 'prenom' || sortField === 'email') {
+                aValue = (aValue || '').toLowerCase();
+                bValue = (bValue || '').toLowerCase();
             }
 
-            // Gérer les valeurs undefined/null
+            // Gérer les valeurs undefined/null - les mettre à la fin
             if (aValue == null && bValue == null) return 0;
             if (aValue == null) return sortDirection === 'asc' ? 1 : -1;
             if (bValue == null) return sortDirection === 'asc' ? -1 : 1;
 
+            // Comparaison normale
             if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
             if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
             return 0;
@@ -235,11 +262,11 @@ export default function ClientsIndex({ clients }: Props) {
                                     <Input
                                         placeholder="Rechercher des clients..."
                                         value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onChange={(e) => handleSearchChange(e.target.value)}
                                         className="pl-8 w-full sm:w-[300px]"
                                     />
                                 </div>
-                                <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>
+                                <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                                     <SelectTrigger className="w-full sm:w-[140px]">
                                         <SelectValue placeholder="Statut" />
                                     </SelectTrigger>
@@ -249,7 +276,7 @@ export default function ClientsIndex({ clients }: Props) {
                                         <SelectItem value="inactive">Inactifs</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Select value={cityFilter} onValueChange={setCityFilter}>
+                                <Select value={cityFilter} onValueChange={handleCityFilterChange}>
                                     <SelectTrigger className="w-full sm:w-[140px]">
                                         <SelectValue placeholder="Ville" />
                                     </SelectTrigger>
@@ -260,6 +287,14 @@ export default function ClientsIndex({ clients }: Props) {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={clearAllFilters}
+                                    className="whitespace-nowrap"
+                                >
+                                    Effacer
+                                </Button>
                             </div>
                         </div>
                     </CardHeader>

@@ -141,7 +141,8 @@ const useStyles = () =>
                     fontSize: 8, // Réduit de 9 à 8
                     fontWeight: 700,
                     color: '#000000',
-                    marginBottom: 2, // Réduit de 3 à 2
+                    marginBottom: 3, // Réduit de 3 à 2
+                    textTransform: 'uppercase',
                 },
                 infoText: {
                     fontSize: 7, // Réduit de 8 à 7
@@ -149,8 +150,9 @@ const useStyles = () =>
                     marginBottom: 0.5, // Ultra-réduit
                 },
                 dateText: {
-                    fontSize: 7, // Réduit de 8 à 7
-                    color: '#333333',
+                    fontSize: 8, // Augmenté pour plus de lisibilité
+                    color: '#000000',
+                    fontWeight: 600,
                 },
                 infoName: {
                     fontSize: 8, // Réduit de 9 à 8
@@ -501,7 +503,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                     </View>
                 </View>
 
-                {/* Section info émetteur/client */}
+                {/* Première ligne : Émetteur et Client */}
                 <View style={styles.infoSection}>
                     <View style={styles.infoBox}>
                         <Text style={styles.infoTitle}>Émetteur</Text>
@@ -549,7 +551,7 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                     </View>
                 </View>
 
-                {/* Section dates en dessous */}
+                {/* Deuxième ligne : Date d'émission et Date d'échéance */}
                 <View style={styles.dateSection}>
                     <View style={styles.dateBox}>
                         <Text style={styles.dateTitle}>Date d'émission</Text>
