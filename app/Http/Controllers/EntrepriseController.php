@@ -16,7 +16,6 @@ class EntrepriseController extends Controller
     public function index()
     {
         $entreprises = Entreprise::withCount('clients')
-            ->actives()
             ->orderBy('created_at', 'desc')
             ->get();
 

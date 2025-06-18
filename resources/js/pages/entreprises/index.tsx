@@ -71,13 +71,23 @@ export default function EntreprisesIndex({ entreprises }: Props) {
     // Filtrer et trier les entreprises
     const filteredAndSortedEntreprises = useMemo(() => {
         const filtered = entreprises.filter(entreprise => {
-            const matchesSearch =
-                entreprise.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (entreprise.nom_commercial?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                entreprise.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (entreprise.telephone?.includes(searchTerm)) ||
-                (entreprise.ville?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (entreprise.secteur_activite?.toLowerCase().includes(searchTerm.toLowerCase()));
+            // Vérification que l'entreprise existe et a les champs requis
+            if (!entreprise || !entreprise.nom) {
+                return false;
+            }
+
+            // Si pas de terme de recherche, on passe au filtrage par statut et secteur
+            const matchesSearch = !searchTerm.trim() || [
+                entreprise.nom,
+                entreprise.nom_commercial,
+                entreprise.email,
+                entreprise.telephone,
+                entreprise.ville,
+                entreprise.secteur_activite
+            ].some(field => {
+                if (!field) return false;
+                return field.toLowerCase().includes(searchTerm.toLowerCase());
+            });
 
             const matchesStatus =
                 statusFilter === 'all' ||
