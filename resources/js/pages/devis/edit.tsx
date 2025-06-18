@@ -285,7 +285,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
 
     // Fonction pour générer et sauvegarder le PDF automatiquement
     const generateAndSavePdf = async (updatedDevis: any) => {
-                try {
+        try {
             setIsGeneratingPdf(true);
 
             // Vérifier que les données essentielles sont présentes
@@ -340,7 +340,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
                 route('devis.save-react-pdf', updatedDevis.id),
                 {
                     pdf_blob: base64String,
-                    filename: `${updatedDevis.numero_devis}.pdf`,
+                    filename: `devis_${updatedDevis.numero_devis}.pdf`,
                     type: 'devis',
                 },
                 {
@@ -369,7 +369,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
             return;
         }
 
-                patch(`/devis/${devis.id}`, {
+        patch(`/devis/${devis.id}`, {
             onSuccess: () => {
                 toast.success('Devis modifié avec succès');
 
@@ -668,7 +668,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <Label htmlFor="objet">Objet du devis *</Label>
+                                    <Label htmlFor="objet">Objet du devis</Label>
                                     <Input
                                         id="objet"
                                         value={data.objet || ''}

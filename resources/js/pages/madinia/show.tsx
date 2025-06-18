@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import {
     Building2,
@@ -26,13 +26,7 @@ import {
     Instagram,
     Linkedin,
     ExternalLink,
-    Save,
-    Clock,
-    Edit,
-    AlertCircle,
-    RefreshCw,
-    Trash2,
-    Archive
+    Save
 } from 'lucide-react';
 import { FormEventHandler } from 'react';
 import { toast } from 'sonner';
@@ -88,28 +82,9 @@ interface Madinia {
 interface Props {
     madinia: Madinia;
     users: User[];
-    historique: HistoriqueAction[];
 }
 
-interface HistoriqueAction {
-    id: number;
-    action: 'creation' | 'modification' | 'changement_statut' | 'envoi_email' | 'suppression' | 'archivage' | 'restauration' | 'transformation';
-    titre: string;
-    description?: string;
-    donnees_avant?: any;
-    donnees_apres?: any;
-    donnees_supplementaires?: any;
-    created_at: string;
-    user?: {
-        id: number;
-        name: string;
-        email: string;
-    };
-    user_nom: string;
-    user_email: string;
-}
-
-export default function MadiniaShow({ madinia, users, historique }: Props) {
+export default function MadiniaShow({ madinia, users }: Props) {
     const { data, setData, patch, processing, errors, clearErrors } = useForm({
         name: madinia.name || '',
         contact_principal_id: madinia.contact_principal_id || null,
@@ -153,61 +128,6 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
         });
     };
 
-    const getActionIcon = (action: string) => {
-        switch (action) {
-            case 'creation':
-                return <FileText className="h-4 w-4 text-white" />;
-            case 'modification':
-                return <Edit className="h-4 w-4 text-white" />;
-            case 'changement_statut':
-                return <RefreshCw className="h-4 w-4 text-white" />;
-            case 'envoi_email':
-                return <Mail className="h-4 w-4 text-white" />;
-            case 'suppression':
-                return <Trash2 className="h-4 w-4 text-white" />;
-            case 'archivage':
-                return <Archive className="h-4 w-4 text-white" />;
-            default:
-                return <AlertCircle className="h-4 w-4 text-white" />;
-        }
-    };
-
-    const getActionColor = (action: string) => {
-        switch (action) {
-            case 'creation':
-                return 'bg-green-500';
-            case 'modification':
-                return 'bg-blue-500';
-            case 'changement_statut':
-                return 'bg-orange-500';
-            case 'envoi_email':
-                return 'bg-purple-500';
-            case 'suppression':
-                return 'bg-red-500';
-            case 'archivage':
-                return 'bg-gray-500';
-            default:
-                return 'bg-gray-400';
-        }
-    };
-
-    const formatActionDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) {
-            return `Aujourd'hui à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-        } else if (diffDays === 1) {
-            return `Hier à ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-        } else if (diffDays < 7) {
-            return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-        } else {
-            return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
-    };
-
     const renderSocialIcon = (platform: string) => {
         switch (platform) {
             case 'facebook':
@@ -227,24 +147,27 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Madin.IA - Informations de l'entreprise" />
 
-            <div className="page-container">
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 {/* En-tête avec informations de l'entreprise */}
-                <div className="page-header">
-                    <Card className="page-header-card">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg" />
+                    <Card className="relative border-0 shadow-sm">
                         <CardContent className="p-6">
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3">
-                                    <Building2 className="page-title-icon" />
-                                    <h1 className="page-title">{madinia.name}</h1>
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-3">
+                                        <Building2 className="h-8 w-8 text-blue-600" />
+                                        <h1 className="text-3xl font-bold tracking-tight">{madinia.name}</h1>
+                                    </div>
+                                    <p className="text-muted-foreground">
+                                        {madinia.description || 'Gérez les informations de votre entreprise'}
+                                    </p>
                                 </div>
-                                <p className="text-muted-foreground">
-                                    {madinia.description || 'Gérez les informations de votre entreprise'}
-                                </p>
                             </div>
 
                             {/* Badges de statut */}
                             <div className="flex flex-wrap gap-2 mt-4">
-                                <Badge className={madinia.infos_legales_completes ? "badge-success" : "badge-neutral"}>
+                                <Badge variant={madinia.infos_legales_completes ? "default" : "secondary"}>
                                     {madinia.infos_legales_completes ? (
                                         <CheckCircle className="w-3 h-3 mr-1" />
                                     ) : (
@@ -252,7 +175,7 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                                     )}
                                     Informations légales {madinia.infos_legales_completes ? 'complètes' : 'incomplètes'}
                                 </Badge>
-                                <Badge className={madinia.infos_bancaires_completes ? "badge-success" : "badge-neutral"}>
+                                <Badge variant={madinia.infos_bancaires_completes ? "default" : "secondary"}>
                                     {madinia.infos_bancaires_completes ? (
                                         <CheckCircle className="w-3 h-3 mr-1" />
                                     ) : (
@@ -263,7 +186,7 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
 
                                 {/* Badge contact principal */}
                                 {madinia.contact_principal && (
-                                    <Badge variant="outline" className="badge-contact">
+                                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
                                         <User className="w-3 h-3 mr-1" />
                                         Contact: {madinia.contact_principal.name}
                                     </Badge>
@@ -271,10 +194,10 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                             </div>
 
                             {/* Informations rapides */}
-                            <div className="grid-3 mt-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                                 {madinia.email && (
-                                    <div className="info-card">
-                                        <Mail className="info-icon-email" />
+                                    <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
+                                        <Mail className="h-5 w-5 text-blue-600" />
                                         <div>
                                             <div className="text-sm font-medium">{madinia.email}</div>
                                             <div className="text-xs text-muted-foreground">Email entreprise</div>
@@ -283,8 +206,8 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                                 )}
 
                                 {madinia.telephone && (
-                                    <div className="info-card">
-                                        <Phone className="info-icon-phone" />
+                                    <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
+                                        <Phone className="h-5 w-5 text-green-600" />
                                         <div>
                                             <div className="text-sm font-medium">{madinia.telephone}</div>
                                             <div className="text-xs text-muted-foreground">Téléphone</div>
@@ -293,8 +216,8 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                                 )}
 
                                 {madinia.site_web && (
-                                    <div className="info-card">
-                                        <Globe className="info-icon-web" />
+                                    <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-white/5 rounded-lg">
+                                        <Globe className="h-5 w-5 text-purple-600" />
                                         <div>
                                             <a
                                                 href={madinia.site_web}
@@ -314,28 +237,28 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                     </Card>
                 </div>
 
-                <form onSubmit={submit} className="form-sections">
+                <form onSubmit={submit} className="space-y-6">
                     {/* Identité de l'entreprise */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="section-title">
-                                <Building2 className="section-icon" />
+                            <CardTitle className="flex items-center gap-2">
+                                <Building2 className="h-5 w-5" />
                                 Identité de l'entreprise
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="section-content">
-                            <div className="grid-2">
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Nom de l'entreprise *</Label>
                                     <Input
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className={errors.name ? 'input-error' : ''}
+                                        className={errors.name ? 'border-red-500' : ''}
                                         placeholder="Nom de votre entreprise"
                                     />
                                     {errors.name && (
-                                        <p className="error-text">{errors.name}</p>
+                                        <p className="text-sm text-red-500">{errors.name}</p>
                                     )}
                                 </div>
 
@@ -384,13 +307,13 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                     {/* Coordonnées */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="section-title">
-                                <Phone className="section-icon" />
+                            <CardTitle className="flex items-center gap-2">
+                                <Phone className="h-5 w-5" />
                                 Coordonnées
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="section-content">
-                            <div className="grid-3">
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="telephone">Téléphone</Label>
                                     <Input
@@ -512,15 +435,15 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                     {/* Réseaux sociaux */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="section-title">
-                                <Users className="section-icon" />
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="h-5 w-5" />
                                 Réseaux sociaux
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="section-content">
-                            <div className="grid-2">
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="facebook" className="label-with-icon">
+                                    <Label htmlFor="facebook" className="flex items-center gap-2">
                                         <Facebook className="h-4 w-4" />
                                         Facebook
                                     </Label>
@@ -669,74 +592,6 @@ export default function MadiniaShow({ madinia, users, historique }: Props) {
                         </Button>
                     </div>
                 </form>
-
-                {/* Historique des actions */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Clock className="h-5 w-5" />
-                            Historique des modifications
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {historique.length > 0 ? (
-                            <div className="space-y-4">
-                                {historique.map((action) => (
-                                    <div key={action.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                                        <div className={`flex items-center justify-center w-8 h-8 rounded-full ${getActionColor(action.action)}`}>
-                                            {getActionIcon(action.action)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between">
-                                                <h4 className="font-medium text-gray-900">{action.titre}</h4>
-                                                <span className="text-sm text-gray-500">{formatActionDate(action.created_at)}</span>
-                                            </div>
-                                            {action.description && (
-                                                <p className="text-sm text-gray-600 mt-1">{action.description}</p>
-                                            )}
-                                            <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                                                <span>Par {action.user?.name || action.user_nom}</span>
-                                                {action.donnees_supplementaires?.email_destinataire && (
-                                                    <span>• Envoyé à {action.donnees_supplementaires.email_destinataire}</span>
-                                                )}
-                                            </div>
-                                            {(action.donnees_avant || action.donnees_apres) && (
-                                                <details className="mt-2">
-                                                    <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
-                                                        Voir les détails des modifications
-                                                    </summary>
-                                                    <div className="mt-2 text-xs bg-white p-2 rounded border">
-                                                        {action.donnees_avant && (
-                                                            <div className="mb-2">
-                                                                <span className="font-medium text-red-600">Avant :</span>
-                                                                <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
-                                                                    {JSON.stringify(action.donnees_avant, null, 2)}
-                                                                </pre>
-                                                            </div>
-                                                        )}
-                                                        {action.donnees_apres && (
-                                                            <div>
-                                                                <span className="font-medium text-green-600">Après :</span>
-                                                                <pre className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">
-                                                                    {JSON.stringify(action.donnees_apres, null, 2)}
-                                                                </pre>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </details>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8 text-gray-500">
-                                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                <p>Aucune modification enregistrée pour l'entreprise</p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
             </div>
         </AppLayout>
     );

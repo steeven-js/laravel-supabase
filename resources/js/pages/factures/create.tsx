@@ -482,7 +482,7 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                             </div>
 
                             <div>
-                                <Label htmlFor="objet">Objet de la facture *</Label>
+                                <Label htmlFor="objet">Objet de la facture</Label>
                                 <Input
                                     id="objet"
                                     value={data.objet || ''}

@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Save,
@@ -25,6 +25,9 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { route } from 'ziggy-js';
+import { pdf } from '@react-pdf/renderer';
+import DevisPdfPreview from '@/components/pdf/DevisPdfPreview';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -108,6 +111,7 @@ interface Props {
 export default function DevisCreate({ clients, services, administrateurs, numero_devis, madinia }: Props) {
     const [lignes, setLignes] = useState<LigneDevis[]>([]);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
@@ -192,6 +196,85 @@ export default function DevisCreate({ clients, services, administrateurs, numero
         return { sousTotal, totalTva, total };
     };
 
+    // Fonction pour générer et sauvegarder le PDF automatiquement après création
+    const generateAndSavePdf = async (newDevis: any) => {
+        try {
+            setIsGeneratingPdf(true);
+
+            // Vérifier que les données essentielles sont présentes
+            if (!newDevis?.numero_devis || !newDevis.client) {
+                console.error('Données du devis manquantes pour la génération PDF', newDevis);
+                setIsGeneratingPdf(false);
+                return;
+            }
+
+            // Préparer les données sécurisées pour le PDF
+            const safeDevisData = {
+                ...newDevis,
+                montant_ht: Number(newDevis.montant_ht) || 0,
+                montant_ttc: Number(newDevis.montant_ttc) || 0,
+                taux_tva: Number(newDevis.taux_tva) || 0,
+                statut: newDevis.statut || 'en_attente',
+                date_devis: newDevis.date_devis || new Date().toISOString(),
+                date_validite: newDevis.date_validite || new Date().toISOString(),
+                lignes: (newDevis.lignes || []).map((ligne: any) => ({
+                    ...ligne,
+                    quantite: Number(ligne.quantite) || 1,
+                    prix_unitaire_ht: Number(ligne.prix_unitaire_ht) || 0,
+                    montant_ht: Number(ligne.montant_ht) || 0,
+                    montant_ttc: Number(ligne.montant_ttc) || 0,
+                    montant_tva: Number(ligne.montant_tva) || 0,
+                    taux_tva: Number(ligne.taux_tva) || 0,
+                })),
+                client: {
+                    ...newDevis.client,
+                    nom: newDevis.client.nom || '',
+                    prenom: newDevis.client.prenom || '',
+                    email: newDevis.client.email || ''
+                }
+            };
+
+            const safeMadiniaData = madinia || {
+                name: 'Madin.IA',
+                email: 'contact@madinia.fr'
+            };
+
+            // 1. Générer le PDF avec react-pdf/renderer
+            const pdfBlob = await pdf(<DevisPdfPreview devis={safeDevisData} madinia={safeMadiniaData} />).toBlob();
+
+            // 2. Convertir le blob en base64
+            const arrayBuffer = await pdfBlob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const binaryString = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+            const base64String = btoa(binaryString);
+
+            // 3. Envoyer vers Laravel via Inertia
+            router.post(
+                route('devis.save-react-pdf', newDevis.id),
+                {
+                    pdf_blob: base64String,
+                    filename: `devis_${newDevis.numero_devis}.pdf`,
+                    type: 'devis',
+                },
+                {
+                    onSuccess: () => {
+                        console.log('PDF généré et sauvegardé automatiquement après création');
+                    },
+                    onError: (errors: any) => {
+                        console.error('Erreur lors de la génération automatique du PDF:', errors);
+                        // Ne pas afficher d'erreur à l'utilisateur car c'est une action secondaire
+                    },
+                    onFinish: () => {
+                        setIsGeneratingPdf(false);
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Erreur lors de la génération automatique du PDF:', error);
+            setIsGeneratingPdf(false);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (lignes.length === 0) {
@@ -199,9 +282,35 @@ export default function DevisCreate({ clients, services, administrateurs, numero
             return;
         }
 
+        const { sousTotal, totalTva, total } = calculateTotals();
+
         post('/devis', {
-            onSuccess: () => {
+            onSuccess: (page: any) => {
                 toast.success('Devis créé avec succès et placé en attente');
+
+                // Récupérer le devis créé depuis la réponse
+                const createdDevis = page.props?.devis;
+
+                if (createdDevis) {
+                    // Trouver l'administrateur et le client sélectionnés
+                    const selectedAdministrateur = data.administrateur_id
+                        ? administrateurs.find(admin => admin.id.toString() === data.administrateur_id)
+                        : null;
+
+                    // Construire le devis avec toutes les données nécessaires
+                    const devisForPdf = {
+                        ...createdDevis,
+                        client: selectedClient || createdDevis.client,
+                        administrateur: selectedAdministrateur || createdDevis.administrateur,
+                        lignes: lignes,
+                        // Calculer les totaux
+                        montant_ht: sousTotal,
+                        montant_ttc: total,
+                        montant_tva: totalTva
+                    };
+
+                    generateAndSavePdf(devisForPdf);
+                }
             },
             onError: () => {
                 toast.error('Une erreur est survenue lors de la création');
@@ -483,7 +592,7 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                             </div>
 
                             <div>
-                                <Label htmlFor="objet">Objet du devis *</Label>
+                                <Label htmlFor="objet">Objet du devis</Label>
                                 <Input
                                     id="objet"
                                     value={data.objet || ''}
@@ -693,7 +802,7 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                             type="button"
                             variant="outline"
                             onClick={handleSubmitBrouillon}
-                            disabled={processing || lignes.length === 0}
+                            disabled={processing || lignes.length === 0 || isGeneratingPdf}
                             className="flex-1 sm:flex-none"
                         >
                             {processing ? (
@@ -711,13 +820,18 @@ export default function DevisCreate({ clients, services, administrateurs, numero
 
                         <Button
                             type="submit"
-                            disabled={processing || lignes.length === 0}
+                            disabled={processing || lignes.length === 0 || isGeneratingPdf}
                             className="flex-1 sm:flex-none"
                         >
                             {processing ? (
                                 <>
                                     <Calculator className="mr-2 h-4 w-4 animate-spin" />
                                     Création...
+                                </>
+                            ) : isGeneratingPdf ? (
+                                <>
+                                    <FileText className="mr-2 h-4 w-4 animate-spin" />
+                                    Génération PDF...
                                 </>
                             ) : (
                                 <>
