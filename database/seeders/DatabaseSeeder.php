@@ -24,6 +24,11 @@ class DatabaseSeeder extends Seeder
         // Créer l'utilisateur principal
         $this->createMainUser();
 
+        // Créer les rôles et les utilisateurs admin
+        $this->call([
+            UserRoleSeeder::class,
+        ]);
+
         // Créer les données de test en ordre de dépendance
         $this->call([
             MadiniaSeeder::class,

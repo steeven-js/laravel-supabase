@@ -192,7 +192,7 @@ export default function ClientsCreate({ entreprises }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Créer un client" />
 
-            <div className="page-container">
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 {/* Bouton retour */}
                 <div>
                     <Button variant="outline" size="sm" asChild>
@@ -204,17 +204,18 @@ export default function ClientsCreate({ entreprises }: Props) {
                 </div>
 
                 {/* En-tête avec progress */}
-                <div className="page-header">
-                    <Card className="page-header-card">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-blue-500/5 rounded-lg" />
+                    <Card className="relative border-0 shadow-sm">
                         <CardContent className="p-6">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-start gap-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-3 flex-wrap">
-                                            <h1 className="page-title">
+                                            <h1 className="text-3xl font-bold tracking-tight">
                                                 Créer un nouveau client
                                             </h1>
-                                            <Badge variant="outline" className="badge-info">
+                                            <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                                                 <Sparkles className="h-3 w-3 mr-1" />
                                                 Nouveau
                                             </Badge>
@@ -242,7 +243,7 @@ export default function ClientsCreate({ entreprises }: Props) {
                                         size="sm"
                                         onClick={handleSubmit}
                                         disabled={processing || !isFormValid}
-                                        className="action-button-sm"
+                                        className="min-w-[140px]"
                                     >
                                         <Save className="mr-2 h-4 w-4" />
                                         {processing ? 'Création...' : 'Créer le client'}
@@ -253,7 +254,7 @@ export default function ClientsCreate({ entreprises }: Props) {
                     </Card>
                 </div>
 
-                <div className="grid-4 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Navigation des sections */}
                     <Card className="lg:h-fit">
                         <CardHeader>
@@ -322,8 +323,8 @@ export default function ClientsCreate({ entreprises }: Props) {
                             {activeSection === 'personal' && (
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle className="section-title">
-                                            <User className="section-icon" />
+                                        <CardTitle className="flex items-center gap-2">
+                                            <User className="h-5 w-5" />
                                             Informations personnelles
                                             <Badge variant="destructive" className="text-xs text-white">Obligatoire</Badge>
                                         </CardTitle>
@@ -331,8 +332,8 @@ export default function ClientsCreate({ entreprises }: Props) {
                                             Renseignez les informations de base du client. Ces informations sont requises.
                                         </p>
                                     </CardHeader>
-                                    <CardContent className="section-content">
-                                        <div className="grid-2 gap-6">
+                                    <CardContent className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
                                                 <Label htmlFor="prenom" className="flex items-center gap-2">
                                                     Prénom
@@ -345,7 +346,7 @@ export default function ClientsCreate({ entreprises }: Props) {
                                                     onChange={(e) => setData('prenom', e.target.value)}
                                                     placeholder="Jean"
                                                     required
-                                                    className={getFieldError('prenom') ? 'input-error' : ''}
+                                                    className={getFieldError('prenom') ? 'border-destructive' : ''}
                                                 />
                                                 {getFieldError('prenom') && (
                                                     <div className="flex items-center gap-2 text-sm text-destructive">

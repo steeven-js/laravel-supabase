@@ -68,6 +68,12 @@ class UserRoleSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'user_role_id' => $adminRole->id,
             ],
+            [
+                'name' => 'Fadila Benjebara',
+                'email' => 'f.benjebara@madin-ia.com',
+                'password' => Hash::make('password123'),
+                'user_role_id' => $adminRole->id,
+            ],
         ];
 
         foreach ($testUsers as $userData) {

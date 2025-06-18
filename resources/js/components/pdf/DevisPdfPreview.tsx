@@ -104,14 +104,9 @@ const useStyles = () =>
                     fontWeight: 700,
                     color: '#000000',
                 },
-                // Sections info et dates fusionnées horizontalement
+                // Section info émetteur/client
                 topInfoSection: {
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginBottom: 8, // Réduit drastiquement
-                },
-                infoDateColumn: {
-                    width: '48%',
+                    marginBottom: 6,
                 },
                 infoSection: {
                     flexDirection: 'row',
@@ -121,7 +116,7 @@ const useStyles = () =>
                 dateSection: {
                     flexDirection: 'row',
                     justifyContent: 'space-between',
-                    marginBottom: 0, // Supprimé
+                    marginBottom: 8,
                 },
                 infoBox: {
                     width: '48%',
@@ -243,17 +238,18 @@ const useStyles = () =>
                     marginBottom: 5,
                 },
                 bankingColumn: {
-                    width: '30%', // Plus étroit
+                    width: 260,
+                    paddingRight: 8,
                 },
                 signatureColumn: {
-                    width: '35%', // Moyen
+                    width: 140,
                 },
                 summaryColumn: {
-                    width: '32%', // Plus étroit
+                    width: 140,
                 },
                 bankingBox: {
                     backgroundColor: '#F8F9FA',
-                    padding: 4, // Ultra-réduit
+                    padding: 8,
                     borderRadius: 2,
                     borderWidth: 1,
                     borderColor: '#E9ECEF',
@@ -505,70 +501,63 @@ export function DevisPdfPreview({ devis, madinia }: DevisPdfPreviewProps) {
                     </View>
                 </View>
 
-                {/* Section info et dates fusionnées */}
-                <View style={styles.topInfoSection}>
-                    {/* Colonne gauche : Info émetteur/client */}
-                    <View style={styles.infoDateColumn}>
-                        <View style={styles.infoSection}>
-                            <View style={styles.infoBox}>
-                                <Text style={styles.infoTitle}>Émetteur</Text>
-                                <Text style={styles.infoName}>{madinia?.name || 'Madin.IA'}</Text>
-                                {madinia?.adresse && <Text style={styles.infoText}>{madinia.adresse}</Text>}
-                                {madinia?.telephone && (
-                                    <Text style={styles.infoText}>Tél: {madinia.telephone}</Text>
-                                )}
-                                <Text style={styles.infoText}>
-                                    Email: {devis.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+                {/* Section info émetteur/client */}
+                <View style={styles.infoSection}>
+                    <View style={styles.infoBox}>
+                        <Text style={styles.infoTitle}>Émetteur</Text>
+                        <Text style={styles.infoName}>{madinia?.name || 'Madin.IA'}</Text>
+                        {madinia?.adresse && <Text style={styles.infoText}>{madinia.adresse}</Text>}
+                        {madinia?.telephone && (
+                            <Text style={styles.infoText}>Tél: {madinia.telephone}</Text>
+                        )}
+                        <Text style={styles.infoText}>
+                            Email: {devis.administrateur?.email || madinia?.email || 'contact@madinia.fr'}
+                        </Text>
+                        {madinia?.siret && (
+                            <Text style={styles.infoText}>SIRET: {madinia.siret}</Text>
+                        )}
+                        {devis.administrateur && (
+                            <>
+                                <Text style={[styles.infoText, { marginTop: 1 }]}>
+                                    Contact: {devis.administrateur.name}
                                 </Text>
-                                {madinia?.siret && (
-                                    <Text style={styles.infoText}>SIRET: {madinia.siret}</Text>
-                                )}
-                                {devis.administrateur && (
-                                    <>
-                                        <Text style={[styles.infoText, { marginTop: 1 }]}>
-                                            Contact: {devis.administrateur.name}
-                                        </Text>
-                                        <Text style={styles.infoText}>Web: https://madinia.fr</Text>
-                                    </>
-                                )}
-                            </View>
-
-                            <View style={styles.infoBox}>
-                                <Text style={styles.infoTitle}>Client</Text>
-                                <Text style={styles.infoName}>
-                                    {(devis.client?.prenom || '')} {(devis.client?.nom || '')}
-                                </Text>
-                                {devis.client?.entreprise && (
-                                    <Text style={styles.infoText}>
-                                        {devis.client.entreprise.nom_commercial || devis.client.entreprise.nom || ''}
-                                    </Text>
-                                )}
-                                {devis.client?.adresse && <Text style={styles.infoText}>{devis.client.adresse}</Text>}
-                                {(devis.client?.code_postal || devis.client?.ville) && (
-                                    <Text style={styles.infoText}>
-                                        {devis.client.code_postal || ''} {devis.client.ville || ''}
-                                    </Text>
-                                )}
-                                <Text style={styles.infoText}>Email: {devis.client?.email || ''}</Text>
-                                {devis.client?.telephone && (
-                                    <Text style={styles.infoText}>Tél: {devis.client.telephone}</Text>
-                                )}
-                            </View>
-                        </View>
+                                <Text style={styles.infoText}>Web: https://madinia.fr</Text>
+                            </>
+                        )}
                     </View>
 
-                    {/* Colonne droite : Dates */}
-                    <View style={styles.infoDateColumn}>
-                        <View style={styles.dateSection}>
-                            <View style={styles.dateBox}>
-                                <Text style={styles.dateTitle}>Date d'émission</Text>
-                                <Text style={styles.dateText}>{fDateSimple(devis.date_devis)}</Text>
-                            </View>
-                            <View style={styles.dateBox}>
-                                <Text style={styles.dateTitle}>Date d'échéance</Text>
-                                <Text style={styles.dateText}>{fDateSimple(devis.date_validite)}</Text>
-                            </View>
-                        </View>
+                    <View style={styles.infoBox}>
+                        <Text style={styles.infoTitle}>Client</Text>
+                        <Text style={styles.infoName}>
+                            {(devis.client?.prenom || '')} {(devis.client?.nom || '')}
+                        </Text>
+                        {devis.client?.entreprise && (
+                            <Text style={styles.infoText}>
+                                {devis.client.entreprise.nom_commercial || devis.client.entreprise.nom || ''}
+                            </Text>
+                        )}
+                        {devis.client?.adresse && <Text style={styles.infoText}>{devis.client.adresse}</Text>}
+                        {(devis.client?.code_postal || devis.client?.ville) && (
+                            <Text style={styles.infoText}>
+                                {devis.client.code_postal || ''} {devis.client.ville || ''}
+                            </Text>
+                        )}
+                        <Text style={styles.infoText}>Email: {devis.client?.email || ''}</Text>
+                        {devis.client?.telephone && (
+                            <Text style={styles.infoText}>Tél: {devis.client.telephone}</Text>
+                        )}
+                    </View>
+                </View>
+
+                {/* Section dates en dessous */}
+                <View style={styles.dateSection}>
+                    <View style={styles.dateBox}>
+                        <Text style={styles.dateTitle}>Date d'émission</Text>
+                        <Text style={styles.dateText}>{fDateSimple(devis.date_devis)}</Text>
+                    </View>
+                    <View style={styles.dateBox}>
+                        <Text style={styles.dateTitle}>Date d'échéance</Text>
+                        <Text style={styles.dateText}>{fDateSimple(devis.date_validite)}</Text>
                     </View>
                 </View>
 
