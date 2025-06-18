@@ -25,7 +25,7 @@ import {
     UserPlus,
     Sparkles
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -56,6 +56,8 @@ interface Props {
 export default function ClientsCreate({ entreprises }: Props) {
     const [activeSection, setActiveSection] = useState<'personal' | 'contact' | 'business' | 'notes'>('personal');
     const [completedSections, setCompletedSections] = useState<Set<string>>(new Set());
+    const [entrepriseSearch, setEntrepriseSearch] = useState('');
+    const entrepriseSearchRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, processing, errors, clearErrors } = useForm({
         nom: '',
@@ -70,6 +72,17 @@ export default function ClientsCreate({ entreprises }: Props) {
         actif: true as boolean,
         notes: '',
     });
+
+    // Filtrer les entreprises en fonction de la recherche
+    const filteredEntreprises = useMemo(() => {
+        if (!entrepriseSearch.trim()) return entreprises;
+
+        const searchTerm = entrepriseSearch.toLowerCase().trim();
+        return entreprises.filter(entreprise =>
+            (entreprise.nom || '').toLowerCase().includes(searchTerm) ||
+            (entreprise.nom_commercial || '').toLowerCase().includes(searchTerm)
+        );
+    }, [entreprises, entrepriseSearch]);
 
     // Surveiller la completion des sections
     useEffect(() => {
@@ -514,20 +527,107 @@ export default function ClientsCreate({ entreprises }: Props) {
                                                         <SelectValue placeholder="Sélectionner une entreprise" />
                                                     </SelectTrigger>
                                                     <SelectContent>
+                                                        {/* Champ de recherche */}
+                                                        <div className="flex items-center gap-2 p-2 border-b">
+                                                            <div className="relative flex-1">
+                                                                <Input
+                                                                    ref={entrepriseSearchRef}
+                                                                    placeholder="Rechercher une entreprise..."
+                                                                    value={entrepriseSearch}
+                                                                    onChange={(e) => {
+                                                                        setEntrepriseSearch(e.target.value);
+                                                                        // Maintenir le focus après le changement
+                                                                        setTimeout(() => {
+                                                                            entrepriseSearchRef.current?.focus();
+                                                                        }, 0);
+                                                                    }}
+                                                                    className="h-8 pl-8 text-sm"
+                                                                    onKeyDown={(e) => {
+                                                                        // Empêcher la fermeture du select avec Escape
+                                                                        if (e.key === 'Escape') {
+                                                                            e.stopPropagation();
+                                                                            setEntrepriseSearch('');
+                                                                            entrepriseSearchRef.current?.focus();
+                                                                        }
+                                                                        // Empêcher la sélection avec Enter
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                        }
+                                                                    }}
+                                                                    onMouseDown={(e) => {
+                                                                        // Empêcher la fermeture du select quand on clique dans l'input
+                                                                        e.stopPropagation();
+                                                                    }}
+                                                                    onFocus={(e) => {
+                                                                        // Empêcher la fermeture du select quand l'input prend le focus
+                                                                        e.stopPropagation();
+                                                                    }}
+                                                                    onBlur={(e) => {
+                                                                        // Reprendre le focus si on le perd sans raison
+                                                                        setTimeout(() => {
+                                                                            if (document.activeElement !== entrepriseSearchRef.current) {
+                                                                                entrepriseSearchRef.current?.focus();
+                                                                            }
+                                                                        }, 10);
+                                                                    }}
+                                                                />
+                                                                <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                                                                    <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                                    </svg>
+                                                                </div>
+                                                                {entrepriseSearch && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setEntrepriseSearch('');
+                                                                        }}
+                                                                        onMouseDown={(e) => {
+                                                                            e.stopPropagation();
+                                                                        }}
+                                                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                                    >
+                                                                        <X className="h-3 w-3" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Option "Aucune entreprise" */}
                                                         <SelectItem value="none">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-2 h-2 rounded-full bg-gray-400" />
                                                                 Aucune entreprise
                                                             </div>
                                                         </SelectItem>
-                                                        {entreprises.map((entreprise) => (
-                                                            <SelectItem key={entreprise.id} value={entreprise.id.toString()}>
-                                                                <div className="flex items-center gap-2">
-                                                                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                                                                    {entreprise.nom_commercial || entreprise.nom}
-                                                                </div>
-                                                            </SelectItem>
-                                                        ))}
+
+                                                        {/* Liste des entreprises filtrées */}
+                                                        {filteredEntreprises.length > 0 ? (
+                                                            filteredEntreprises.map((entreprise) => (
+                                                                <SelectItem key={entreprise.id} value={entreprise.id.toString()}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-medium">
+                                                                                {entreprise.nom_commercial || entreprise.nom}
+                                                                            </span>
+                                                                            {entreprise.nom_commercial && entreprise.nom && entreprise.nom_commercial !== entreprise.nom && (
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    {entreprise.nom}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))
+                                                        ) : entrepriseSearch ? (
+                                                            <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                                                                <AlertCircle className="h-4 w-4" />
+                                                                Aucune entreprise trouvée pour "{entrepriseSearch}"
+                                                            </div>
+                                                        ) : null}
                                                     </SelectContent>
                                                 </Select>
                                                 <p className="text-xs text-muted-foreground">

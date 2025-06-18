@@ -21,9 +21,11 @@ import {
     Mail,
     Phone,
     MapPin,
-    DraftingCompass
+    DraftingCompass,
+    X,
+    AlertCircle
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { route } from 'ziggy-js';
 import { pdf } from '@react-pdf/renderer';
@@ -112,6 +114,8 @@ export default function DevisCreate({ clients, services, administrateurs, numero
     const [lignes, setLignes] = useState<LigneDevis[]>([]);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [clientSearch, setClientSearch] = useState('');
+    const clientSearchRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, processing, errors } = useForm({
         client_id: '',
@@ -124,6 +128,20 @@ export default function DevisCreate({ clients, services, administrateurs, numero
         conditions: '',
         lignes: [] as any[],
     });
+
+    // Filtrer les clients en fonction de la recherche
+    const filteredClients = useMemo(() => {
+        if (!clientSearch.trim()) return clients;
+
+        const searchTerm = clientSearch.toLowerCase().trim();
+        return clients.filter(client =>
+            (client.nom || '').toLowerCase().includes(searchTerm) ||
+            (client.prenom || '').toLowerCase().includes(searchTerm) ||
+            (client.email || '').toLowerCase().includes(searchTerm) ||
+            (client.entreprise?.nom || '').toLowerCase().includes(searchTerm) ||
+            (client.entreprise?.nom_commercial || '').toLowerCase().includes(searchTerm)
+        );
+    }, [clients, clientSearch]);
 
     useEffect(() => {
         if (data.client_id) {
@@ -489,20 +507,96 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                                     <SelectValue placeholder="Sélectionner un client" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {clients.map((client) => (
-                                                        <SelectItem key={client.id} value={client.id.toString()}>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium">
-                                                                    {client.prenom} {client.nom}
-                                                                </span>
-                                                                {client.entreprise && (
-                                                                    <span className="text-xs text-gray-500">
-                                                                        {client.entreprise.nom_commercial || client.entreprise.nom}
-                                                                    </span>
-                                                                )}
+                                                    {/* Champ de recherche */}
+                                                    <div className="flex items-center gap-2 p-2 border-b">
+                                                        <div className="relative flex-1">
+                                                            <Input
+                                                                ref={clientSearchRef}
+                                                                placeholder="Rechercher un client..."
+                                                                value={clientSearch}
+                                                                onChange={(e) => {
+                                                                    setClientSearch(e.target.value);
+                                                                    // Maintenir le focus après le changement
+                                                                    setTimeout(() => {
+                                                                        clientSearchRef.current?.focus();
+                                                                    }, 0);
+                                                                }}
+                                                                className="h-8 pl-8 text-sm"
+                                                                onKeyDown={(e) => {
+                                                                    // Empêcher la fermeture du select avec Escape
+                                                                    if (e.key === 'Escape') {
+                                                                        e.stopPropagation();
+                                                                        setClientSearch('');
+                                                                        clientSearchRef.current?.focus();
+                                                                    }
+                                                                    // Empêcher la sélection avec Enter
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                    }
+                                                                }}
+                                                                onMouseDown={(e) => {
+                                                                    // Empêcher la fermeture du select quand on clique dans l'input
+                                                                    e.stopPropagation();
+                                                                }}
+                                                                onFocus={(e) => {
+                                                                    // Empêcher la fermeture du select quand l'input prend le focus
+                                                                    e.stopPropagation();
+                                                                }}
+                                                                onBlur={(e) => {
+                                                                    // Reprendre le focus si on le perd sans raison
+                                                                    setTimeout(() => {
+                                                                        if (document.activeElement !== clientSearchRef.current) {
+                                                                            clientSearchRef.current?.focus();
+                                                                        }
+                                                                    }, 10);
+                                                                }}
+                                                            />
+                                                            <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                                                                <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                                </svg>
                                                             </div>
-                                                        </SelectItem>
-                                                    ))}
+                                                            {clientSearch && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setClientSearch('');
+                                                                    }}
+                                                                    onMouseDown={(e) => {
+                                                                        e.stopPropagation();
+                                                                    }}
+                                                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                                >
+                                                                    <X className="h-3 w-3" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Liste des clients filtrés */}
+                                                    {filteredClients.length > 0 ? (
+                                                        filteredClients.map((client) => (
+                                                            <SelectItem key={client.id} value={client.id.toString()}>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-medium">
+                                                                        {client.prenom} {client.nom}
+                                                                    </span>
+                                                                    {client.entreprise && (
+                                                                        <span className="text-xs text-gray-500">
+                                                                            {client.entreprise.nom_commercial || client.entreprise.nom}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))
+                                                    ) : clientSearch ? (
+                                                        <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                                                            <AlertCircle className="h-4 w-4" />
+                                                            Aucun client trouvé pour "{clientSearch}"
+                                                        </div>
+                                                    ) : null}
                                                 </SelectContent>
                                             </Select>
                                             {errors.client_id && (
