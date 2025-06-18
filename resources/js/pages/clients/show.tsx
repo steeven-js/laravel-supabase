@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type User as UserType } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -195,10 +195,7 @@ interface Props {
     client: Client;
     historique: HistoriqueAction[];
     auth: {
-        user: {
-            id: number;
-            name: string;
-        };
+        user: UserType;
     };
 }
 
@@ -591,7 +588,7 @@ export default function ClientsShow({ client, historique, auth }: Props) {
         return 'bg-green-500';
     };
 
-        const handleJaugeClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const handleJaugeClick = (event: React.MouseEvent<HTMLDivElement>) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const width = rect.width;
@@ -1080,9 +1077,8 @@ export default function ClientsShow({ client, historique, auth }: Props) {
             <div
                 ref={setNodeRef}
                 style={style}
-                className={`flex items-center gap-3 p-3 border rounded-lg bg-white hover:bg-gray-50 transition-colors ${
-                    todo.termine ? 'opacity-60' : ''
-                }`}
+                className={`flex items-center gap-3 p-3 border rounded-lg bg-white hover:bg-gray-50 transition-colors ${todo.termine ? 'opacity-60' : ''
+                    }`}
             >
                 <div
                     {...attributes}
@@ -1151,7 +1147,7 @@ export default function ClientsShow({ client, historique, auth }: Props) {
         <AppLayout breadcrumbs={breadcrumbs(client)}>
             <Head title={`${client.prenom} ${client.nom}`} />
 
-            <div className="page-container">
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
                 {/* Bouton retour */}
                 <div>
                     <Button variant="outline" size="sm" asChild>
@@ -1163,17 +1159,21 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                 </div>
 
                 {/* En-tête avec informations principales */}
-                <div className="page-header">
-                    <Card className="page-header-card">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg" />
+                    <Card className="relative border-0 shadow-sm">
                         <CardContent className="p-6">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-start gap-4">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-3 flex-wrap">
-                                            <h1 className="page-title">
+                                            <h1 className="text-3xl font-bold tracking-tight">
                                                 {client.prenom} {client.nom}
                                             </h1>
-                                            <Badge className={client.actif ? 'badge-success text-sm' : 'badge-neutral text-sm'}>
+                                            <Badge
+                                                variant={client.actif ? 'default' : 'secondary'}
+                                                className="text-sm"
+                                            >
                                                 {client.actif ? 'Actif' : 'Inactif'}
                                             </Badge>
                                         </div>
@@ -1224,11 +1224,10 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                                            activeTab === tab.id
+                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${activeTab === tab.id
                                                 ? 'bg-background text-foreground shadow-sm'
                                                 : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                                        }`}
+                                            }`}
                                     >
                                         <Icon className="h-4 w-4" />
                                         {tab.label}
@@ -1241,18 +1240,18 @@ export default function ClientsShow({ client, historique, auth }: Props) {
 
                 {/* Contenu des onglets */}
                 {activeTab === 'overview' && (
-                                            <div className="grid-3 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Informations de contact et todolist */}
                         <div className="lg:col-span-2 space-y-6">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className="section-title">
-                                        <User className="section-icon" />
+                                    <CardTitle className="flex items-center gap-2">
+                                        <User className="h-5 w-5" />
                                         Informations de contact
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="section-content">
-                                    <div className="grid-2 sm:grid-cols-2 gap-4">
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="group">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
@@ -2080,8 +2079,8 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                                     />
                                                     <Percent className="h-4 w-4 text-muted-foreground" />
                                                 </div>
-                                                                                                                                                <div className="w-full relative">
-                                                                                                        <div
+                                                <div className="w-full relative">
+                                                    <div
                                                         className="w-full bg-gray-200 rounded-full h-4 cursor-pointer select-none relative"
                                                         onMouseDown={handleMouseDown}
                                                         onMouseMove={handleJaugeDrag}
@@ -2102,14 +2101,13 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                                     </div>
                                                     <div className="flex justify-between text-xs text-muted-foreground mt-3">
                                                         <span>0%</span>
-                                                        <span className={`font-medium ${
-                                                            opportunityForm.probabilite <= 33 ? 'text-red-600' :
-                                                            opportunityForm.probabilite <= 66 ? 'text-orange-600' :
-                                                            'text-green-600'
-                                                        }`}>
+                                                        <span className={`font-medium ${opportunityForm.probabilite <= 33 ? 'text-red-600' :
+                                                                opportunityForm.probabilite <= 66 ? 'text-orange-600' :
+                                                                    'text-green-600'
+                                                            }`}>
                                                             {opportunityForm.probabilite <= 33 ? 'Faible' :
-                                                             opportunityForm.probabilite <= 66 ? 'Moyenne' :
-                                                             'Élevée'}
+                                                                opportunityForm.probabilite <= 66 ? 'Moyenne' :
+                                                                    'Élevée'}
                                                         </span>
                                                         <span>100%</span>
                                                     </div>
@@ -2232,7 +2230,7 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                                                     <Percent className="h-4 w-4 flex-shrink-0" />
                                                                     <span className="text-sm font-medium">{opportunity.probabilite}%</span>
                                                                 </div>
-                                                                                                                                <div className="flex-1 min-w-[80px] relative">
+                                                                <div className="flex-1 min-w-[80px] relative">
                                                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                                                         <div
                                                                             className={`h-2 rounded-full transition-all duration-300 ${getProbabiliteColorClass(opportunity.probabilite)}`}
@@ -2485,8 +2483,8 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                             </div>
                                             <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700 select-none">
                                                 {ticketForm.progression <= 25 ? 'Faible' :
-                                                 ticketForm.progression <= 50 ? 'Moyenne' :
-                                                 ticketForm.progression <= 75 ? 'Bonne' : 'Excellente'}
+                                                    ticketForm.progression <= 50 ? 'Moyenne' :
+                                                        ticketForm.progression <= 75 ? 'Bonne' : 'Excellente'}
                                             </div>
                                         </div>
                                         <div className="flex justify-between text-xs text-gray-500">
@@ -2590,26 +2588,26 @@ export default function ClientsShow({ client, historique, auth }: Props) {
                                                             </div>
                                                         </div>
 
-                                                                                                {/* Barre de progression */}
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between text-sm">
-                                                <span>Progression</span>
-                                                <span className={`font-medium text-${getProgressionColor(getProgression(ticket))}-600`}>
-                                                    {getProgression(ticket)}%
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-3 relative cursor-pointer group">
-                                                <div
-                                                    className={`h-3 rounded-full transition-all duration-300 ${getProgressionColorClass(getProgression(ticket))}`}
-                                                    style={{ width: `${getProgression(ticket)}%` }}
-                                                ></div>
-                                                <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {getProgression(ticket) <= 25 ? 'Faible' :
-                                                     getProgression(ticket) <= 50 ? 'Moyenne' :
-                                                     getProgression(ticket) <= 75 ? 'Bonne' : 'Excellente'}
-                                                </div>
-                                            </div>
-                                        </div>
+                                                        {/* Barre de progression */}
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between text-sm">
+                                                                <span>Progression</span>
+                                                                <span className={`font-medium text-${getProgressionColor(getProgression(ticket))}-600`}>
+                                                                    {getProgression(ticket)}%
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-full bg-gray-200 rounded-full h-3 relative cursor-pointer group">
+                                                                <div
+                                                                    className={`h-3 rounded-full transition-all duration-300 ${getProgressionColorClass(getProgression(ticket))}`}
+                                                                    style={{ width: `${getProgression(ticket)}%` }}
+                                                                ></div>
+                                                                <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    {getProgression(ticket) <= 25 ? 'Faible' :
+                                                                        getProgression(ticket) <= 50 ? 'Moyenne' :
+                                                                            getProgression(ticket) <= 75 ? 'Bonne' : 'Excellente'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
                                                         <div className="flex items-center gap-6 text-sm text-muted-foreground flex-wrap">
                                                             <div className="flex items-center gap-1">

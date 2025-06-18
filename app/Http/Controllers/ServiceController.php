@@ -202,9 +202,18 @@ class ServiceController extends Controller
      */
     public function toggle(Service $service)
     {
+        $ancienStatut = $service->actif;
         $service->update(['actif' => !$service->actif]);
 
         $status = $service->actif ? 'activé' : 'désactivé';
+
+        // Envoyer notification pour l'activation/désactivation
+        if ($ancienStatut !== $service->actif) {
+            $action = $service->actif ? 'activated' : 'deactivated';
+            $service->sendCustomNotification($action,
+                "Le service \"{$service->nom}\" a été {$status}"
+            );
+        }
 
         return back()->with('success', "Service {$status} avec succès.");
     }

@@ -142,7 +142,7 @@ export default function FacturesIndex({ factures }: Props) {
                     return itemDate.getFullYear() === currentYear;
                 case 'mois_courant':
                     return itemDate.getFullYear() === currentYear &&
-                           itemDate.getMonth() + 1 === currentMonth;
+                        itemDate.getMonth() + 1 === currentMonth;
                 default:
                     return true;
             }
@@ -324,23 +324,23 @@ export default function FacturesIndex({ factures }: Props) {
 
     const isRetard = (dateEcheance: string, statut: string) => {
         return new Date(dateEcheance) < new Date() &&
-               !['payee', 'annulee'].includes(statut);
+            !['payee', 'annulee'].includes(statut);
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Factures" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <div className="page-container">
                 {/* En-tête */}
-                <div className="flex items-center justify-between">
+                <div className="page-header">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Factures</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="page-title">Factures</h1>
+                        <p className="page-subtitle">
                             Gérez vos factures clients et suivez les paiements
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="form-actions">
                         {selectedFactures.length > 0 && (
                             <>
                                 <Button variant="outline" size="sm" onClick={handleDeleteSelected}>

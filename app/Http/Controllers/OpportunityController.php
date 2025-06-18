@@ -30,6 +30,12 @@ class OpportunityController extends Controller
             'user_id' => Auth::id(),
         ]);
 
+        // Envoyer notification pour la nouvelle opportunité
+        $client->sendCustomNotification('opportunity_created',
+            "Nouvelle opportunité \"{$validated['nom']}\" créée pour {$client->prenom} {$client->nom}" .
+            (isset($validated['montant']) ? " (Montant estimé: " . number_format($validated['montant'], 2) . "€)" : "")
+        );
+
         return back()->with('success', 'Opportunité créée avec succès !');
     }
 
@@ -56,6 +62,17 @@ class OpportunityController extends Controller
         }
 
         $opportunity->update($validated);
+
+        // Envoyer notification pour les étapes importantes
+        if (in_array($validated['etape'], ['gagnee', 'perdue'])) {
+            $messages = [
+                'gagnee' => "🎉 Opportunité \"{$opportunity->nom}\" GAGNÉE pour {$opportunity->client->prenom} {$opportunity->client->nom}" .
+                           (isset($validated['montant']) ? " (Montant: " . number_format($validated['montant'], 2) . "€)" : ""),
+                'perdue' => "😞 Opportunité \"{$opportunity->nom}\" PERDUE pour {$opportunity->client->prenom} {$opportunity->client->nom}"
+            ];
+
+            $opportunity->client->sendCustomNotification('opportunity_closed', $messages[$validated['etape']]);
+        }
 
         return back()->with('success', 'Opportunité mise à jour avec succès !');
     }

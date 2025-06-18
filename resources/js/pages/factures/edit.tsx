@@ -127,19 +127,19 @@ export default function FactureEdit({ facture, clients }: Props) {
     const getStatusStyles = (statut: string) => {
         switch (statut) {
             case 'payee':
-                return 'bg-green-100 text-green-800 border-green-200';
+                return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700';
             case 'envoyee':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
+                return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700';
             case 'en_retard':
-                return 'bg-red-100 text-red-800 border-red-200';
+                return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700';
             case 'annulee':
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+                return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-600';
             case 'brouillon':
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+                return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-600';
             case 'en_attente':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700';
             default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+                return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-600';
         }
     };
 
@@ -181,8 +181,8 @@ export default function FactureEdit({ facture, clients }: Props) {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Modifier la facture</h1>
-                            <p className="text-muted-foreground">
+                            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Modifier la facture</h1>
+                            <p className="text-muted-foreground dark:text-gray-400">
                                 Modifiez les informations de la facture {facture.numero_facture}
                             </p>
                         </div>
@@ -220,7 +220,7 @@ export default function FactureEdit({ facture, clients }: Props) {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5" />
+                                        <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                                         Informations générales
                                     </CardTitle>
                                 </CardHeader>
@@ -328,7 +328,7 @@ export default function FactureEdit({ facture, clients }: Props) {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <Euro className="h-5 w-5" />
+                                        <Euro className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                                         Montants et TVA
                                     </CardTitle>
                                 </CardHeader>
@@ -375,7 +375,7 @@ export default function FactureEdit({ facture, clients }: Props) {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5" />
+                                        <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                                         Conditions et notes
                                     </CardTitle>
                                 </CardHeader>
@@ -417,19 +417,19 @@ export default function FactureEdit({ facture, clients }: Props) {
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <Calculator className="h-5 w-5" />
+                                        <Calculator className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                                         Résumé financier
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="space-y-3">
-                                        <div className="flex justify-between items-center py-2 border-b">
-                                            <span className="text-sm text-muted-foreground">Montant HT</span>
-                                            <span className="font-medium">{formatPrice(montantHT)}</span>
+                                        <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                                            <span className="text-sm text-muted-foreground dark:text-gray-400">Montant HT</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-100">{formatPrice(montantHT)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center py-2 border-b">
-                                            <span className="text-sm text-muted-foreground">TVA ({tauxTVA}%)</span>
-                                            <span className="font-medium">{formatPrice(montantTVA)}</span>
+                                        <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                                            <span className="text-sm text-muted-foreground dark:text-gray-400">TVA ({tauxTVA}%)</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-100">{formatPrice(montantTVA)}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-3 bg-green-50 dark:bg-green-950/20 px-3 rounded-lg">
                                             <span className="font-semibold text-green-700 dark:text-green-300">Total TTC</span>
@@ -446,28 +446,28 @@ export default function FactureEdit({ facture, clients }: Props) {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            <User className="h-5 w-5" />
+                                            <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                                             Client sélectionné
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         <div className="text-center">
-                                            <h3 className="font-semibold">{selectedClient.prenom} {selectedClient.nom}</h3>
+                                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">{selectedClient.prenom} {selectedClient.nom}</h3>
                                             {selectedClient.entreprise && (
-                                                <p className="text-sm text-muted-foreground">
+                                                <p className="text-sm text-muted-foreground dark:text-gray-400">
                                                     {selectedClient.entreprise.nom_commercial || selectedClient.entreprise.nom}
                                                 </p>
                                             )}
                                         </div>
                                         <div className="space-y-2 text-sm">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-muted-foreground">Email:</span>
-                                                <span>{selectedClient.email}</span>
+                                                <span className="text-muted-foreground dark:text-gray-400">Email:</span>
+                                                <span className="text-gray-900 dark:text-gray-100">{selectedClient.email}</span>
                                             </div>
                                             {selectedClient.telephone && (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-muted-foreground">Tél:</span>
-                                                    <span>{selectedClient.telephone}</span>
+                                                    <span className="text-muted-foreground dark:text-gray-400">Tél:</span>
+                                                    <span className="text-gray-900 dark:text-gray-100">{selectedClient.telephone}</span>
                                                 </div>
                                             )}
                                         </div>

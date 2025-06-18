@@ -4,10 +4,12 @@ namespace App\Mail;
 
 use App\Models\Devis;
 use App\Models\Client;
+use App\Services\DevisPdfService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 
 class DevisAdminMail extends Mailable
@@ -16,16 +18,21 @@ class DevisAdminMail extends Mailable
 
     public Devis $devis;
     public Client $client;
+    public string $urlDevis;
+    protected DevisPdfService $pdfService;
 
     /**
      * Create a new message instance.
      */
     public function __construct(
         Devis $devis,
-        Client $client
+        Client $client,
+        string $urlDevis
     ) {
         $this->devis = $devis;
         $this->client = $client;
+        $this->urlDevis = $urlDevis;
+        $this->pdfService = app(DevisPdfService::class);
     }
 
     /**
@@ -53,6 +60,9 @@ class DevisAdminMail extends Mailable
             with: [
                 'devis' => $this->devis,
                 'client' => $this->client,
+                'urlDevis' => $this->urlDevis,
+                'urlPdfSupabase' => $this->pdfService->getUrlSupabasePdf($this->devis),
+                'urlPdfLocal' => $this->pdfService->getUrlPdf($this->devis),
             ],
         );
     }
@@ -64,6 +74,17 @@ class DevisAdminMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $attachments = [];
+
+        // Ajouter le PDF en pièce jointe si disponible
+        $cheminPdf = $this->pdfService->getCheminPdf($this->devis);
+
+        if ($cheminPdf && file_exists($cheminPdf)) {
+            $attachments[] = Attachment::fromPath($cheminPdf)
+                ->as("Devis_{$this->devis->numero_devis}.pdf")
+                ->withMime('application/pdf');
+        }
+
+        return $attachments;
     }
 }

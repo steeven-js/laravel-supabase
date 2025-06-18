@@ -192,10 +192,10 @@ export default function ClientsIndex({ clients }: Props) {
 
             <div className="page-container">
                 {/* En-tête */}
-                <div className="flex items-center justify-between">
+                <div className="page-header">
                     <div>
                         <h1 className="page-title">Clients</h1>
-                        <p className="text-muted-foreground">
+                        <p className="page-subtitle">
                             Gérez vos clients et leurs informations
                         </p>
                     </div>
@@ -223,20 +223,20 @@ export default function ClientsIndex({ clients }: Props) {
 
                 {/* Filtres et recherche */}
                 <Card>
-                    <CardHeader className="pb-4">
-                        <div className="form-row sm:justify-between">
-                            <CardTitle className="section-title">
-                                <Filter className="section-icon" />
+                    <CardHeader className="card-header">
+                        <div className="card-row">
+                            <CardTitle className="card-title">
+                                <Filter className="h-5 w-5" />
                                 Filtres & Recherche
                             </CardTitle>
-                            <div className="form-actions">
-                                <div className="input-with-icon">
-                                    <Search className="input-icon-left" />
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <div className="relative">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Rechercher des clients..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="input-with-left-icon w-full sm:w-[300px]"
+                                        className="pl-8 w-full sm:w-[300px]"
                                     />
                                 </div>
                                 <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}>

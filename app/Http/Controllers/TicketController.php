@@ -35,6 +35,11 @@ class TicketController extends Controller
             'visible_client' => $validated['visible_client'] ?? true,
         ]);
 
+        // Envoyer notification pour le nouveau ticket
+        $client->sendCustomNotification('ticket_created',
+            "Nouveau ticket \"{$validated['titre']}\" créé pour {$client->prenom} {$client->nom} (Priorité: {$validated['priorite']}, Type: {$validated['type']})"
+        );
+
         return back()->with('success', 'Ticket créé avec succès !');
     }
 
@@ -91,6 +96,11 @@ class TicketController extends Controller
         ]);
 
         $ticket->resoudre($validated['solution']);
+
+        // Envoyer notification pour la résolution
+        $ticket->client->sendCustomNotification('ticket_resolved',
+            "Le ticket \"{$ticket->titre}\" de {$ticket->client->prenom} {$ticket->client->nom} a été résolu"
+        );
 
         return back()->with('success', 'Ticket marqué comme résolu !');
     }

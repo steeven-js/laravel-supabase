@@ -100,12 +100,12 @@ export default function UsersIndex({ users }: Props) {
             <Head title="Administration - Utilisateurs" />
 
             <AppLayout breadcrumbs={breadcrumbs}>
-                <div className="space-y-6">
+                <div className="page-container">
                     {/* Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="page-header">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
-                            <p className="text-gray-600">
+                            <h1 className="page-title">Gestion des utilisateurs</h1>
+                            <p className="page-subtitle">
                                 {users.total} utilisateur{users.total > 1 ? 's' : ''} au total
                             </p>
                         </div>

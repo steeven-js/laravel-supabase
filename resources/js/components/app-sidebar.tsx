@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor, Package, Building, Mail } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Users, Building2, FileText, Receipt, Monitor, Package, Building, Mail, Bell } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -49,6 +49,12 @@ const mainNavItems: NavItem[] = [
         icon: Mail,
     },
     {
+        title: 'Notifications',
+        href: '/notifications',
+        icon: Bell,
+        requiresAdmin: true,
+    },
+    {
         title: 'Utilisateurs',
         href: '/admin/users',
         icon: Users,
@@ -86,6 +92,10 @@ export function AppSidebar() {
         // Si l'élément nécessite un super admin
         if (item.requiresSuperAdmin) {
             return user?.user_role?.name === 'super_admin';
+        }
+        // Si l'élément nécessite un admin (admin ou super_admin)
+        if (item.requiresAdmin) {
+            return user?.user_role?.name && ['admin', 'super_admin'].includes(user.user_role.name);
         }
         // Sinon, l'élément est accessible à tous les utilisateurs connectés
         return true;

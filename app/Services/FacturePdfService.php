@@ -308,10 +308,10 @@ class FacturePdfService
     }
 
     /**
-     * Génère le nom du fichier PDF
+     * Génère le nom du fichier PDF basé sur le numéro de facture
      */
     private function getNomFichier(Facture $facture): string
     {
-        return "facture_{$facture->numero_facture}_{$facture->id}.pdf";
+        return "facture_{$facture->numero_facture}.pdf";
     }
 }

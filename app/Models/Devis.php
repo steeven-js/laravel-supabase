@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Traits\HasHistorique;
+use App\Traits\SendsNotifications;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Devis extends Model
 {
-    use HasHistorique;
+    use HasHistorique, SendsNotifications;
 
     /**
      * Les attributs qui peuvent être assignés en masse.
@@ -55,14 +56,27 @@ class Devis extends Model
     /**
      * Boot du modèle - génère automatiquement le numéro de devis.
      */
-    protected static function boot()
+        protected static function boot()
     {
         parent::boot();
 
+        // Avant création, générer un numéro temporaire
         static::creating(function ($devis) {
             if (empty($devis->numero_devis)) {
-                $devis->numero_devis = static::genererNumeroDevis();
+                $annee = substr(date('Y'), -2);
+                $devis->numero_devis = "DV-{$annee}-TEMP";
             }
+        });
+
+        // Après création, mettre à jour le numéro de devis avec l'ID
+        static::created(function ($devis) {
+            $annee = substr(date('Y'), -2);
+            $numeroFormate = sprintf('DV-%s-%04d', $annee, $devis->id);
+
+            // Mise à jour sans déclencher les événements pour éviter la récursion
+            static::withoutEvents(function () use ($devis, $numeroFormate) {
+                $devis->update(['numero_devis' => $numeroFormate]);
+            });
         });
     }
 
@@ -157,26 +171,18 @@ class Devis extends Model
     }
 
     /**
-     * Générer un numéro de devis automatique au format DV-25-001.
+     * Générer un numéro de devis formaté basé sur l'ID du devis.
      */
-    public static function genererNumeroDevis(): string
+    public function getNumeroDevisFormateAttribute(): string
     {
-        $annee = substr(date('Y'), -2); // Récupère les 2 derniers chiffres de l'année (ex: 25 pour 2025)
-
-        // Chercher le dernier numéro de l'année courante
-        $dernierNumero = static::where('numero_devis', 'LIKE', "DV-{$annee}-%")
-                              ->orderBy('numero_devis', 'desc')
-                              ->first();
-
-        if ($dernierNumero) {
-            // Extraire le numéro séquentiel du dernier devis (ex: 001 dans DV-25-001)
-            $dernierNum = (int) substr($dernierNumero->numero_devis, -3);
-            $nouveauNum = $dernierNum + 1;
-        } else {
-            $nouveauNum = 1;
+        if (!$this->id) {
+            // Si pas d'ID (nouveau devis), retourner un numéro temporaire
+            $annee = substr(date('Y'), -2);
+            return "DV-{$annee}-TEMP";
         }
 
-        return sprintf('DV-%s-%03d', $annee, $nouveauNum);
+        $annee = substr(date('Y'), -2);
+        return sprintf('DV-%s-%04d', $annee, $this->id);
     }
 
     /**

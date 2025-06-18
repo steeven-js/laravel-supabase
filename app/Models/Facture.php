@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Traits\HasHistorique;
+use App\Traits\SendsNotifications;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Facture extends Model
 {
-    use HasHistorique;
+    use HasHistorique, SendsNotifications;
 
     /**
      * Les attributs qui peuvent être assignés en masse.

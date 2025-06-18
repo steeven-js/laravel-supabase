@@ -257,8 +257,8 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                                 <Receipt className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-semibold text-gray-900">Créer une facture</h1>
-                                <p className="text-sm text-gray-600">Nouvelle facture #{numero_facture}</p>
+                                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Créer une facture</h1>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Nouvelle facture #{numero_facture}</p>
                             </div>
                         </div>
                     </div>
@@ -276,8 +276,8 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                                 {/* From */}
                                 <div>
                                     <div className="flex items-center gap-2 mb-4">
-                                        <Edit3 className="h-4 w-4 text-gray-400" />
-                                        <h3 className="text-sm font-semibold text-gray-700">Facture de</h3>
+                                        <Edit3 className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Facture de</h3>
                                     </div>
 
                                     <div className="mb-4">
@@ -304,25 +304,25 @@ export default function FactureCreate({ clients, services, administrateurs, nume
 
                                     <div className="space-y-3">
                                         <div>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100">
                                                 {madinia?.name || 'Madin.IA'}
                                             </p>
                                             {madinia?.adresse && (
-                                                <p className="text-gray-600 text-sm">{madinia.adresse}</p>
+                                                <p className="text-gray-600 dark:text-gray-400 text-sm">{madinia.adresse}</p>
                                             )}
                                             {madinia?.pays && (
-                                                <p className="text-gray-600 text-sm">{madinia.pays}</p>
+                                                <p className="text-gray-600 dark:text-gray-400 text-sm">{madinia.pays}</p>
                                             )}
                                             <div className="flex flex-col gap-1 mt-3">
                                                 {madinia?.telephone && (
                                                     <div className="flex items-center gap-2">
-                                                        <Phone className="h-3 w-3 text-gray-400" />
-                                                        <span className="text-gray-600 text-sm">{madinia.telephone}</span>
+                                                        <Phone className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                        <span className="text-gray-600 dark:text-gray-400 text-sm">{madinia.telephone}</span>
                                                     </div>
                                                 )}
                                                 <div className="flex items-center gap-2">
-                                                    <Mail className="h-3 w-3 text-gray-400" />
-                                                    <span className="text-gray-600 text-sm">
+                                                    <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                    <span className="text-gray-600 dark:text-gray-400 text-sm">
                                                         {data.administrateur_id ? (() => {
                                                             const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
                                                             return admin ? admin.email : 'd.brault@madin-ia.com';
@@ -331,30 +331,30 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                                                 </div>
                                             </div>
                                             {madinia?.siret && (
-                                                <div className="text-xs text-gray-500 mt-2">
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                                     SIRET: {madinia.siret}
                                                 </div>
                                             )}
                                         </div>
 
                                         {data.administrateur_id && (
-                                            <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
+                                            <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm space-y-1">
                                                 {(() => {
                                                     const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
                                                     return admin ? (
                                                         <>
-                                                            <p className="font-medium text-gray-900">{admin.name}</p>
+                                                            <p className="font-medium text-gray-900 dark:text-gray-100">{admin.name}</p>
                                                             <div className="flex items-center gap-2">
-                                                                <Mail className="h-3 w-3 text-gray-400" />
-                                                                <span className="text-gray-600">{admin.email}</span>
+                                                                <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                                <span className="text-gray-600 dark:text-gray-400">{admin.email}</span>
                                                             </div>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <p className="font-medium text-gray-900">David Brault</p>
+                                                            <p className="font-medium text-gray-900 dark:text-gray-100">David Brault</p>
                                                             <div className="flex items-center gap-2">
-                                                                <Mail className="h-3 w-3 text-gray-400" />
-                                                                <span className="text-gray-600">d.brault@madin-ia.com</span>
+                                                                <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                                <span className="text-gray-600 dark:text-gray-400">d.brault@madin-ia.com</span>
                                                             </div>
                                                         </>
                                                     );
@@ -367,8 +367,8 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                                 {/* To */}
                                 <div>
                                     <div className="flex items-center gap-2 mb-4">
-                                        <User className="h-4 w-4 text-gray-400" />
-                                        <h3 className="text-sm font-semibold text-gray-700">Facture pour</h3>
+                                        <User className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Facture pour</h3>
                                     </div>
 
                                     <div className="space-y-3">
@@ -401,29 +401,29 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                                         </div>
 
                                         {selectedClient && (
-                                            <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
-                                                <p className="font-medium text-gray-900">
+                                            <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm space-y-1">
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">
                                                     {selectedClient.prenom} {selectedClient.nom}
                                                 </p>
                                                 {selectedClient.entreprise && (
-                                                    <p className="text-gray-600">
+                                                    <p className="text-gray-600 dark:text-gray-400">
                                                         {selectedClient.entreprise.nom_commercial || selectedClient.entreprise.nom}
                                                     </p>
                                                 )}
                                                 <div className="flex items-center gap-2">
-                                                    <Mail className="h-3 w-3 text-gray-400" />
-                                                    <span className="text-gray-600">{selectedClient.email}</span>
+                                                    <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                    <span className="text-gray-600 dark:text-gray-400">{selectedClient.email}</span>
                                                 </div>
                                                 {selectedClient.telephone && (
                                                     <div className="flex items-center gap-2">
-                                                        <Phone className="h-3 w-3 text-gray-400" />
-                                                        <span className="text-gray-600">{selectedClient.telephone}</span>
+                                                        <Phone className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                        <span className="text-gray-600 dark:text-gray-400">{selectedClient.telephone}</span>
                                                     </div>
                                                 )}
                                                 {(selectedClient.adresse || selectedClient.ville) && (
                                                     <div className="flex items-start gap-2">
-                                                        <MapPin className="h-3 w-3 text-gray-400 mt-0.5" />
-                                                        <div className="text-gray-600">
+                                                        <MapPin className="h-3 w-3 text-gray-400 dark:text-gray-500 mt-0.5" />
+                                                        <div className="text-gray-600 dark:text-gray-400">
                                                             {selectedClient.adresse && <div>{selectedClient.adresse}</div>}
                                                             {(selectedClient.code_postal || selectedClient.ville) && (
                                                                 <div>{selectedClient.code_postal} {selectedClient.ville}</div>
@@ -510,30 +510,30 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                         </CardHeader>
                         <CardContent className="p-0">
                             {lignes.length === 0 ? (
-                                <div className="p-8 text-center text-gray-500">
-                                    <Receipt className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                    <Receipt className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                                     <p className="text-lg font-medium mb-2">Aucune ligne ajoutée</p>
                                     <p className="text-sm">Cliquez sur "Ajouter une ligne" pour commencer</p>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
-                                        <thead className="bg-gray-50 border-b">
+                                        <thead className="bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
                                             <tr>
-                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">#</th>
-                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-56">Service</th>
-                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qté</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Prix unit.</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-20">TVA</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Total</th>
+                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8">#</th>
+                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56">Service</th>
+                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">Qté</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Prix unit.</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">TVA</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Total</th>
                                                 <th className="px-3 py-3 w-12"></th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        <tbody className="bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-700">
                                             {lignes.map((ligne, index) => (
-                                                <tr key={index} className="hover:bg-gray-50">
-                                                    <td className="px-3 py-3 text-xs text-gray-500">
+                                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                                    <td className="px-3 py-3 text-xs text-gray-500 dark:text-gray-400">
                                                         {index + 1}
                                                     </td>
                                                     <td className="px-3 py-3">
@@ -575,7 +575,7 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                                                                 className="text-center text-xs"
                                                             />
                                                             {ligne.service?.unite && (
-                                                                <div className="text-xs text-gray-500 text-center">
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
                                                                     {formatUnite(ligne.service.unite, ligne.quantite)}
                                                                 </div>
                                                             )}
@@ -626,21 +626,21 @@ export default function FactureCreate({ clients, services, administrateurs, nume
                             {lignes.length > 0 && (
                                 <>
                                     <Separator />
-                                    <div className="p-6 bg-gray-50">
+                                    <div className="p-6 bg-gray-50 dark:bg-gray-800/50">
                                         <div className="flex justify-end">
                                             <div className="w-72 space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-gray-600">Sous-total HT</span>
-                                                    <span className="font-medium">{formatPrice(sousTotal)}</span>
+                                                    <span className="text-sm text-gray-600 dark:text-gray-400">Sous-total HT</span>
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatPrice(sousTotal)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-sm text-gray-600">TVA</span>
-                                                    <span className="font-medium">{formatPrice(totalTva)}</span>
+                                                    <span className="text-sm text-gray-600 dark:text-gray-400">TVA</span>
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatPrice(totalTva)}</span>
                                                 </div>
                                                 <Separator />
                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-semibold text-gray-900">Total TTC</span>
-                                                    <span className="text-xl font-bold text-blue-600">{formatPrice(total)}</span>
+                                                    <span className="font-semibold text-gray-900 dark:text-gray-100">Total TTC</span>
+                                                    <span className="text-xl font-bold text-blue-600 dark:text-blue-400">{formatPrice(total)}</span>
                                                 </div>
                                             </div>
                                         </div>

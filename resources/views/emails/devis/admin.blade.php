@@ -45,9 +45,15 @@ Un nouveau devis a été créé dans le système.
 {{ $devis->notes }}
 @endif
 
-<x-mail::button :url="route('devis.show', $devis->id)">
+<x-mail::button :url="$urlDevis">
 Voir le devis
 </x-mail::button>
+
+@if($urlPdfSupabase)
+<x-mail::button :url="$urlPdfSupabase" color="success">
+Télécharger le PDF
+</x-mail::button>
+@endif
 
 Cordialement,<br>
 Système automatique {{ config('app.name') }}

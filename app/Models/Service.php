@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasHistorique;
+use App\Traits\SendsNotifications;
 use App\ServiceUnite;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
-    use HasFactory, HasHistorique;
+    use HasFactory, HasHistorique, SendsNotifications;
 
     protected $fillable = [
         'nom',

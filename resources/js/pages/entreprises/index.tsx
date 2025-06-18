@@ -159,21 +159,6 @@ export default function EntreprisesIndex({ entreprises }: Props) {
         setDeleteDialog({ isOpen: false, entreprise: null });
     };
 
-    const handleDeleteEntreprise = async (deleteUrl: string, onClose: () => void) => {
-        setIsDeleting(true);
-        router.delete(deleteUrl, {
-            onSuccess: () => {
-                setIsDeleting(false);
-                onClose();
-                toast.success('Entreprise supprimée avec succès');
-            },
-            onError: () => {
-                setIsDeleting(false);
-                toast.error('Une erreur est survenue lors de la suppression de l\'entreprise');
-            }
-        });
-    };
-
     // Suppression multiple
     const handleDeleteSelected = () => {
         if (selectedEntreprises.length === 0) return;
@@ -186,16 +171,16 @@ export default function EntreprisesIndex({ entreprises }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Entreprises" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <div className="page-container">
                 {/* En-tête */}
-                <div className="flex items-center justify-between">
+                <div className="page-header">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Entreprises</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="page-title">Entreprises</h1>
+                        <p className="page-subtitle">
                             Gérez vos entreprises et leurs informations
                         </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="form-actions">
                         {selectedEntreprises.length > 0 && (
                             <>
                                 <Button variant="outline" size="sm" onClick={handleDeleteSelected}>
@@ -219,9 +204,9 @@ export default function EntreprisesIndex({ entreprises }: Props) {
 
                 {/* Filtres et recherche */}
                 <Card>
-                    <CardHeader className="pb-4">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="flex items-center gap-2">
+                    <CardHeader className="card-header">
+                        <div className="card-row">
+                            <CardTitle className="card-title">
                                 <Filter className="h-5 w-5" />
                                 Filtres & Recherche
                             </CardTitle>

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -58,6 +59,55 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
             ],
+                        // Notifications pour les admins - TEMPORAIREMENT DÉSACTIVÉES
+            'notifications' => [],
+            'unreadNotificationsCount' => 0,
         ];
+    }
+
+    /**
+     * Obtenir les notifications pour l'utilisateur si c'est un admin
+     */
+    private function getNotificationsForUser($user)
+    {
+        if (!$user) {
+            return [];
+        }
+
+        try {
+            // Charger la relation userRole avec le rôle
+            $user->load('userRole');
+
+            if ($user->userRole && in_array($user->userRole->name, ['admin', 'super_admin'])) {
+                return $user->notifications()->latest()->limit(10)->get()->toArray();
+            }
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du chargement des notifications: ' . $e->getMessage());
+        }
+
+        return [];
+    }
+
+    /**
+     * Obtenir le nombre de notifications non lues pour l'utilisateur si c'est un admin
+     */
+    private function getUnreadCountForUser($user)
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        try {
+            // Charger la relation userRole avec le rôle
+            $user->load('userRole');
+
+            if ($user->userRole && in_array($user->userRole->name, ['admin', 'super_admin'])) {
+                return $user->unreadNotifications()->count();
+            }
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du chargement du count notifications: ' . $e->getMessage());
+        }
+
+        return 0;
     }
 }

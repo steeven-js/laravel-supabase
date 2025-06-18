@@ -21,6 +21,7 @@ export interface NavItem {
     icon?: LucideIcon | null;
     isActive?: boolean;
     requiresSuperAdmin?: boolean;
+    requiresAdmin?: boolean;
 }
 
 export interface SharedData {

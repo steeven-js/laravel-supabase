@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Notifications\AdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -97,7 +98,7 @@ class AdminController extends Controller
                 ->withInput();
         }
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -108,6 +109,12 @@ class AdminController extends Controller
             'code_postal' => $request->code_postal,
             'pays' => $request->pays,
         ]);
+
+        // Envoyer notification pour le nouvel utilisateur
+        $role = \App\Models\UserRole::find($request->user_role_id);
+        $this->sendAdminNotification('user_created',
+            "Nouvel utilisateur créé : {$user->name} ({$user->email}) avec le rôle \"{$role->name}\""
+        );
 
         return redirect()->route('admin.users')
             ->with('success', 'Utilisateur créé avec succès.');
@@ -200,7 +207,17 @@ class AdminController extends Controller
                 ->with('error', 'Impossible de supprimer le dernier Super Administrateur.');
         }
 
+        // Sauvegarder les informations avant suppression pour la notification
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $userRole = $user->userRole->name ?? 'Inconnu';
+
         $user->delete();
+
+        // Envoyer notification pour la suppression
+        $this->sendAdminNotification('user_deleted',
+            "Utilisateur supprimé : {$userName} ({$userEmail}) - Rôle : \"{$userRole}\""
+        );
 
         return redirect()->route('admin.users')
             ->with('success', 'Utilisateur supprimé avec succès.');
@@ -249,5 +266,24 @@ class AdminController extends Controller
             'success' => 'Rôle mis à jour avec succès.',
             'role_display' => $user->fresh()->load('userRole')->role_display
         ]);
+    }
+
+    /**
+     * Envoie une notification à tous les administrateurs
+     */
+    private function sendAdminNotification(string $action, string $message)
+    {
+        $admins = User::whereHas('userRole', function ($query) {
+            $query->whereIn('name', ['admin', 'super_admin']);
+        })->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new AdminNotification(
+                'Administration',
+                $message,
+                null,
+                'admin'
+            ));
+        }
     }
 }

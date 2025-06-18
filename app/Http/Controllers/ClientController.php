@@ -138,12 +138,6 @@ class ClientController extends Controller
         return Inertia::render('clients/show', [
             'client' => $client,
             'historique' => $historique,
-            'auth' => [
-                'user' => [
-                    'id' => Auth::id(),
-                    'name' => Auth::user()->name,
-                ]
-            ]
         ]);
     }
 
@@ -204,6 +198,11 @@ class ClientController extends Controller
                 $clientEmail->update(['statut' => 'echec']);
                 throw $e;
             }
+
+            // Envoyer notification pour l'envoi d'email au client
+            $client->sendCustomNotification('email_sent',
+                "Un email a été envoyé à {$client->prenom} {$client->nom} avec l'objet : \"{$validated['objet']}\""
+            );
 
             return back()->with('success', '📧 Email envoyé avec succès à ' . $client->nom_complet);
 

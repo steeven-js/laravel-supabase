@@ -7,6 +7,7 @@ use App\Models\Devis;
 use App\Models\Facture;
 use App\Services\DevisPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -103,7 +104,7 @@ class DevisController extends Controller
             'clients' => $clients,
             'services' => $services,
             'administrateurs' => $administrateurs,
-            'numero_devis' => Devis::genererNumeroDevis(),
+            'numero_devis' => 'DV-' . substr(date('Y'), -2) . '-TEMP',
             'madinia' => $madinia ? [
                 'name' => $madinia->name,
                 'telephone' => $madinia->telephone,
@@ -137,6 +138,12 @@ class DevisController extends Controller
     public function store(Request $request)
     {
         try {
+            // Debug: Logger les données reçues
+            Log::info('Données reçues pour création devis', [
+                'all_data' => $request->all(),
+                'user_id' => Auth::id()
+            ]);
+
             $validated = $request->validate([
                 'client_id' => 'required|exists:clients,id',
                 'administrateur_id' => 'required|exists:users,id',
@@ -155,9 +162,9 @@ class DevisController extends Controller
                 'lignes.*.ordre' => 'required|integer|min:1',
             ]);
 
-            // Générer automatiquement le numéro de devis
-            $validated['numero_devis'] = Devis::genererNumeroDevis();
+            Log::info('Données validées avec succès', ['validated' => $validated]);
 
+            // Le numéro de devis sera généré automatiquement après création via l'ID
             // Créer le devis avec le statut par défaut "en_attente"
             $devis = new Devis();
             $devis->fill($validated);
@@ -191,6 +198,11 @@ class DevisController extends Controller
                 ->withInput()
                 ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
+            Log::error('Erreur lors de la création du devis', [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
+            ]);
             return back()
                 ->withInput()
                 ->with('error', '❌ Une erreur est survenue lors de la création du devis.');
@@ -226,9 +238,7 @@ class DevisController extends Controller
                 'lignes.*.ordre' => 'required|integer|min:1',
             ]);
 
-            // Générer automatiquement le numéro de devis
-            $validated['numero_devis'] = Devis::genererNumeroDevis();
-
+            // Le numéro de devis sera généré automatiquement après création via l'ID
             // Créer le devis avec le statut "brouillon"
             $devis = new Devis();
             $devis->fill($validated);
@@ -633,6 +643,11 @@ class DevisController extends Controller
             $result = $devis->accepter();
 
             if ($result) {
+                // Envoyer notification personnalisée pour l'acceptation
+                $devis->sendCustomNotification('accepted',
+                    "Le devis #{$devis->numero_devis} pour {$devis->client->prenom} {$devis->client->nom} a été accepté par le client"
+                );
+
                 Log::info('Devis accepté avec succès via interface', [
                     'devis_id' => $devis->getKey(),
                     'devis_numero' => $devis->numero_devis
@@ -676,6 +691,11 @@ class DevisController extends Controller
     {
         try {
             $devis->refuser();
+
+            // Envoyer notification personnalisée pour le refus
+            $devis->sendCustomNotification('refused',
+                "Le devis #{$devis->numero_devis} pour {$devis->client->prenom} {$devis->client->nom} a été refusé par le client"
+            );
 
             return redirect()->back()
                 ->with('success', '⛔ Devis ' . $devis->numero_devis . ' refusé.');
@@ -881,6 +901,11 @@ class DevisController extends Controller
                 'client_email' => $devis->client->email
             ]);
 
+            // Envoyer notification personnalisée pour l'envoi
+            $devis->sendCustomNotification('sent',
+                "Le devis #{$devis->numero_devis} a été envoyé par email à {$devis->client->prenom} {$devis->client->nom} ({$devis->client->email})"
+            );
+
             Log::info('=== FIN ENVOI EMAIL DEVIS (SUCCÈS) ===', [
                 'devis_id' => $devis->id,
             ]);
@@ -984,6 +1009,11 @@ class DevisController extends Controller
             ];
 
             $facture = $devis->transformerEnFacture($parametresFacture);
+
+            // Envoyer notification pour la transformation
+            $devis->sendCustomNotification('transformed',
+                "Le devis #{$devis->numero_devis} a été transformé en facture #{$facture->numero_facture} pour {$devis->client->prenom} {$devis->client->nom}"
+            );
 
             // Marquer la date d'envoi admin
             $facture->date_envoi_admin = now();
@@ -1213,10 +1243,14 @@ class DevisController extends Controller
                 return;
             }
 
+            // Générer l'URL du devis pour l'admin
+            $urlDevis = url('/devis/' . $devis->id);
+
             // Créer l'instance de mail
             $mailInstance = new \App\Mail\DevisAdminMail(
                 $devis,
-                $devis->client
+                $devis->client,
+                $urlDevis
             );
 
             // Préparer les destinataires
@@ -1377,8 +1411,8 @@ class DevisController extends Controller
                 throw new \Exception('Impossible de décoder le contenu PDF');
             }
 
-            // Générer le nom de fichier
-            $nomFichier = "devis_{$devis->numero_devis}_{$devis->id}.pdf";
+            // Générer le nom de fichier basé sur le numéro de devis
+            $nomFichier = "devis_{$devis->numero_devis}.pdf";
 
             // 1. Sauvegarder localement
             $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'devis');

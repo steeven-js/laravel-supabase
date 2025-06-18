@@ -319,10 +319,10 @@ class DevisPdfService
 
 
     /**
-     * Génère le nom du fichier PDF unifié
+     * Génère le nom du fichier PDF basé sur le numéro de devis
      */
     private function getNomFichier(Devis $devis): string
     {
-        return "devis_{$devis->id}.pdf";
+        return "devis_{$devis->numero_devis}.pdf";
     }
 }

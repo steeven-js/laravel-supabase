@@ -64,9 +64,8 @@ class DevisSeeder extends Seeder
             // Sélectionner les services pour ce devis (1 à 4 services)
             $servicesDevis = $services->random($faker->numberBetween(1, 4));
 
-            // Créer le devis
+            // Créer le devis (le numéro sera généré automatiquement)
             $devis = Devis::create([
-                'numero_devis' => $this->genererNumeroDevis($dateDevis),
                 'client_id' => $client->id,
                 'date_devis' => $dateDevis,
                 'date_validite' => $dateValidite,
@@ -209,32 +208,7 @@ class DevisSeeder extends Seeder
         return round($prixBase * $variation, 2);
     }
 
-    /**
-     * Génère un numéro de devis unique
-     */
-    private function genererNumeroDevis($date): string
-    {
-        $annee = $date->format('Y');
-        $mois = $date->format('m');
 
-        if (!isset($this->numeroCounters[$annee][$mois])) {
-            // Trouver le dernier numéro pour ce mois
-            $dernierDevis = Devis::where('numero_devis', 'LIKE', "DEV-{$annee}{$mois}-%")
-                ->orderBy('numero_devis', 'desc')
-                ->first();
-
-            if ($dernierDevis) {
-                preg_match('/DEV-\d{6}-(\d+)$/', $dernierDevis->numero_devis, $matches);
-                $this->numeroCounters[$annee][$mois] = (int)($matches[1] ?? 0);
-            } else {
-                $this->numeroCounters[$annee][$mois] = 0;
-            }
-        }
-
-        $this->numeroCounters[$annee][$mois]++;
-
-        return sprintf('DEV-%s%s-%03d', $annee, $mois, $this->numeroCounters[$annee][$mois]);
-    }
 
     /**
      * Génère des conditions générales
@@ -278,7 +252,6 @@ class DevisSeeder extends Seeder
             $servicesDemo = $services->random($faker->numberBetween(2, 3));
 
             $devis = Devis::create([
-                'numero_devis' => $this->genererNumeroDevis($dateDevis),
                 'client_id' => $client->id,
                 'date_devis' => $dateDevis,
                 'date_validite' => $dateValidite,

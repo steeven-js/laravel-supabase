@@ -514,6 +514,17 @@ class FactureController extends Controller
 
             $facture->save();
 
+            // Envoyer notification pour le changement de statut important
+            if (in_array($nouveauStatut, ['payee', 'annulee', 'en_retard'])) {
+                $messages = [
+                    'payee' => "La facture #{$facture->numero_facture} de {$facture->client->prenom} {$facture->client->nom} a été marquée comme payée",
+                    'annulee' => "La facture #{$facture->numero_facture} de {$facture->client->prenom} {$facture->client->nom} a été annulée",
+                    'en_retard' => "La facture #{$facture->numero_facture} de {$facture->client->prenom} {$facture->client->nom} est maintenant en retard de paiement"
+                ];
+
+                $facture->sendCustomNotification('status_changed', $messages[$nouveauStatut]);
+            }
+
             return redirect()->back()
                 ->with('success', '✅ Statut de la facture ' . $facture->numero_facture . ' modifié avec succès !');
 
@@ -541,6 +552,11 @@ class FactureController extends Controller
             $facture->marquerPayee(
                 $validated['mode_paiement'],
                 $validated['reference_paiement'] ?? null
+            );
+
+            // Envoyer notification pour le paiement
+            $facture->sendCustomNotification('paid',
+                "La facture #{$facture->numero_facture} de {$facture->client->prenom} {$facture->client->nom} a été marquée comme payée (Montant: " . number_format($facture->montant_ttc, 2) . "€, Mode: {$validated['mode_paiement']})"
             );
 
             return redirect()->back()
@@ -605,6 +621,11 @@ class FactureController extends Controller
                     ]);
                 }
             }
+
+            // Envoyer notification pour l'envoi de facture
+            $facture->sendCustomNotification('sent',
+                "La facture #{$facture->numero_facture} a été envoyée par email à {$facture->client->prenom} {$facture->client->nom} ({$facture->client->email})"
+            );
 
             Log::info('Facture envoyée par email', [
                 'facture_numero' => $facture->numero_facture,
@@ -948,8 +969,8 @@ class FactureController extends Controller
                 throw new \Exception('Impossible de décoder le contenu PDF');
             }
 
-            // Générer le nom de fichier unifié
-            $nomFichier = "facture_{$facture->numero_facture}_{$facture->id}.pdf";
+            // Générer le nom de fichier basé sur le numéro de facture
+            $nomFichier = "facture_{$facture->numero_facture}.pdf";
 
             // 1. Sauvegarder localement
             $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'factures');
@@ -1117,7 +1138,7 @@ class FactureController extends Controller
 
             // Lire le contenu du PDF local
             $pdfContent = file_get_contents($cheminPdf);
-            $nomFichier = "facture_{$facture->id}.pdf";
+            $nomFichier = "facture_{$facture->numero_facture}.pdf";
 
             // Synchroniser vers Supabase
             $urlSupabase = $this->sauvegarderPdfSupabase($pdfContent, $nomFichier, 'factures');

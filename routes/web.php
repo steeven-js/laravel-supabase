@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\MadiniaController;
 use App\Http\Controllers\Settings\ProfileController;
 
@@ -178,6 +179,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API pour l'historique (pour les widgets et composants React)
     Route::prefix('api/historique')->name('api.historique.')->group(function () {
         Route::get('/{type}/{id}', [App\Http\Controllers\HistoriqueController::class, 'apiHistoriqueEntite'])->name('entite');
+    });
+
+    // Route simple pour les notifications (accessible à tous les utilisateurs authentifiés)
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+
+    // Routes pour les notifications (réservées aux admins)
+    Route::middleware(['admin'])->prefix('notifications')->name('notifications.')->group(function () {
+        Route::patch('/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+        Route::get('/api/header', [NotificationController::class, 'getForHeader'])->name('api.header');
     });
 
     // Routes d'administration - Protégées par middleware superadmin (accès réservé aux Super Admins)

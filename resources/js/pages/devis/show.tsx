@@ -144,19 +144,19 @@ interface Props {
 const getStatusStyles = (statut: string) => {
     switch (statut) {
         case 'accepte':
-            return 'bg-green-100 text-green-800 border-green-200';
+            return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700';
         case 'envoye':
-            return 'bg-blue-100 text-blue-800 border-blue-200';
+            return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700';
         case 'en_attente':
-            return 'bg-amber-100 text-amber-800 border-amber-200';
+            return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700';
         case 'refuse':
-            return 'bg-red-100 text-red-800 border-red-200';
+            return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700';
         case 'expire':
-            return 'bg-orange-100 text-orange-800 border-orange-200';
+            return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700';
         case 'brouillon':
-            return 'bg-gray-100 text-gray-800 border-gray-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-600';
         default:
-            return 'bg-gray-100 text-gray-800 border-gray-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-600';
     }
 };
 
@@ -182,13 +182,13 @@ const formatStatut = (statut: string) => {
 const getStatusEnvoiStyles = (statutEnvoi: string) => {
     switch (statutEnvoi) {
         case 'envoye':
-            return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+            return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700';
         case 'echec_envoi':
-            return 'bg-red-100 text-red-800 border-red-200';
+            return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700';
         case 'non_envoye':
-            return 'bg-amber-100 text-amber-800 border-amber-200';
+            return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700';
         default:
-            return 'bg-gray-100 text-gray-800 border-gray-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-600';
     }
 };
 
@@ -301,17 +301,17 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
     const getActionColor = (action: string) => {
         switch (action) {
             case 'creation':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
             case 'modification':
-                return 'bg-amber-100 text-amber-800';
+                return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
             case 'changement_statut':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
             case 'envoi_email':
-                return 'bg-purple-100 text-purple-800';
+                return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
             case 'transformation':
-                return 'bg-emerald-100 text-emerald-800';
+                return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300';
         }
     };
 
@@ -353,16 +353,16 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                 </div>
 
                 {/* Header avec actions - Version harmonisée */}
-                <Card className="w-full max-w-5xl mx-auto bg-white shadow-sm border border-gray-200">
+                <Card className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-900/50 shadow-sm border border-gray-200 dark:border-gray-700">
                     <CardContent className="p-6">
                         {/* Titre et informations principales */}
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
                             <div className="flex-1">
-                                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                                     Devis {devis.numero_devis}
                                 </h1>
                                 {devis.administrateur && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                         <span>Assigné à <strong>{devis.administrateur.name}</strong></span>
                                     </div>
@@ -372,15 +372,15 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             {/* Statuts organisés */}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 {/* Statut principal */}
-                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
+                                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-w-[200px]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Settings className="h-4 w-4 text-amber-600" />
-                                        <span className="text-sm font-medium text-gray-700">
+                                        <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                             Statut du devis
                                         </span>
                                     </div>
                                     <Select value={devis.statut} onValueChange={handleStatutChange}>
-                                        <SelectTrigger className="w-full h-10 border-gray-300 hover:border-amber-400 bg-white transition-colors">
+                                        <SelectTrigger className="w-full h-10 border-gray-300 dark:border-gray-600 hover:border-amber-400 dark:hover:border-amber-500 bg-white dark:bg-gray-800 transition-colors">
                                             <SelectValue placeholder="Sélectionner un statut" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -397,10 +397,10 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                 </div>
 
                                 {/* Statut d'envoi */}
-                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-w-[200px]">
+                                <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-w-[200px]">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Mail className="h-4 w-4 text-blue-600" />
-                                        <span className="text-sm font-medium text-gray-700">
+                                        <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                             Statut d'envoi
                                         </span>
                                     </div>
@@ -443,7 +443,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-10 px-4 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                                    className="h-10 px-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                                     onClick={handlePreviewPdf}
                                 >
                                     <Eye className="mr-2 h-4 w-4" />
@@ -468,14 +468,14 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                 </Card>
 
                 {/* Header de statut uniforme pour tous les devis */}
-                <Card className="w-full max-w-5xl mx-auto">
+                <Card className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-700">
                     <CardContent className="p-8">
                         {devis.facture ? (
                             // Devis déjà transformé en facture
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-green-700">✅ Devis transformé en facture</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-green-700 dark:text-green-400">✅ Devis transformé en facture</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Ce devis a été transformé en facture {devis.facture.numero_facture}
                                     </p>
                                 </div>
@@ -492,8 +492,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Devis accepté, peut être transformé
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-green-700">🎉 Devis accepté</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-green-700 dark:text-green-400">🎉 Devis accepté</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Ce devis peut maintenant être transformé en facture
                                     </p>
                                 </div>
@@ -510,8 +510,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Devis envoyé
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-blue-700">📧 Devis envoyé</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-blue-700 dark:text-blue-400">📧 Devis envoyé</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Le devis a été envoyé au client le {devis.date_envoi_client ? new Date(devis.date_envoi_client).toLocaleDateString('fr-FR', {
                                             year: 'numeric',
                                             month: 'long',
@@ -526,8 +526,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Devis en brouillon
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">📝 Devis en brouillon</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700 dark:text-gray-300">📝 Devis en brouillon</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Ce devis est en cours de préparation et peut être modifié
                                     </p>
                                 </div>
@@ -536,8 +536,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Devis en attente
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-amber-700">⏳ Devis en attente</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-amber-700 dark:text-amber-400">⏳ Devis en attente</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Ce devis est en attente de validation ou d'envoi au client
                                     </p>
                                 </div>
@@ -546,8 +546,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Devis refusé
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-red-700">❌ Devis refusé</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-red-700 dark:text-red-400">❌ Devis refusé</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Ce devis a été refusé par le client
                                     </p>
                                 </div>
@@ -556,8 +556,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Devis expiré
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-orange-700">⏰ Devis expiré</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-orange-700 dark:text-orange-400">⏰ Devis expiré</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Ce devis a dépassé sa date de validité
                                     </p>
                                 </div>
@@ -566,8 +566,8 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                             // Statut par défaut
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-semibold text-lg mb-1 text-gray-700">📄 Devis</h3>
-                                    <p className="text-sm text-gray-600">
+                                    <h3 className="font-semibold text-lg mb-1 text-gray-700 dark:text-gray-300">📄 Devis</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Statut du devis
                                     </p>
                                 </div>
@@ -577,7 +577,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                 </Card>
 
                 {/* Main devis details card */}
-                <Card className="w-full max-w-5xl mx-auto bg-white shadow-lg">
+                <Card className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-900/50 shadow-lg border-gray-200 dark:border-gray-700">
                     <CardContent className="p-12 lg:p-16">
                         {/* Header section with logo and title */}
                         <div className="flex justify-between items-start mb-8">
@@ -603,7 +603,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                         {formatStatut(devis.statut)}
                                     </span>
                                 </div>
-                                <h2 className="text-3xl font-bold text-gray-900">{devis.numero_devis}</h2>
+                                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{devis.numero_devis}</h2>
                             </div>
                         </div>
 
@@ -611,38 +611,38 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             {/* From section */}
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Devis de</h3>
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Devis de</h3>
                                 <div className="space-y-1">
-                                    <p className="font-semibold text-gray-900">
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
                                         {madinia?.name || 'Madin.IA'}
                                     </p>
                                     {madinia?.adresse && (
-                                        <p className="text-gray-600">{madinia.adresse}</p>
+                                        <p className="text-gray-600 dark:text-gray-400">{madinia.adresse}</p>
                                     )}
                                     {madinia?.pays && (
-                                        <p className="text-gray-600">{madinia.pays}</p>
+                                        <p className="text-gray-600 dark:text-gray-400">{madinia.pays}</p>
                                     )}
                                     <div className="flex flex-col gap-1 mt-2">
                                         {madinia?.telephone && (
                                             <div className="flex items-center gap-2">
-                                                <Phone className="h-4 w-4 text-gray-400" />
-                                                <span className="text-gray-600">{madinia.telephone}</span>
+                                                <Phone className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                                <span className="text-gray-600 dark:text-gray-400">{madinia.telephone}</span>
                                             </div>
                                         )}
                                         {madinia?.email && (
                                             <div className="flex items-center gap-2">
-                                                <Mail className="h-4 w-4 text-gray-400" />
-                                                <span className="text-gray-600">{madinia.email}</span>
+                                                <Mail className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                                <span className="text-gray-600 dark:text-gray-400">{madinia.email}</span>
                                             </div>
                                         )}
                                         {devis.administrateur && (
-                                            <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 rounded-md">
-                                                <Mail className="h-4 w-4 text-blue-500" />
+                                            <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                                                <Mail className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-medium text-blue-900">
+                                                    <span className="text-sm font-medium text-blue-900 dark:text-blue-200">
                                                         {devis.administrateur.name}
                                                     </span>
-                                                    <span className="text-xs text-blue-600">
+                                                    <span className="text-xs text-blue-600 dark:text-blue-300">
                                                         {devis.administrateur.email}
                                                     </span>
                                                 </div>
@@ -650,7 +650,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                                         )}
                                     </div>
                                     {madinia?.siret && (
-                                        <div className="text-xs text-gray-500 mt-2">
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                             SIRET: {madinia.siret}
                                         </div>
                                     )}
@@ -659,32 +659,32 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
 
                             {/* To section */}
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Devis pour</h3>
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Devis pour</h3>
                                 <div className="space-y-1">
-                                    <p className="font-semibold text-gray-900">
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
                                         {devis.client.prenom} {devis.client.nom}
                                     </p>
                                     {devis.client.entreprise && (
-                                        <p className="text-gray-600">
+                                        <p className="text-gray-600 dark:text-gray-400">
                                             {devis.client.entreprise.nom_commercial || devis.client.entreprise.nom}
                                         </p>
                                     )}
                                     {devis.client.adresse && (
-                                        <p className="text-gray-600">{devis.client.adresse}</p>
+                                        <p className="text-gray-600 dark:text-gray-400">{devis.client.adresse}</p>
                                     )}
                                     {(devis.client.code_postal || devis.client.ville) && (
-                                        <p className="text-gray-600">
+                                        <p className="text-gray-600 dark:text-gray-400">
                                             {devis.client.code_postal} {devis.client.ville}
                                         </p>
                                     )}
                                     <div className="flex items-center gap-2 mt-2">
-                                        <Mail className="h-4 w-4 text-gray-400" />
-                                        <span className="text-gray-600">{devis.client.email}</span>
+                                        <Mail className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                        <span className="text-gray-600 dark:text-gray-400">{devis.client.email}</span>
                                     </div>
                                     {devis.client.telephone && (
                                         <div className="flex items-center gap-2">
-                                            <Phone className="h-4 w-4 text-gray-400" />
-                                            <span className="text-gray-600">{devis.client.telephone}</span>
+                                            <Phone className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                            <span className="text-gray-600 dark:text-gray-400">{devis.client.telephone}</span>
                                         </div>
                                     )}
                                 </div>
@@ -692,10 +692,10 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
                         </div>
 
                         {/* Date information */}
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-gray-50 p-4 rounded-lg">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
                             <div>
-                                <p className="text-sm text-gray-600">Date de création</p>
-                                <p className="font-semibold">{formatDateShort(devis.date_devis)}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Date de création</p>
+                                <p className="font-semibold text-gray-900 dark:text-gray-100">{formatDateShort(devis.date_devis)}</p>
                             </div>
                             {devis.date_envoi_client && (
                                 <div className="text-center">
