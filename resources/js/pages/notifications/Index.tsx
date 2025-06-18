@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { type Notification } from '@/components/notifications-dropdown';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -62,6 +62,55 @@ const formatTimeAgo = (dateString: string) => {
 };
 
 export default function NotificationsIndex({ notifications }: Props) {
+    // Fonction pour gérer le clic sur une notification
+    const handleNotificationClick = (notification: Notification) => {
+        // Marquer comme lue si pas encore lue
+        if (!notification.read_at) {
+            router.patch(`/notifications/${notification.id}/mark-as-read`, {}, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }
+
+        // Rediriger vers l'URL appropriée
+        const redirectUrl = getRedirectUrl(notification);
+        if (redirectUrl) {
+            router.visit(redirectUrl);
+        }
+    };
+
+    // Fonction pour générer l'URL de redirection
+    const getRedirectUrl = (notification: Notification): string | null => {
+        // Si une URL d'action est fournie, l'utiliser en priorité
+        if (notification.data.action_url) {
+            return notification.data.action_url;
+        }
+
+        // Sinon, générer l'URL basée sur le type et l'ID
+        const modelType = notification.data.model_type || notification.data.icon_type;
+        const modelId = notification.data.model_id;
+
+        if (!modelType || !modelId) {
+            return null;
+        }
+
+        // Mapper les types vers les routes
+        switch (modelType) {
+            case 'client':
+                return `/clients/${modelId}`;
+            case 'entreprise':
+                return `/entreprises/${modelId}`;
+            case 'devis':
+                return `/devis/${modelId}`;
+            case 'facture':
+                return `/factures/${modelId}`;
+            case 'service':
+                return `/services/${modelId}`;
+            default:
+                return null;
+        }
+    };
+
     return (
         <AppLayout>
             <Head title="Notifications" />
@@ -94,6 +143,7 @@ export default function NotificationsIndex({ notifications }: Props) {
                         notifications.data.map((notification) => (
                             <Card
                                 key={notification.id}
+                                onClick={() => handleNotificationClick(notification)}
                                 className={cn(
                                     "cursor-pointer transition-colors hover:bg-muted/50",
                                     !notification.read_at && "border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/20"
@@ -131,7 +181,7 @@ export default function NotificationsIndex({ notifications }: Props) {
                                                 {notification.data.message}
                                             </p>
 
-                                            {notification.data.action_url && (
+                                            {(notification.data.action_url || notification.data.model_id) && (
                                                 <div className="text-xs text-blue-600 hover:text-blue-800">
                                                     Cliquez pour voir les détails →
                                                 </div>

@@ -59,13 +59,13 @@ class HandleInertiaRequests extends Middleware
                 'warning' => $request->session()->get('warning'),
                 'info' => $request->session()->get('info'),
             ],
-                        // Notifications pour les admins - TEMPORAIREMENT DÉSACTIVÉES
-            'notifications' => [],
-            'unreadNotificationsCount' => 0,
+            // Notifications pour les admins
+            'notifications' => $this->getNotificationsForUser($request->user()),
+            'unreadNotificationsCount' => $this->getUnreadCountForUser($request->user()),
         ];
     }
 
-    /**
+        /**
      * Obtenir les notifications pour l'utilisateur si c'est un admin
      */
     private function getNotificationsForUser($user)

@@ -100,6 +100,10 @@ export function NotificationsDropdown({ notifications, unreadCount }: Notificati
     // S'assurer que notifications est toujours un tableau
     const safeNotifications = Array.isArray(notifications) ? notifications : [];
 
+    // Calculer le nombre de notifications non lues depuis les notifications si unreadCount n'est pas fourni
+    const unreadCountFromNotifications = safeNotifications.filter(n => !n.read_at).length;
+    const finalUnreadCount = unreadCount || unreadCountFromNotifications;
+
     const handleNotificationClick = (notification: Notification) => {
         // Marquer comme lue si pas encore lue
         if (!notification.read_at) {
@@ -109,12 +113,45 @@ export function NotificationsDropdown({ notifications, unreadCount }: Notificati
             });
         }
 
-        // Rediriger vers l'URL d'action si elle existe
-        if (notification.data.action_url) {
-            router.visit(notification.data.action_url);
+        // Rediriger vers l'URL appropriée
+        const redirectUrl = getRedirectUrl(notification);
+        if (redirectUrl) {
+            router.visit(redirectUrl);
         }
 
         setIsOpen(false);
+    };
+
+    // Fonction pour générer l'URL de redirection
+    const getRedirectUrl = (notification: Notification): string | null => {
+        // Si une URL d'action est fournie, l'utiliser en priorité
+        if (notification.data.action_url) {
+            return notification.data.action_url;
+        }
+
+        // Sinon, générer l'URL basée sur le type et l'ID
+        const modelType = notification.data.model_type || notification.data.icon_type;
+        const modelId = notification.data.model_id;
+
+        if (!modelType || !modelId) {
+            return null;
+        }
+
+        // Mapper les types vers les routes
+        switch (modelType) {
+            case 'client':
+                return `/clients/${modelId}`;
+            case 'entreprise':
+                return `/entreprises/${modelId}`;
+            case 'devis':
+                return `/devis/${modelId}`;
+            case 'facture':
+                return `/factures/${modelId}`;
+            case 'service':
+                return `/services/${modelId}`;
+            default:
+                return null;
+        }
     };
 
     const markAllAsRead = () => {
@@ -135,24 +172,32 @@ export function NotificationsDropdown({ notifications, unreadCount }: Notificati
                                 size="icon"
                                 className="group relative h-9 w-9 cursor-pointer"
                             >
-                                {unreadCount > 0 ? (
-                                    <BellRing className="!size-5 opacity-80 group-hover:opacity-100" />
+                                {finalUnreadCount > 0 ? (
+                                    <BellRing className="!size-6 opacity-80 group-hover:opacity-100 text-blue-600" />
                                 ) : (
-                                    <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
+                                    <Bell className="!size-6 opacity-80 group-hover:opacity-100" />
                                 )}
-                                {unreadCount > 0 && (
-                                    <Badge
-                                        variant="destructive"
-                                        className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
+                                                                {/* Badge de notification - parfaitement centré */}
+                                {finalUnreadCount > 0 && (
+                                    <div
+                                        className="absolute -right-0.5 -top-0.5 h-6 w-6 min-w-6 rounded-full bg-red-500 hover:bg-red-600 border-2 border-white shadow-lg z-50 text-white text-[10px] font-bold"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            lineHeight: '1',
+                                            minWidth: '24px',
+                                            minHeight: '24px'
+                                        }}
                                     >
-                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                    </Badge>
+                                        {finalUnreadCount > 99 ? '99+' : finalUnreadCount}
+                                    </div>
                                 )}
                             </Button>
                         </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Notifications{unreadCount > 0 && ` (${unreadCount})`}</p>
+                        <p>Notifications{finalUnreadCount > 0 && ` (${finalUnreadCount} non lue${finalUnreadCount > 1 ? 's' : ''})`}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
@@ -160,14 +205,14 @@ export function NotificationsDropdown({ notifications, unreadCount }: Notificati
             <DropdownMenuContent className="w-80" align="end">
                 <div className="flex items-center justify-between p-4 border-b">
                     <h3 className="font-semibold">Notifications</h3>
-                    {unreadCount > 0 && (
+                    {finalUnreadCount > 0 && (
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={markAllAsRead}
                             className="text-xs"
                         >
-                            Tout marquer comme lu
+                            Tout marquer comme lu ({finalUnreadCount})
                         </Button>
                     )}
                 </div>
