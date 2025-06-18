@@ -9,18 +9,15 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Mail\Mailable;
+use App\Models\User;
 
 class MonitoringController extends Controller
 {
     public function index()
     {
-        // Vérifier que nous sommes en mode local
-        if (!app()->environment('local')) {
-            abort(404);
-        }
-
         $diagnostics = $this->getDiagnostics();
 
         return Inertia::render('monitoring/index', [
@@ -30,11 +27,6 @@ class MonitoringController extends Controller
 
     public function testEmail(Request $request)
     {
-        // Vérifier que nous sommes en mode local
-        if (!app()->environment('local')) {
-            abort(404);
-        }
-
         try {
             $testEmail = $request->get('email', config('mail.from.address'));
 
@@ -101,11 +93,6 @@ class MonitoringController extends Controller
 
     public function testDatabase()
     {
-        // Vérifier que nous sommes en mode local
-        if (!app()->environment('local')) {
-            abort(404);
-        }
-
         try {
             // Test de connexion à la base de données
             $connection = DB::connection()->getPdo();
@@ -139,11 +126,6 @@ class MonitoringController extends Controller
 
     public function clearCache()
     {
-        // Vérifier que nous sommes en mode local
-        if (!app()->environment('local')) {
-            abort(404);
-        }
-
         try {
             Artisan::call('cache:clear');
             Artisan::call('config:clear');
