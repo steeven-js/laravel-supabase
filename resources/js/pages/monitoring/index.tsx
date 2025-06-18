@@ -140,7 +140,10 @@ export default function MonitoringIndex({ diagnostics }: Props) {
 
     const getStatusBadge = (status: boolean, trueText = 'OK', falseText = 'Erreur') => {
         return (
-            <Badge variant={status ? 'success' : 'destructive'}>
+            <Badge
+                variant={status ? 'success' : 'destructive'}
+                className={status ? '' : 'text-white bg-red-600 hover:bg-red-700 border-red-600'}
+            >
                 {status ? trueText : falseText}
             </Badge>
         );
@@ -383,7 +386,10 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold mb-3">
-                                    <Badge variant={diagnostics.environment.app_env === 'production' ? 'destructive' : 'secondary'}>
+                                    <Badge
+                                        variant={diagnostics.environment.app_env === 'production' ? 'destructive' : 'secondary'}
+                                        className={diagnostics.environment.app_env === 'production' ? 'text-white bg-red-600 hover:bg-red-700 border-red-600' : ''}
+                                    >
                                         {diagnostics.environment.app_env.toUpperCase()}
                                     </Badge>
                                 </div>
@@ -480,7 +486,7 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                 </div>
                             </div>
                             {testResults.email && (
-                                <div className={`p-3 rounded-md ${testResults.email.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                <div className={`p-3 rounded-md ${testResults.email.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                                     <div className="flex items-center gap-2">
                                         {testResults.email.success ? (
                                             <CheckCircle className="w-4 h-4" />
@@ -520,7 +526,7 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                 Tester la base de données
                             </Button>
                             {testResults.database && (
-                                <div className={`p-3 rounded-md ${testResults.database.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                <div className={`p-3 rounded-md ${testResults.database.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                                     <div className="flex items-center gap-2">
                                         {testResults.database.success ? (
                                             <CheckCircle className="w-4 h-4" />
@@ -560,7 +566,7 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                 Effacer tous les caches
                             </Button>
                             {testResults.cache && (
-                                <div className={`p-3 rounded-md ${testResults.cache.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                <div className={`p-3 rounded-md ${testResults.cache.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                                     <div className="flex items-center gap-2">
                                         {testResults.cache.success ? (
                                             <CheckCircle className="w-4 h-4" />
