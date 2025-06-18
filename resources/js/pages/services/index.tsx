@@ -37,7 +37,7 @@ import {
     BarChart3,
     Info
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -126,12 +126,74 @@ export default function ServicesIndex({
         safeServices.links = [];
     }
 
-    const [searchTerm, setSearchTerm] = useState(safeFilters.search || '');
-    const [statutFilter, setStatutFilter] = useState(safeFilters.statut || 'tous');
-    const [sortBy, setSortBy] = useState(safeFilters.sort || 'nom');
-    const [sortDirection, setSortDirection] = useState(safeFilters.direction || 'asc');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statutFilter, setStatutFilter] = useState('tous');
+    const [sortBy, setSortBy] = useState<string>('nom');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(15);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+    // Tous les services (récupérés une seule fois)
+    const allServices = safeServices.data || [];
+
+    // Filtrage et tri côté client
+    const filteredAndSortedServices = useMemo(() => {
+        const filtered = allServices.filter(service => {
+            // Vérification que le service existe
+            if (!service || !service.nom) {
+                return false;
+            }
+
+            // Filtrage par terme de recherche
+            const matchesSearch = !searchTerm.trim() || [
+                service.nom,
+                service.code,
+                service.description
+            ].some(field => {
+                if (!field) return false;
+                return field.toLowerCase().includes(searchTerm.toLowerCase());
+            });
+
+            // Filtrage par statut
+            const matchesStatus =
+                statutFilter === 'tous' ||
+                (statutFilter === 'actif' && service.actif) ||
+                (statutFilter === 'inactif' && !service.actif);
+
+            return matchesSearch && matchesStatus;
+        });
+
+        // Tri
+        filtered.sort((a, b) => {
+            let aValue = a[sortBy as keyof Service];
+            let bValue = b[sortBy as keyof Service];
+
+            if (sortBy === 'nom' || sortBy === 'code' || sortBy === 'description') {
+                aValue = (aValue as string)?.toLowerCase() || '';
+                bValue = (bValue as string)?.toLowerCase() || '';
+            }
+
+            // Gérer les valeurs undefined/null
+            if (aValue == null && bValue == null) return 0;
+            if (aValue == null) return sortDirection === 'asc' ? 1 : -1;
+            if (bValue == null) return sortDirection === 'asc' ? -1 : 1;
+
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        return filtered;
+    }, [allServices, searchTerm, statutFilter, sortBy, sortDirection]);
+
+    // Pagination côté client
+    const totalPages = Math.ceil(filteredAndSortedServices.length / itemsPerPage);
+    const paginatedServices = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredAndSortedServices.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredAndSortedServices, currentPage, itemsPerPage]);
 
     const formatPrice = (price: number | undefined | null) => {
         const safePrice = price || 0;
@@ -141,32 +203,14 @@ export default function ServicesIndex({
         }).format(safePrice);
     };
 
-    const handleSearch = () => {
-        router.get('/services', {
-            search: searchTerm,
-            statut: statutFilter === 'tous' ? '' : statutFilter,
-            sort: sortBy,
-            direction: sortDirection,
-        }, {
-            preserveState: true,
-            replace: true,
-        });
-    };
-
     const handleSort = (column: string) => {
-        const newDirection = sortBy === column && sortDirection === 'asc' ? 'desc' : 'asc';
-        setSortBy(column);
-        setSortDirection(newDirection);
-
-        router.get('/services', {
-            search: searchTerm,
-            statut: statutFilter === 'tous' ? '' : statutFilter,
-            sort: column,
-            direction: newDirection,
-        }, {
-            preserveState: true,
-            replace: true,
-        });
+        if (sortBy === column) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(column);
+            setSortDirection('asc');
+        }
+        setCurrentPage(1); // Retourner à la première page lors du tri
     };
 
     const handleToggleStatus = (service: Service) => {
@@ -225,7 +269,7 @@ export default function ServicesIndex({
         setStatutFilter('tous');
         setSortBy('nom');
         setSortDirection('asc');
-        router.get('/services', {}, { preserveState: true, replace: true });
+        setCurrentPage(1);
     };
 
     return (
@@ -312,13 +356,20 @@ export default function ServicesIndex({
                                         placeholder="Rechercher un service (nom, code, description)..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                setCurrentPage(1); // Retourner à la première page lors de la recherche
+                                            }
+                                        }}
                                         className="pl-10"
                                     />
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <Select value={statutFilter} onValueChange={setStatutFilter}>
+                                <Select value={statutFilter} onValueChange={(value) => {
+                                    setStatutFilter(value);
+                                    setCurrentPage(1); // Retourner à la première page lors du changement de filtre
+                                }}>
                                     <SelectTrigger className="w-[140px]">
                                         <Filter className="mr-2 h-4 w-4" />
                                         <SelectValue placeholder="Statut" />
@@ -329,9 +380,6 @@ export default function ServicesIndex({
                                         <SelectItem value="inactif">Inactifs</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button onClick={handleSearch}>
-                                    Rechercher
-                                </Button>
                                 <Button variant="outline" onClick={resetFilters}>
                                     Réinitialiser
                                 </Button>
@@ -344,15 +392,15 @@ export default function ServicesIndex({
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
-                            <span>Services ({safeServices.meta.total})</span>
+                            <span>Services ({filteredAndSortedServices.length} résultat{filteredAndSortedServices.length > 1 ? 's' : ''})</span>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <BarChart3 className="h-4 w-4" />
-                                Page {safeServices.meta.current_page} sur {safeServices.meta.last_page}
+                                Page {currentPage} sur {totalPages}
                             </div>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
-                        {!safeServices.data || safeServices.data.length === 0 ? (
+                        {!paginatedServices || paginatedServices.length === 0 ? (
                             <div className="text-center py-12">
                                 <Package className="mx-auto h-12 w-12 mb-4 text-muted-foreground" />
                                 <h3 className="font-medium mb-2">Aucun service trouvé</h3>
@@ -419,7 +467,7 @@ export default function ServicesIndex({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {safeServices.data?.map((service, index) => (
+                                        {paginatedServices?.map((service, index) => (
                                             <tr
                                                 key={service.id}
                                                 className={`border-b hover:bg-muted/30 transition-colors ${
@@ -544,25 +592,48 @@ export default function ServicesIndex({
                         )}
 
                         {/* Pagination */}
-                        {safeServices.meta && safeServices.meta.last_page > 1 && (
+                        {totalPages > 1 && (
                             <div className="p-4 border-t">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm text-muted-foreground">
-                                        Affichage de {(((safeServices.meta?.current_page || 1) - 1) * (safeServices.meta?.per_page || 15)) + 1} à{' '}
-                                        {Math.min((safeServices.meta?.current_page || 1) * (safeServices.meta?.per_page || 15), safeServices.meta?.total || 0)} sur{' '}
-                                        {safeServices.meta?.total || 0} services
+                                        Affichage de {((currentPage - 1) * itemsPerPage) + 1} à{' '}
+                                        {Math.min(currentPage * itemsPerPage, filteredAndSortedServices.length)} sur{' '}
+                                        {filteredAndSortedServices.length} services
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {safeServices.links?.map((link, index) => (
-                                            <Button
-                                                key={index}
-                                                variant={link.active ? "default" : "outline"}
-                                                size="sm"
-                                                disabled={!link.url}
-                                                onClick={() => link.url && router.get(link.url)}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        ))}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                            disabled={currentPage === 1}
+                                        >
+                                            Précédent
+                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                                                if (page > totalPages) return null;
+                                                return (
+                                                    <Button
+                                                        key={page}
+                                                        variant={currentPage === page ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setCurrentPage(page)}
+                                                        className="w-8"
+                                                    >
+                                                        {page}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            Suivant
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

@@ -14,36 +14,22 @@ class ServiceController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Service::query();
-
-        // Recherche
-        if ($request->filled('search')) {
-            $query->search($request->search);
-        }
-
-        // Filtre par statut
-        if ($request->filled('statut') && $request->statut !== 'tous') {
-            if ($request->statut === 'actif') {
-                $query->where('actif', true);
-            } else {
-                $query->where('actif', false);
-            }
-        }
-
-        // Tri
-        $sortField = $request->get('sort', 'nom');
-        $sortDirection = $request->get('direction', 'asc');
-
-        $allowedSorts = ['nom', 'code', 'prix_ht', 'created_at'];
-        if (in_array($sortField, $allowedSorts)) {
-            $query->orderBy($sortField, $sortDirection);
-        }
-
-        $services = $query->paginate(15)->withQueryString();
+        // Récupérer tous les services avec les compteurs
+        $services = Service::withCount(['lignesDevis', 'lignesFactures'])
+            ->orderBy('nom', 'asc')
+            ->get();
 
         return Inertia::render('services/index', [
-            'services' => $services,
-            'filters' => $request->only(['search', 'statut']),
+            'services' => [
+                'data' => $services,
+                'links' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'per_page' => 15,
+                    'total' => $services->count(),
+                    'last_page' => 1,
+                ]
+            ],
             'stats' => [
                 'total' => Service::count(),
                 'actifs' => Service::where('actif', true)->count(),
