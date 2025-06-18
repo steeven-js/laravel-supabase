@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Save,
@@ -23,10 +24,12 @@ import {
     Check,
     X,
     Eye,
-    EyeOff
+    EyeOff,
+    Plus
 } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
+import { route } from 'ziggy-js';
 
 interface Client {
     id: number;
@@ -54,6 +57,20 @@ interface Props {
     entreprises: Entreprise[];
 }
 
+interface NewEntreprise {
+    nom: string;
+    nom_commercial: string;
+    adresse: string;
+    ville: string;
+    code_postal: string;
+    pays: string;
+    siret: string;
+    email: string;
+    telephone: string;
+    site_web: string;
+    [key: string]: string;
+}
+
 const breadcrumbs = (client: Client): BreadcrumbItem[] => [
     {
         title: 'Dashboard',
@@ -73,12 +90,15 @@ const breadcrumbs = (client: Client): BreadcrumbItem[] => [
     },
 ];
 
-export default function ClientsEdit({ client, entreprises }: Props) {
+export default function ClientsEdit({ client, entreprises: initialEntreprises }: Props) {
     const [activeSection, setActiveSection] = useState<'personal' | 'contact' | 'business' | 'notes'>('personal');
     const [isDirty, setIsDirty] = useState(false);
     const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
     const [entrepriseSearch, setEntrepriseSearch] = useState('');
     const entrepriseSearchRef = useRef<HTMLInputElement>(null);
+    const [entreprises, setEntreprises] = useState<Entreprise[]>(initialEntreprises);
+    const [isCreatingEntreprise, setIsCreatingEntreprise] = useState(false);
+    const [showEntrepriseModal, setShowEntrepriseModal] = useState(false);
 
     const { data, setData, patch, processing, errors, isDirty: formIsDirty, reset } = useForm({
         nom: client.nom || '',
@@ -93,6 +113,56 @@ export default function ClientsEdit({ client, entreprises }: Props) {
         actif: client.actif,
         notes: client.notes || '',
     });
+
+    const [newEntreprise, setNewEntreprise] = useState<NewEntreprise>({
+        nom: '',
+        nom_commercial: '',
+        adresse: '',
+        ville: '',
+        code_postal: '',
+        pays: 'France',
+        siret: '',
+        email: '',
+        telephone: '',
+        site_web: '',
+    });
+
+    // Fonction pour créer une nouvelle entreprise
+    const handleCreateEntreprise = async () => {
+        if (!newEntreprise.nom.trim()) {
+            toast.error('Le nom de l\'entreprise est obligatoire');
+            return;
+        }
+
+        setIsCreatingEntreprise(true);
+
+        router.post(route('entreprises.store'), {
+            ...newEntreprise,
+            // Convertir les valeurs vides en null pour Laravel
+            nom_commercial: newEntreprise.nom_commercial || null,
+            adresse: newEntreprise.adresse || null,
+            ville: newEntreprise.ville || null,
+            code_postal: newEntreprise.code_postal || null,
+            siret: newEntreprise.siret || null,
+            email: newEntreprise.email || null,
+            telephone: newEntreprise.telephone || null,
+            site_web: newEntreprise.site_web || null,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                // Recharger juste pour récupérer la liste mise à jour
+                location.reload();
+            },
+            onError: (errors: any) => {
+                console.error('Erreur validation:', errors);
+                const firstErrorKey = Object.keys(errors)[0];
+                const firstError = errors[firstErrorKey];
+                toast.error(Array.isArray(firstError) ? firstError[0] : firstError || 'Erreur lors de la création');
+                setIsCreatingEntreprise(false);
+            }
+        });
+    };
 
     // Filtrer les entreprises en fonction de la recherche
     const filteredEntreprises = useMemo(() => {
@@ -473,120 +543,150 @@ export default function ClientsEdit({ client, entreprises }: Props) {
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="entreprise_id">Entreprise associée</Label>
-                                                <Select
-                                                    value={data.entreprise_id || 'none'}
-                                                    onValueChange={(value) => setData('entreprise_id', value === 'none' ? '' : value)}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionner une entreprise" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {/* Champ de recherche */}
-                                                        <div className="flex items-center gap-2 p-2 border-b">
-                                                            <div className="relative flex-1">
-                                                                <Input
-                                                                    ref={entrepriseSearchRef}
-                                                                    placeholder="Rechercher une entreprise..."
-                                                                    value={entrepriseSearch}
-                                                                    onChange={(e) => {
-                                                                        setEntrepriseSearch(e.target.value);
-                                                                        // Maintenir le focus après le changement
-                                                                        setTimeout(() => {
-                                                                            entrepriseSearchRef.current?.focus();
-                                                                        }, 0);
-                                                                    }}
-                                                                    className="h-8 pl-8 text-sm"
-                                                                    onKeyDown={(e) => {
-                                                                        // Empêcher la fermeture du select avec Escape
-                                                                        if (e.key === 'Escape') {
-                                                                            e.stopPropagation();
-                                                                            setEntrepriseSearch('');
-                                                                            entrepriseSearchRef.current?.focus();
-                                                                        }
-                                                                        // Empêcher la sélection avec Enter
-                                                                        if (e.key === 'Enter') {
-                                                                            e.preventDefault();
-                                                                            e.stopPropagation();
-                                                                        }
-                                                                    }}
-                                                                    onMouseDown={(e) => {
-                                                                        // Empêcher la fermeture du select quand on clique dans l'input
-                                                                        e.stopPropagation();
-                                                                    }}
-                                                                    onFocus={(e) => {
-                                                                        // Empêcher la fermeture du select quand l'input prend le focus
-                                                                        e.stopPropagation();
-                                                                    }}
-                                                                    onBlur={(e) => {
-                                                                        // Reprendre le focus si on le perd sans raison
-                                                                        setTimeout(() => {
-                                                                            if (document.activeElement !== entrepriseSearchRef.current) {
+                                                <div className="flex gap-2 mt-1">
+                                                    <Select
+                                                        value={data.entreprise_id}
+                                                        onValueChange={(value) => setData('entreprise_id', value)}
+                                                    >
+                                                        <SelectTrigger className="flex-1">
+                                                            <SelectValue placeholder="Sélectionner une entreprise" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {/* Champ de recherche */}
+                                                            <div className="flex items-center gap-2 p-2 border-b">
+                                                                <div className="relative flex-1">
+                                                                    <Input
+                                                                        ref={entrepriseSearchRef}
+                                                                        placeholder="Rechercher une entreprise..."
+                                                                        value={entrepriseSearch}
+                                                                        onChange={(e) => {
+                                                                            setEntrepriseSearch(e.target.value);
+                                                                            // Maintenir le focus après le changement
+                                                                            setTimeout(() => {
+                                                                                entrepriseSearchRef.current?.focus();
+                                                                            }, 0);
+                                                                        }}
+                                                                        className="h-8 pl-8 text-sm"
+                                                                        onKeyDown={(e) => {
+                                                                            // Empêcher la fermeture du select avec Escape
+                                                                            if (e.key === 'Escape') {
+                                                                                e.stopPropagation();
+                                                                                setEntrepriseSearch('');
                                                                                 entrepriseSearchRef.current?.focus();
                                                                             }
-                                                                        }, 10);
-                                                                    }}
-                                                                />
-                                                                <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
-                                                                    <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                                                    </svg>
-                                                                </div>
-                                                                {entrepriseSearch && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setEntrepriseSearch('');
+                                                                            // Empêcher la sélection avec Enter
+                                                                            if (e.key === 'Enter') {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                            }
                                                                         }}
                                                                         onMouseDown={(e) => {
+                                                                            // Empêcher la fermeture du select quand on clique dans l'input
                                                                             e.stopPropagation();
                                                                         }}
-                                                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                                                    >
-                                                                        <X className="h-3 w-3" />
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Option "Aucune entreprise" */}
-                                                        <SelectItem value="none">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 rounded-full bg-gray-400" />
-                                                                Aucune entreprise
-                                                            </div>
-                                                        </SelectItem>
-
-                                                        {/* Liste des entreprises filtrées */}
-                                                        {filteredEntreprises.length > 0 ? (
-                                                            filteredEntreprises.map((entreprise) => (
-                                                                <SelectItem key={entreprise.id} value={entreprise.id.toString()}>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                                                                        <div className="flex flex-col">
-                                                                            <span className="font-medium">
-                                                                                {entreprise.nom_commercial || entreprise.nom}
-                                                                            </span>
-                                                                            {entreprise.nom_commercial && entreprise.nom && entreprise.nom_commercial !== entreprise.nom && (
-                                                                                <span className="text-xs text-muted-foreground">
-                                                                                    {entreprise.nom}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
+                                                                        onFocus={(e) => {
+                                                                            // Empêcher la fermeture du select quand l'input prend le focus
+                                                                            e.stopPropagation();
+                                                                        }}
+                                                                        onBlur={(e) => {
+                                                                            // Reprendre le focus si on le perd sans raison
+                                                                            setTimeout(() => {
+                                                                                if (document.activeElement !== entrepriseSearchRef.current) {
+                                                                                    entrepriseSearchRef.current?.focus();
+                                                                                }
+                                                                            }, 10);
+                                                                        }}
+                                                                    />
+                                                                    <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                                                                        <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                                        </svg>
                                                                     </div>
-                                                                </SelectItem>
-                                                            ))
-                                                        ) : entrepriseSearch ? (
-                                                            <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
-                                                                <AlertCircle className="h-4 w-4" />
-                                                                Aucune entreprise trouvée pour "{entrepriseSearch}"
+                                                                    {entrepriseSearch && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setEntrepriseSearch('');
+                                                                            }}
+                                                                            onMouseDown={(e) => {
+                                                                                e.stopPropagation();
+                                                                            }}
+                                                                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                                        >
+                                                                            <X className="h-3 w-3" />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        ) : null}
-                                                    </SelectContent>
-                                                </Select>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Associez ce client à une entreprise pour faciliter la facturation
-                                                </p>
+
+                                                            {/* Option "Aucune entreprise" */}
+                                                            <SelectItem value="none">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-2 h-2 rounded-full bg-gray-400" />
+                                                                    Aucune entreprise
+                                                                </div>
+                                                            </SelectItem>
+
+                                                            {/* Liste des entreprises filtrées */}
+                                                            {filteredEntreprises.length > 0 ? (
+                                                                filteredEntreprises.map((entreprise) => (
+                                                                    <SelectItem key={entreprise.id} value={entreprise.id.toString()}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                                                                            <div className="flex flex-col">
+                                                                                <span className="font-medium">
+                                                                                    {entreprise.nom_commercial || entreprise.nom}
+                                                                                </span>
+                                                                                {entreprise.nom_commercial && entreprise.nom && entreprise.nom_commercial !== entreprise.nom && (
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        {entreprise.nom}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                ))
+                                                            ) : entrepriseSearch ? (
+                                                                <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                                                                    <AlertCircle className="h-4 w-4" />
+                                                                    Aucune entreprise trouvée pour "{entrepriseSearch}"
+                                                                </div>
+                                                            ) : null}
+
+                                                            {/* Bouton pour créer une nouvelle entreprise */}
+                                                            <div className="border-t mt-2 pt-2">
+                                                                <Dialog open={showEntrepriseModal} onOpenChange={setShowEntrepriseModal}>
+                                                                    <DialogTrigger asChild>
+                                                                        <div
+                                                                            className="flex items-center gap-2 p-2 text-sm text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
+                                                                            onMouseDown={(e) => e.stopPropagation()}
+                                                                        >
+                                                                            <Plus className="h-4 w-4" />
+                                                                            Créer une nouvelle entreprise
+                                                                        </div>
+                                                                    </DialogTrigger>
+                                                                </Dialog>
+                                                            </div>
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    {/* Bouton créer entreprise visible */}
+                                                    <Dialog open={showEntrepriseModal} onOpenChange={setShowEntrepriseModal}>
+                                                        <DialogTrigger asChild>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="flex items-center gap-2 px-3"
+                                                                title="Créer une nouvelle entreprise"
+                                                            >
+                                                                <Plus className="h-4 w-4" />
+                                                                Nouvelle entreprise
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                    </Dialog>
+                                                </div>
                                             </div>
 
                                             <Separator />
@@ -688,6 +788,160 @@ export default function ClientsEdit({ client, entreprises }: Props) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal pour créer une nouvelle entreprise */}
+            <Dialog open={showEntrepriseModal} onOpenChange={setShowEntrepriseModal}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5" />
+                            Créer une nouvelle entreprise
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="modal_nom">Nom de l'entreprise *</Label>
+                                <Input
+                                    id="modal_nom"
+                                    value={newEntreprise.nom}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, nom: e.target.value }))}
+                                    placeholder="Raison sociale"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="modal_nom_commercial">Nom commercial</Label>
+                                <Input
+                                    id="modal_nom_commercial"
+                                    value={newEntreprise.nom_commercial}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, nom_commercial: e.target.value }))}
+                                    placeholder="Nom commercial"
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="modal_adresse">Adresse</Label>
+                            <Input
+                                id="modal_adresse"
+                                value={newEntreprise.adresse}
+                                onChange={(e) => setNewEntreprise(prev => ({ ...prev, adresse: e.target.value }))}
+                                placeholder="Adresse complète"
+                                className="mt-1"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <div>
+                                <Label htmlFor="modal_code_postal">Code postal</Label>
+                                <Input
+                                    id="modal_code_postal"
+                                    value={newEntreprise.code_postal}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, code_postal: e.target.value }))}
+                                    placeholder="75000"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="modal_ville">Ville</Label>
+                                <Input
+                                    id="modal_ville"
+                                    value={newEntreprise.ville}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, ville: e.target.value }))}
+                                    placeholder="Paris"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="modal_pays">Pays</Label>
+                                <Input
+                                    id="modal_pays"
+                                    value={newEntreprise.pays}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, pays: e.target.value }))}
+                                    placeholder="France"
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="modal_email">Email</Label>
+                                <Input
+                                    id="modal_email"
+                                    type="email"
+                                    value={newEntreprise.email}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, email: e.target.value }))}
+                                    placeholder="contact@entreprise.fr"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="modal_telephone">Téléphone</Label>
+                                <Input
+                                    id="modal_telephone"
+                                    value={newEntreprise.telephone}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, telephone: e.target.value }))}
+                                    placeholder="01 23 45 67 89"
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="modal_siret">SIRET</Label>
+                                <Input
+                                    id="modal_siret"
+                                    value={newEntreprise.siret}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, siret: e.target.value }))}
+                                    placeholder="12345678901234"
+                                    className="mt-1"
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="modal_site_web">Site web</Label>
+                                <Input
+                                    id="modal_site_web"
+                                    value={newEntreprise.site_web}
+                                    onChange={(e) => setNewEntreprise(prev => ({ ...prev, site_web: e.target.value }))}
+                                    placeholder="https://entreprise.fr"
+                                    className="mt-1"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowEntrepriseModal(false)}
+                            disabled={isCreatingEntreprise}
+                        >
+                            Annuler
+                        </Button>
+                        <Button
+                            onClick={handleCreateEntreprise}
+                            disabled={isCreatingEntreprise || !newEntreprise.nom.trim()}
+                        >
+                            {isCreatingEntreprise ? (
+                                <>
+                                    <Plus className="mr-2 h-4 w-4 animate-spin" />
+                                    Création...
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Créer l'entreprise
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }
