@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Mail\Mailable;
 use App\Models\User;
+use App\Services\EmailLogService;
 
 class MonitoringController extends Controller
 {
@@ -27,39 +28,56 @@ class MonitoringController extends Controller
 
     public function testEmail(Request $request)
     {
-        try {
-            $testEmail = $request->get('email', config('mail.from.address'));
+        $testEmail = $request->get('email', config('mail.from.address'));
 
-            Log::info('🚀 Début du test d\'envoi d\'email avec template Markdown Laravel', [
-                'recipient' => $testEmail,
-                'timestamp' => now()->format('Y-m-d H:i:s'),
+        // Démarrer une session de logs d'email
+        $sessionId = EmailLogService::startEmailSession('test_email', [
+            'recipient' => $testEmail,
+            'user_id' => Auth::id(),
+            'ip' => $request->ip(),
+        ]);
+
+        try {
+            // Logger la configuration de l'email
+            EmailLogService::logConfig([
                 'driver' => config('mail.default'),
                 'host' => config('mail.mailers.' . config('mail.default') . '.host'),
+                'port' => config('mail.mailers.' . config('mail.default') . '.port'),
             ]);
 
             // Obtenir les diagnostics pour l'email
             $diagnostics = $this->getDiagnostics();
 
-            Log::info('📝 Diagnostics collectés pour l\'email', [
-                'php_version' => $diagnostics['php']['version'],
-                'laravel_version' => $diagnostics['laravel']['version'],
-                'database_status' => $diagnostics['database']['status'],
+            EmailLogService::logEvent('TEMPLATE', 'INFO', [
+                'template' => 'emails.test-email',
+                'type' => 'Markdown Laravel',
+            ]);
+
+            EmailLogService::logEvent('SENDING', 'INFO', [
+                'recipient' => $testEmail,
+                'subject' => '🧪 Test Email Markdown - ' . now()->format('d/m/Y H:i:s'),
             ]);
 
             // Utiliser la classe Mailable avec template Markdown Laravel
             Mail::to($testEmail)->send(new \App\Mail\TestEmailMark($diagnostics, $testEmail));
 
-            Log::info('✅ Email Markdown envoyé avec succès', [
-                'recipient' => $testEmail,
-                'subject' => '🧪 Test Email Markdown - ' . now()->format('d/m/Y H:i:s'),
-                'timestamp' => now()->format('Y-m-d H:i:s'),
+            EmailLogService::logSuccess($testEmail, '🧪 Test Email Markdown - ' . now()->format('d/m/Y H:i:s'), [
                 'template' => 'emails.test-email (Markdown Laravel)',
+                'components' => ['x-mail::message', 'x-mail::button', 'x-mail::table', 'x-mail::panel'],
+            ]);
+
+            // Terminer la session avec succès
+            EmailLogService::endEmailSession(true, [
+                'emails_sent' => 1,
+                'template' => 'markdown',
+                'duration' => 'success',
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => "Email Markdown Laravel envoyé avec succès à {$testEmail}",
                 'timestamp' => now()->format('d/m/Y H:i:s'),
+                'session_id' => $sessionId,
                 'details' => [
                     'driver' => config('mail.default'),
                     'format' => 'Template Markdown Laravel natif',
@@ -69,18 +87,23 @@ class MonitoringController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('❌ Erreur lors de l\'envoi d\'email Markdown', [
-                'recipient' => $testEmail ?? 'unknown',
-                'error' => $e->getMessage(),
+            EmailLogService::logError($testEmail, $e->getMessage(), [
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
-                'timestamp' => now()->format('Y-m-d H:i:s'),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Terminer la session avec erreur
+            EmailLogService::endEmailSession(false, [
+                'error' => $e->getMessage(),
+                'emails_sent' => 0,
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de l\'envoi : ' . $e->getMessage(),
                 'timestamp' => now()->format('d/m/Y H:i:s'),
+                'session_id' => $sessionId,
                 'error_details' => [
                     'line' => $e->getLine(),
                     'file' => basename($e->getFile()),
@@ -142,6 +165,67 @@ class MonitoringController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de l\'effacement du cache : ' . $e->getMessage(),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupérer les logs d'emails
+     */
+    public function getEmailLogs(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!app()->environment('local') && (!$user || !$user->isSuperAdmin())) {
+            abort(404);
+        }
+
+        try {
+            $lines = $request->get('lines', 50);
+            $logs = EmailLogService::getEmailLogs($lines);
+
+            return response()->json([
+                'success' => true,
+                'logs' => $logs,
+                'total_lines' => count($logs),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des logs : ' . $e->getMessage(),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ], 500);
+        }
+    }
+
+    /**
+     * Nettoyer les anciens logs d'emails
+     */
+    public function cleanEmailLogs(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!app()->environment('local') && (!$user || !$user->isSuperAdmin())) {
+            abort(404);
+        }
+
+        try {
+            $days = $request->get('days', 7);
+            $result = EmailLogService::clearOldLogs($days);
+
+            return response()->json([
+                'success' => $result,
+                'message' => "Logs d'emails antérieurs à {$days} jours supprimés avec succès",
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du nettoyage des logs : ' . $e->getMessage(),
                 'timestamp' => now()->format('d/m/Y H:i:s')
             ], 500);
         }

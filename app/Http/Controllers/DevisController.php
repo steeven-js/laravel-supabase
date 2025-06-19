@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Devis;
 use App\Models\Facture;
 use App\Services\DevisPdfService;
+use App\Services\EmailLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -831,6 +832,16 @@ class DevisController extends Controller
      */
     public function envoyerEmail(Request $request, Devis $devis)
     {
+        // Démarrer une session de logs d'email
+        $sessionId = EmailLogService::startEmailSession('devis_email', [
+            'recipient' => $devis->client->email,
+            'devis_id' => $devis->id,
+            'devis_numero' => $devis->numero_devis,
+            'client_id' => $devis->client_id,
+            'user_id' => Auth::id(),
+            'ip' => $request->ip(),
+        ]);
+
         Log::info('=== DÉBUT ENVOI EMAIL DEVIS ===', [
             'devis_id' => $devis->id,
             'devis_numero' => $devis->numero_devis,
@@ -842,6 +853,18 @@ class DevisController extends Controller
                 'statut' => $devis->statut,
                 'statut_envoi' => $devis->statut_envoi,
             ]);
+
+            EmailLogService::logError($devis->client->email, 'Devis ne peut pas être envoyé', [
+                'devis_id' => $devis->id,
+                'statut' => $devis->statut,
+                'statut_envoi' => $devis->statut_envoi,
+            ]);
+
+            EmailLogService::endEmailSession(false, [
+                'error' => 'Devis ne peut pas être envoyé',
+                'statut' => $devis->statut,
+            ]);
+
             return redirect()->back()
                 ->with('error', '❌ Ce devis ne peut pas être envoyé.');
         }
@@ -856,6 +879,16 @@ class DevisController extends Controller
             'devis_id' => $devis->getKey(),
             'message_client_length' => strlen($validated['message_client'] ?? ''),
             'envoyer_copie_admin' => $validated['envoyer_copie_admin'] ?? false,
+            'template_id' => $validated['template_id'] ?? null,
+        ]);
+
+        EmailLogService::logEvent('PREPARATION', 'INFO', [
+            'type' => 'Email devis client',
+            'template' => 'DevisClientMail',
+            'recipient' => $devis->client->email,
+            'devis_numero' => $devis->numero_devis,
+            'client' => $devis->client->prenom . ' ' . $devis->client->nom,
+            'has_custom_message' => !empty($validated['message_client']),
             'template_id' => $validated['template_id'] ?? null,
         ]);
 
@@ -877,6 +910,12 @@ class DevisController extends Controller
             Log::info('Statut devis mis à jour vers envoyé', [
                 'devis_id' => $devis->id,
                 'nouveau_statut_envoi' => $devis->statut_envoi,
+            ]);
+
+            EmailLogService::logSuccess($devis->client->email, "Devis {$devis->numero_devis}", [
+                'template' => 'DevisClientMail',
+                'devis_numero' => $devis->numero_devis,
+                'client' => $devis->client->prenom . ' ' . $devis->client->nom,
             ]);
 
             // Envoyer copie à l'admin si demandé
@@ -910,6 +949,14 @@ class DevisController extends Controller
                 'devis_id' => $devis->id,
             ]);
 
+            // Terminer la session avec succès
+            EmailLogService::endEmailSession(true, [
+                'emails_sent' => $validated['envoyer_copie_admin'] ? 2 : 1,
+                'devis_numero' => $devis->numero_devis,
+                'template' => 'DevisClientMail',
+                'has_admin_copy' => $validated['envoyer_copie_admin'] ?? false,
+            ]);
+
             return redirect()->route('devis.index')
                 ->with('success', '📧 Devis ' . $devis->numero_devis . ' envoyé avec succès au client !');
         } catch (\Exception $e) {
@@ -921,6 +968,18 @@ class DevisController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
+            ]);
+
+            EmailLogService::logError($devis->client->email, $e->getMessage(), [
+                'devis_numero' => $devis->numero_devis,
+                'error_file' => basename($e->getFile()),
+                'error_line' => $e->getLine(),
+            ]);
+
+            EmailLogService::endEmailSession(false, [
+                'error' => $e->getMessage(),
+                'devis_numero' => $devis->numero_devis,
+                'emails_sent' => 0,
             ]);
 
             return redirect()->back()
@@ -1184,10 +1243,22 @@ class DevisController extends Controller
                 'fichier_pdf' => $devis->pdf_file,
             ]);
 
+            EmailLogService::logEvent('PDF_READY', 'INFO', [
+                'devis_numero' => $devis->numero_devis,
+                'pdf_file' => $devis->pdf_file,
+                'pdf_exists' => !empty($devis->pdf_file),
+            ]);
+
             // Créer l'instance de mail
             Log::info('Tentative de création de DevisClientMail', [
                 'devis_numero' => $devis->numero_devis,
                 'client_email' => $devis->client->email,
+            ]);
+
+            EmailLogService::logEvent('MAIL_CREATION', 'INFO', [
+                'template' => 'DevisClientMail',
+                'has_custom_message' => !empty($messagePersonnalise),
+                'template_id' => $templateId,
             ]);
 
             // Créer l'instance de mail
@@ -1203,6 +1274,12 @@ class DevisController extends Controller
             $cc = ['d.brault@madin-ia.com'];
 
             // Envoyer l'email avec les destinataires appropriés
+            EmailLogService::logEvent('SENDING', 'INFO', [
+                'recipient' => $devis->client->email,
+                'cc_recipients' => $cc,
+                'subject' => "Devis {$devis->numero_devis}",
+            ]);
+
             Mail::to($to)
                 ->cc($cc)
                 ->send($mailInstance);
@@ -1217,6 +1294,13 @@ class DevisController extends Controller
                 'devis_numero' => $devis->numero_devis,
                 'error' => $e->getMessage()
             ]);
+
+            EmailLogService::logError($devis->client->email, $e->getMessage(), [
+                'devis_numero' => $devis->numero_devis,
+                'template' => 'DevisClientMail',
+                'error_context' => 'envoyerEmailClientDevis',
+            ]);
+
             throw $e;
         }
     }
@@ -1263,11 +1347,23 @@ class DevisController extends Controller
             }
 
             // Envoyer l'email avec les destinataires appropriés
+            EmailLogService::logEvent('ADMIN_SENDING', 'INFO', [
+                'admin_email' => $adminEmail,
+                'cc_recipients' => $cc,
+                'devis_numero' => $devis->numero_devis,
+            ]);
+
             Mail::to($to)
                 ->when(!empty($cc), function ($message) use ($cc) {
                     return $message->cc($cc);
                 })
                 ->send($mailInstance);
+
+            EmailLogService::logSuccess($adminEmail, "Notification admin devis {$devis->numero_devis}", [
+                'template' => 'DevisAdminMail',
+                'devis_numero' => $devis->numero_devis,
+                'ceo_cc' => !empty($cc),
+            ]);
 
             Log::info('Email de notification admin devis envoyé', [
                 'devis_numero' => $devis->numero_devis,
@@ -1279,6 +1375,13 @@ class DevisController extends Controller
                 'devis_numero' => $devis->numero_devis,
                 'error' => $e->getMessage()
             ]);
+
+            EmailLogService::logError($adminEmail, $e->getMessage(), [
+                'devis_numero' => $devis->numero_devis,
+                'template' => 'DevisAdminMail',
+                'error_context' => 'envoyerEmailAdminDevis',
+            ]);
+
             throw $e;
         }
     }

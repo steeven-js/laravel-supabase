@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Exception;
+use App\Services\EmailLogService;
 
 class ClientController extends Controller
 {
@@ -146,6 +147,14 @@ class ClientController extends Controller
      */
     public function sendEmail(Request $request, Client $client)
     {
+        // Démarrer une session de logs d'email
+        $sessionId = EmailLogService::startEmailSession('client_email', [
+            'recipient' => $client->email,
+            'client_id' => $client->id,
+            'user_id' => Auth::id(),
+            'ip' => $request->ip(),
+        ]);
+
         Log::info('=== DÉBUT SENDMAIL DEBUG ===', [
             'client_id' => $client->id,
             'request_all' => $request->except(['attachments']), // Exclure les fichiers du log pour éviter les erreurs
@@ -168,18 +177,42 @@ class ClientController extends Controller
                 'attachments.*.max' => 'Chaque fichier ne peut pas dépasser 25MB.',
             ]);
 
-            // Traiter les adresses CC
+            EmailLogService::logEvent('PREPARATION', 'INFO', [
+                'type' => 'Email client personnalisé',
+                'template' => 'ClientEmailMailable',
+                'recipient' => $client->email,
+                'client' => $client->prenom . ' ' . $client->nom,
+                'subject' => $validated['objet'],
+            ]);
+
+                            // Traiter les adresses CC
             $ccEmails = [];
             if (!empty($validated['cc'])) {
                 $ccEmails = array_map('trim', explode(',', $validated['cc']));
                 // Valider chaque adresse email
                 foreach ($ccEmails as $email) {
                     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        EmailLogService::logError($client->email, "Adresse CC invalide: {$email}", [
+                            'invalid_cc' => $email,
+                            'all_cc' => $validated['cc'],
+                        ]);
+
+                        EmailLogService::endEmailSession(false, [
+                            'error' => 'Adresse CC invalide',
+                            'invalid_email' => $email,
+                        ]);
+
                         return back()
                             ->withErrors(['cc' => "L'adresse email '{$email}' n'est pas valide."])
                             ->with('error', '❌ Erreur de validation. Veuillez vérifier les adresses CC.');
                     }
                 }
+
+                EmailLogService::logEvent('CC_PROCESSED', 'INFO', [
+                    'original_cc' => $validated['cc'],
+                    'valid_emails' => $ccEmails,
+                    'count' => count($ccEmails),
+                ]);
             }
 
             // Traiter les pièces jointes
@@ -193,6 +226,10 @@ class ClientController extends Controller
             ]);
 
             if ($request->hasFile('attachments')) {
+                EmailLogService::logEvent('ATTACHMENTS_START', 'INFO', [
+                    'files_count' => count($request->file('attachments')),
+                ]);
+
                 // S'assurer que le dossier exists
                 $attachmentDir = storage_path('app/private/client_emails/attachments');
                 if (!file_exists($attachmentDir)) {
@@ -242,12 +279,23 @@ class ClientController extends Controller
                         ];
 
                         $attachmentPaths[] = storage_path('app/private/' . $path);
+
+                        EmailLogService::logAttachment($originalName, $file->getSize(), $file->getMimeType(), [
+                            'stored_name' => $fileName,
+                            'path' => $path,
+                        ]);
                     } catch (Exception $e) {
                         Log::error('Erreur lors du stockage du fichier', [
                             'original_name' => $originalName,
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString()
                         ]);
+
+                        EmailLogService::logError($client->email, "Erreur stockage fichier: {$originalName}", [
+                            'file_name' => $originalName,
+                            'error' => $e->getMessage(),
+                        ]);
+
                         throw new Exception("Erreur lors du stockage du fichier {$originalName}: " . $e->getMessage());
                     }
                 }
@@ -255,6 +303,11 @@ class ClientController extends Controller
                 Log::info('=== FIN TRAITEMENT PIÈCES JOINTES ===', [
                     'total_files' => count($attachmentsInfo),
                     'attachment_paths' => $attachmentPaths
+                ]);
+
+                EmailLogService::logEvent('ATTACHMENTS_END', 'INFO', [
+                    'total_files' => count($attachmentsInfo),
+                    'total_size' => array_sum(array_column($attachmentsInfo, 'size')),
                 ]);
             }
 
@@ -297,6 +350,13 @@ class ClientController extends Controller
                     $mail->cc($ccEmails);
                 }
 
+                EmailLogService::logEvent('SENDING', 'INFO', [
+                    'recipient' => $client->email,
+                    'subject' => $validated['objet'],
+                    'cc_count' => count($ccEmails),
+                    'attachments_count' => count($attachmentsInfo),
+                ]);
+
                 $mail->send($mailInstance);
 
                 Log::info('Email client envoyé avec succès', [
@@ -306,6 +366,12 @@ class ClientController extends Controller
                     'attachments_count' => count($attachmentsInfo)
                 ]);
 
+                EmailLogService::logSuccess($client->email, $validated['objet'], [
+                    'template' => 'ClientEmailMailable',
+                    'cc_count' => count($ccEmails),
+                    'attachments_count' => count($attachmentsInfo),
+                ]);
+
             } catch (Exception $e) {
                 // Marquer l'email comme échoué si l'envoi réel échoue
                 Log::error('=== ERREUR ENVOI EMAIL CLIENT ===', [
@@ -313,6 +379,12 @@ class ClientController extends Controller
                     'error_message' => $e->getMessage(),
                     'error_code' => $e->getCode(),
                     'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                ]);
+
+                EmailLogService::logError($client->email, $e->getMessage(), [
+                    'error_code' => $e->getCode(),
+                    'error_file' => basename($e->getFile()),
                     'error_line' => $e->getLine(),
                 ]);
 
@@ -340,6 +412,14 @@ class ClientController extends Controller
                 $successMessage .= ' (avec ' . count($attachmentsInfo) . ' pièce(s) jointe(s))';
             }
 
+            // Terminer la session avec succès
+            EmailLogService::endEmailSession(true, [
+                'emails_sent' => 1,
+                'cc_count' => count($ccEmails),
+                'attachments_count' => count($attachmentsInfo),
+                'template' => 'ClientEmailMailable',
+            ]);
+
             return back()->with('success', $successMessage);
 
         } catch (ValidationException $e) {
@@ -347,6 +427,11 @@ class ClientController extends Controller
                 'client_id' => $client->id,
                 'errors' => $e->errors(),
                 'input' => $request->except(['attachments']) // Exclure les fichiers pour éviter les erreurs de sérialisation
+            ]);
+
+            EmailLogService::endEmailSession(false, [
+                'error' => 'Erreur de validation',
+                'validation_errors' => $e->errors(),
             ]);
 
             return back()
@@ -359,6 +444,11 @@ class ClientController extends Controller
                 'error_message' => $e->getMessage(),
                 'error_trace' => $e->getTraceAsString(),
                 'input' => $request->except(['attachments']) // Exclure les fichiers pour éviter les erreurs de sérialisation
+            ]);
+
+            EmailLogService::endEmailSession(false, [
+                'error' => $e->getMessage(),
+                'emails_sent' => 0,
             ]);
 
             return back()

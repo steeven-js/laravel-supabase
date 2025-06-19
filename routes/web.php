@@ -213,12 +213,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // API pour mise à jour des rôles (AJAX)
         Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
 
-        // Routes de monitoring - Réservées aux Super Admins
-        Route::prefix('monitoring')->name('monitoring.')->group(function () {
-            Route::get('/', [MonitoringController::class, 'index'])->name('index');
-            Route::post('test-email', [MonitoringController::class, 'testEmail'])->name('test-email');
-            Route::post('test-database', [MonitoringController::class, 'testDatabase'])->name('test-database');
-            Route::post('clear-cache', [MonitoringController::class, 'clearCache'])->name('clear-cache');
+            // Routes de monitoring - Réservées aux Super Admins
+    Route::prefix('monitoring')->name('monitoring.')->group(function () {
+        Route::get('/', [MonitoringController::class, 'index'])->name('index');
+        Route::post('test-email', [MonitoringController::class, 'testEmail'])->name('test-email');
+        Route::post('test-database', [MonitoringController::class, 'testDatabase'])->name('test-database');
+        Route::post('clear-cache', [MonitoringController::class, 'clearCache'])->name('clear-cache');
+
+        // Routes pour les logs d'emails
+        Route::get('email-logs', [MonitoringController::class, 'getEmailLogs'])->name('email-logs');
+        Route::post('clean-email-logs', [MonitoringController::class, 'cleanEmailLogs'])->name('clean-email-logs');
         });
     });
 });

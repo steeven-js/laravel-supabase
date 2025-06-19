@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Facture;
 use App\Services\FacturePdfService;
+use App\Services\EmailLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -589,7 +591,28 @@ class FactureController extends Controller
      */
     public function envoyerEmail(Request $request, Facture $facture)
     {
+        // Démarrer une session de logs d'email
+        $sessionId = EmailLogService::startEmailSession('facture_email', [
+            'recipient' => $facture->client->email,
+            'facture_id' => $facture->id,
+            'facture_numero' => $facture->numero_facture,
+            'client_id' => $facture->client_id,
+            'user_id' => Auth::id(),
+            'ip' => $request->ip(),
+        ]);
+
         if (!$facture->peutEtreEnvoyee()) {
+            EmailLogService::logError($facture->client->email, 'Facture ne peut pas être envoyée', [
+                'facture_id' => $facture->id,
+                'statut' => $facture->statut,
+                'statut_envoi' => $facture->statut_envoi,
+            ]);
+
+            EmailLogService::endEmailSession(false, [
+                'error' => 'Facture ne peut pas être envoyée',
+                'statut' => $facture->statut,
+            ]);
+
             return redirect()->back()
                 ->with('error', '❌ Cette facture ne peut pas être envoyée.');
         }
@@ -597,6 +620,15 @@ class FactureController extends Controller
         $validated = $request->validate([
             'message_client' => 'nullable|string',
             'envoyer_copie_admin' => 'boolean',
+        ]);
+
+        EmailLogService::logEvent('PREPARATION', 'INFO', [
+            'type' => 'Email facture client',
+            'template' => 'FactureClientMail',
+            'recipient' => $facture->client->email,
+            'facture_numero' => $facture->numero_facture,
+            'client' => $facture->client->prenom . ' ' . $facture->client->nom,
+            'has_custom_message' => !empty($validated['message_client']),
         ]);
 
         try {
@@ -627,9 +659,23 @@ class FactureController extends Controller
                 "La facture #{$facture->numero_facture} a été envoyée par email à {$facture->client->prenom} {$facture->client->nom} ({$facture->client->email})"
             );
 
+            EmailLogService::logSuccess($facture->client->email, "Facture {$facture->numero_facture}", [
+                'template' => 'FactureClientMail',
+                'facture_numero' => $facture->numero_facture,
+                'client' => $facture->client->prenom . ' ' . $facture->client->nom,
+            ]);
+
             Log::info('Facture envoyée par email', [
                 'facture_numero' => $facture->numero_facture,
                 'client_email' => $facture->client->email
+            ]);
+
+            // Terminer la session avec succès
+            EmailLogService::endEmailSession(true, [
+                'emails_sent' => $validated['envoyer_copie_admin'] ? 2 : 1,
+                'facture_numero' => $facture->numero_facture,
+                'template' => 'FactureClientMail',
+                'has_admin_copy' => $validated['envoyer_copie_admin'] ?? false,
             ]);
 
             return redirect()->back()
@@ -641,6 +687,17 @@ class FactureController extends Controller
             Log::error('Erreur lors de l\'envoi de la facture', [
                 'facture_numero' => $facture->numero_facture,
                 'error' => $e->getMessage()
+            ]);
+
+            EmailLogService::logError($facture->client->email, $e->getMessage(), [
+                'facture_numero' => $facture->numero_facture,
+                'error_context' => 'envoyerEmail facture',
+            ]);
+
+            EmailLogService::endEmailSession(false, [
+                'error' => $e->getMessage(),
+                'facture_numero' => $facture->numero_facture,
+                'emails_sent' => 0,
             ]);
 
             return redirect()->back()
@@ -692,6 +749,16 @@ class FactureController extends Controller
                 'client_email' => $facture->client->email,
             ]);
 
+            EmailLogService::logEvent('PDF_REGENERATION', 'INFO', [
+                'facture_numero' => $facture->numero_facture,
+                'action' => 'Régénération avant envoi email',
+            ]);
+
+            EmailLogService::logEvent('MAIL_CREATION', 'INFO', [
+                'template' => 'FactureClientMail',
+                'has_custom_message' => !empty($messagePersonnalise),
+            ]);
+
             // Créer l'instance de mail
             $mailInstance = new \App\Mail\FactureClientMail(
                 $devis,
@@ -705,6 +772,12 @@ class FactureController extends Controller
             $cc = ['d.brault@madin-ia.com'];
 
             // Envoyer l'email avec les destinataires appropriés
+            EmailLogService::logEvent('SENDING', 'INFO', [
+                'recipient' => $facture->client->email,
+                'cc_recipients' => $cc,
+                'subject' => "Facture {$facture->numero_facture}",
+            ]);
+
             Mail::to($to)
                 ->cc($cc)
                 ->send($mailInstance);
@@ -719,6 +792,13 @@ class FactureController extends Controller
                 'facture_numero' => $facture->numero_facture,
                 'error' => $e->getMessage()
             ]);
+
+            EmailLogService::logError($facture->client->email, $e->getMessage(), [
+                'facture_numero' => $facture->numero_facture,
+                'template' => 'FactureClientMail',
+                'error_context' => 'envoyerEmailClientFacture',
+            ]);
+
             throw $e;
         }
     }
@@ -763,11 +843,23 @@ class FactureController extends Controller
             }
 
             // Envoyer l'email avec les destinataires appropriés
+            EmailLogService::logEvent('ADMIN_SENDING', 'INFO', [
+                'admin_email' => $adminEmail,
+                'cc_recipients' => $cc,
+                'facture_numero' => $facture->numero_facture,
+            ]);
+
             Mail::to($to)
                 ->when(!empty($cc), function ($message) use ($cc) {
                     return $message->cc($cc);
                 })
                 ->send($mailInstance);
+
+            EmailLogService::logSuccess($adminEmail, "Notification admin facture {$facture->numero_facture}", [
+                'template' => 'FactureAdminMail',
+                'facture_numero' => $facture->numero_facture,
+                'ceo_cc' => !empty($cc),
+            ]);
 
             Log::info('Email de notification admin facture envoyé', [
                 'facture_numero' => $facture->numero_facture,
@@ -779,6 +871,13 @@ class FactureController extends Controller
                 'facture_numero' => $facture->numero_facture,
                 'error' => $e->getMessage()
             ]);
+
+            EmailLogService::logError($adminEmail, $e->getMessage(), [
+                'facture_numero' => $facture->numero_facture,
+                'template' => 'FactureAdminMail',
+                'error_context' => 'envoyerEmailAdminFacture',
+            ]);
+
             throw $e;
         }
     }

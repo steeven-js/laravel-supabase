@@ -23,9 +23,11 @@ import {
     HardDrive,
     Cpu,
     Info,
-    Eye
+    Eye,
+    FileText,
+    Clock
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Diagnostics {
     php: {
@@ -88,6 +90,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function MonitoringIndex({ diagnostics }: Props) {
     const [testResults, setTestResults] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState<Record<string, boolean>>({});
+    const [emailLogs, setEmailLogs] = useState<any[]>([]);
+    const [autoRefresh, setAutoRefresh] = useState(false);
+    const [logLines, setLogLines] = useState(150); // Augmenter à 150 par défaut
 
     const { data, setData } = useForm({
         email: diagnostics.mail.from_address,
@@ -97,7 +102,7 @@ export default function MonitoringIndex({ diagnostics }: Props) {
         setLoading(prev => ({ ...prev, [testType]: true }));
 
         try {
-            const response = await fetch(`/monitoring/${endpoint}`, {
+            const response = await fetch(`/admin/monitoring/${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -108,6 +113,11 @@ export default function MonitoringIndex({ diagnostics }: Props) {
 
             const result = await response.json();
             setTestResults(prev => ({ ...prev, [testType]: result }));
+
+            // Actualiser les logs après un test d'email
+            if (testType === 'email') {
+                await loadEmailLogs();
+            }
         } catch (error) {
             setTestResults(prev => ({
                 ...prev,
@@ -119,6 +129,77 @@ export default function MonitoringIndex({ diagnostics }: Props) {
             }));
         } finally {
             setLoading(prev => ({ ...prev, [testType]: false }));
+        }
+    };
+
+    // Charger les logs d'emails
+    const loadEmailLogs = async (lines?: number) => {
+        const linesToLoad = lines || logLines;
+        try {
+            setLoading(prev => ({ ...prev, emailLogs: true }));
+            const response = await fetch(`/admin/monitoring/email-logs?lines=${linesToLoad}`);
+            const result = await response.json();
+
+            if (result.success) {
+                setEmailLogs(result.logs);
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des logs:', error);
+        } finally {
+            setLoading(prev => ({ ...prev, emailLogs: false }));
+        }
+    };
+
+    // Nettoyer les anciens logs
+    const cleanEmailLogs = async (days = 7) => {
+        try {
+            setLoading(prev => ({ ...prev, cleanLogs: true }));
+            const response = await fetch('/admin/monitoring/clean-email-logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ days }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                await loadEmailLogs();
+            }
+        } catch (error) {
+            console.error('Erreur lors du nettoyage:', error);
+        } finally {
+            setLoading(prev => ({ ...prev, cleanLogs: false }));
+        }
+    };
+
+    // Auto-refresh des logs
+    useEffect(() => {
+        loadEmailLogs(); // Charger au montage
+
+        if (autoRefresh) {
+            const interval = setInterval(() => {
+                loadEmailLogs();
+            }, 5000); // Refresh toutes les 5 secondes
+
+            return () => clearInterval(interval);
+        }
+    }, [autoRefresh]);
+
+    // Formater les niveaux de log pour le style
+    const getLogLevelStyle = (level: string) => {
+        switch (level) {
+            case 'SUCCESS':
+                return 'text-green-700 bg-green-50 border-green-200';
+            case 'ERROR':
+                return 'text-red-700 bg-red-50 border-red-200';
+            case 'WARNING':
+                return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+            case 'INFO':
+                return 'text-blue-700 bg-blue-50 border-blue-200';
+            default:
+                return 'text-gray-700 bg-gray-50 border-gray-200';
         }
     };
 
@@ -581,6 +662,144 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                 </div>
                             )}
                         </div>
+                    </CardContent>
+                </Card>
+
+                {/* Logs d'envoi d'emails */}
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <FileText className="w-5 h-5" />
+                            Logs d'envoi d'emails
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {/* Contrôles des logs */}
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Button
+                                    onClick={() => loadEmailLogs()}
+                                    disabled={loading.emailLogs}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    {loading.emailLogs ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <RefreshCw className="w-4 h-4" />
+                                    )}
+                                    Actualiser
+                                </Button>
+
+                                <Button
+                                    onClick={() => cleanEmailLogs()}
+                                    disabled={loading.cleanLogs}
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    {loading.cleanLogs ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="w-4 h-4" />
+                                    )}
+                                    Nettoyer
+                                </Button>
+
+                                {/* Sélecteur de nombre de lignes */}
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="logLines" className="text-sm whitespace-nowrap">Lignes:</Label>
+                                    <select
+                                        id="logLines"
+                                        value={logLines}
+                                        onChange={(e) => {
+                                            const newLines = parseInt(e.target.value);
+                                            setLogLines(newLines);
+                                            loadEmailLogs(newLines);
+                                        }}
+                                        className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                        <option value={150}>150</option>
+                                        <option value={200}>200</option>
+                                        <option value={300}>300</option>
+                                        <option value={500}>500</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoRefresh}
+                                        onChange={(e) => setAutoRefresh(e.target.checked)}
+                                        className="rounded"
+                                    />
+                                    <Clock className="w-4 h-4" />
+                                    Auto-actualisation
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Affichage des logs */}
+                        <div className="max-h-96 overflow-y-auto border rounded-lg">
+                            {loading.emailLogs ? (
+                                <div className="flex items-center justify-center p-8">
+                                    <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                                    <span>Chargement des logs...</span>
+                                </div>
+                            ) : emailLogs.length === 0 ? (
+                                <div className="flex items-center justify-center p-8 text-muted-foreground">
+                                    <FileText className="w-6 h-6 mr-2" />
+                                    <span>Aucun log d'email trouvé</span>
+                                </div>
+                            ) : (
+                                <div className="space-y-1 p-2">
+                                    {emailLogs.map((log, index) => {
+                                        const isSession = log.formatted?.isSession;
+                                        const isSeparator = log.formatted?.isSeparator;
+                                        const hasIcon = log.formatted?.hasIcon;
+
+                                        if (isSeparator) {
+                                            return (
+                                                <div key={index} className="text-gray-400 font-mono text-xs py-1">
+                                                    {log.raw}
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`text-xs font-mono p-2 rounded border-l-4 ${
+                                                    isSession
+                                                        ? 'bg-purple-50 border-purple-400 text-purple-800'
+                                                        : hasIcon
+                                                        ? getLogLevelStyle(log.level)
+                                                        : 'bg-gray-50 border-gray-300 text-gray-700'
+                                                }`}
+                                            >
+                                                <div className="whitespace-pre-wrap break-all">
+                                                    {log.raw}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Informations sur les logs */}
+                        {emailLogs.length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                                {emailLogs.length} lignes affichées (dernières {logLines} lignes) •
+                                Logs stockés dans storage/logs/emails.log •
+                                {autoRefresh && 'Actualisation automatique activée'}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
