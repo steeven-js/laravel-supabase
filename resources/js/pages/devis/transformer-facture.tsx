@@ -175,62 +175,64 @@ export default function TransformerFacture({
             <Head title={`Transformer ${devis.numero_devis} en facture`} />
 
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
-                {/* En-tête modernisé */}
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-blue-500/5 rounded-lg" />
-                    <Card className="relative border-0 shadow-sm">
-                        <CardContent className="p-6">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="flex items-start gap-4">
-                                    <Button variant="outline" size="sm" asChild className="shrink-0">
-                                        <Link href={`/devis/${devis.id}`}>
-                                            <ArrowLeft className="mr-2 h-4 w-4" />
-                                            Retour au devis
-                                        </Link>
-                                    </Button>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <h1 className="text-3xl font-bold tracking-tight">
-                                                Transformer en facture
-                                            </h1>
-                                            <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 dark:bg-green-950/20">
-                                                <Receipt className="h-3 w-3 mr-1" />
-                                                Facture
-                                            </Badge>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <span className="font-medium">{devis.numero_devis}</span>
-                                            <span className="text-muted-foreground">→</span>
-                                            <span className="font-medium text-green-600">{numero_facture_propose}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <User className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">
-                                                Pour {devis.client.prenom} {devis.client.nom}
-                                            </span>
-                                            <button
-                                                onClick={() => copyToClipboard(devis.client.email)}
-                                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-                                            >
-                                                <Copy className="h-3 w-3" />
-                                                {devis.client.email}
-                                            </button>
-                                        </div>
+                {/* Bouton retour */}
+                <div>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/devis/${devis.id}`}>
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Retour au devis
+                        </Link>
+                    </Button>
+                </div>
+
+                {/* Header avec actions - Version harmonisée */}
+                <Card className="w-full mx-auto bg-white dark:bg-gray-900/50 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <CardContent className="p-6">
+                        {/* Titre et informations principales */}
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
+                            <div className="flex items-start gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        <h1 className="text-3xl font-bold tracking-tight">
+                                            Transformer en facture
+                                        </h1>
+                                        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 dark:bg-green-950/20">
+                                            <Receipt className="h-3 w-3 mr-1" />
+                                            Facture
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                        <span className="font-medium">{devis.numero_devis}</span>
+                                        <span className="text-muted-foreground">→</span>
+                                        <span className="font-medium text-green-600">{numero_facture_propose}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-muted-foreground" />
+                                        <span className="text-muted-foreground">
+                                            Pour {devis.client.prenom} {devis.client.nom}
+                                        </span>
+                                        <button
+                                            onClick={() => copyToClipboard(devis.client.email)}
+                                            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                        >
+                                            <Copy className="h-3 w-3" />
+                                            {devis.client.email}
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
-                                        Devis
-                                    </Badge>
-                                    <Badge variant="outline">
-                                        {formatPrice(devis.montant_ttc)}
-                                    </Badge>
-                                </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+                                    Devis
+                                </Badge>
+                                <Badge variant="outline">
+                                    {formatPrice(devis.montant_ttc)}
+                                </Badge>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Indicateur d'étapes modernisé */}
                 <Card>
@@ -288,6 +290,59 @@ export default function TransformerFacture({
                 </Card>
 
                 <form onSubmit={handleSubmit}>
+                    {/* Navigation entre les étapes */}
+                    <Card className='mb-4'>
+                        <CardContent className="p-4">
+                            <div className="flex justify-between items-center">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={etapePrecedente}
+                                    disabled={etapeActuelle === 1}
+                                    className="min-w-[120px]"
+                                >
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Précédent
+                                </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Clock className="h-4 w-4" />
+                                    Étape {etapeActuelle} sur {totalEtapes}
+                                </div>
+
+                                {etapeActuelle < totalEtapes ? (
+                                    <Button
+                                        type="button"
+                                        onClick={etapesSuivante}
+                                        className="min-w-[120px]"
+                                    >
+                                        Suivant
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="button"
+                                        onClick={handleTransformerFacture}
+                                        disabled={processing}
+                                        className="bg-green-600 hover:bg-green-700 min-w-[160px]"
+                                    >
+                                        {processing ? (
+                                            <>
+                                                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                                                Transformation...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Receipt className="mr-2 h-4 w-4" />
+                                                Créer la facture
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Étape 1: Récapitulatif du devis */}
                     {etapeActuelle === 1 && (
                         <Card className="transition-all duration-300 animate-in fade-in-50">
@@ -721,7 +776,7 @@ export default function TransformerFacture({
                     )}
 
                     {/* Navigation entre les étapes */}
-                    <Card>
+                    <Card className='mt-4'>
                         <CardContent className="p-4">
                             <div className="flex justify-between items-center">
                                 <Button
