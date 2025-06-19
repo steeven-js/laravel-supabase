@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
@@ -25,7 +26,9 @@ import {
     Info,
     Eye,
     FileText,
-    Clock
+    Clock,
+    ArrowRightLeft,
+    Receipt
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -91,8 +94,10 @@ export default function MonitoringIndex({ diagnostics }: Props) {
     const [testResults, setTestResults] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState<Record<string, boolean>>({});
     const [emailLogs, setEmailLogs] = useState<any[]>([]);
+    const [transformationLogs, setTransformationLogs] = useState<any[]>([]);
     const [autoRefresh, setAutoRefresh] = useState(false);
     const [logLines, setLogLines] = useState(150); // Augmenter à 150 par défaut
+    const [activeTab, setActiveTab] = useState('emails'); // Tab actif
 
     const { data, setData } = useForm({
         email: diagnostics.mail.from_address,
@@ -144,16 +149,34 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                 setEmailLogs(result.logs);
             }
         } catch (error) {
-            console.error('Erreur lors du chargement des logs:', error);
+            console.error('Erreur lors du chargement des logs emails:', error);
         } finally {
             setLoading(prev => ({ ...prev, emailLogs: false }));
         }
     };
 
-    // Nettoyer les anciens logs
+    // Charger les logs de transformation
+    const loadTransformationLogs = async (lines?: number) => {
+        const linesToLoad = lines || logLines;
+        try {
+            setLoading(prev => ({ ...prev, transformationLogs: true }));
+            const response = await fetch(`/admin/monitoring/transformation-logs?lines=${linesToLoad}`);
+            const result = await response.json();
+
+            if (result.success) {
+                setTransformationLogs(result.logs);
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des logs transformations:', error);
+        } finally {
+            setLoading(prev => ({ ...prev, transformationLogs: false }));
+        }
+    };
+
+    // Nettoyer les anciens logs d'emails
     const cleanEmailLogs = async (days = 7) => {
         try {
-            setLoading(prev => ({ ...prev, cleanLogs: true }));
+            setLoading(prev => ({ ...prev, cleanEmailLogs: true }));
             const response = await fetch('/admin/monitoring/clean-email-logs', {
                 method: 'POST',
                 headers: {
@@ -168,24 +191,57 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                 await loadEmailLogs();
             }
         } catch (error) {
-            console.error('Erreur lors du nettoyage:', error);
+            console.error('Erreur lors du nettoyage des logs emails:', error);
         } finally {
-            setLoading(prev => ({ ...prev, cleanLogs: false }));
+            setLoading(prev => ({ ...prev, cleanEmailLogs: false }));
+        }
+    };
+
+    // Nettoyer les anciens logs de transformation
+    const cleanTransformationLogs = async (days = 30) => {
+        try {
+            setLoading(prev => ({ ...prev, cleanTransformationLogs: true }));
+            const response = await fetch('/admin/monitoring/clean-transformation-logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ days }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                await loadTransformationLogs();
+            }
+        } catch (error) {
+            console.error('Erreur lors du nettoyage des logs transformations:', error);
+        } finally {
+            setLoading(prev => ({ ...prev, cleanTransformationLogs: false }));
         }
     };
 
     // Auto-refresh des logs
     useEffect(() => {
-        loadEmailLogs(); // Charger au montage
+        // Charger les logs au montage selon l'onglet actif
+        if (activeTab === 'emails') {
+            loadEmailLogs();
+        } else if (activeTab === 'transformations') {
+            loadTransformationLogs();
+        }
 
         if (autoRefresh) {
             const interval = setInterval(() => {
-                loadEmailLogs();
+                if (activeTab === 'emails') {
+                    loadEmailLogs();
+                } else if (activeTab === 'transformations') {
+                    loadTransformationLogs();
+                }
             }, 5000); // Refresh toutes les 5 secondes
 
             return () => clearInterval(interval);
         }
-    }, [autoRefresh]);
+    }, [autoRefresh, activeTab]);
 
     // Formater les niveaux de log pour le style
     const getLogLevelStyle = (level: string) => {
@@ -665,15 +721,28 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                     </CardContent>
                 </Card>
 
-                {/* Logs d'envoi d'emails */}
+                {/* Onglets pour les logs */}
                 <Card className="mt-6">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <FileText className="w-5 h-5" />
-                            Logs d'envoi d'emails
+                            Logs système
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="emails" className="flex items-center gap-2">
+                                    <Mail className="w-4 h-4" />
+                                    Logs d'emails
+                                </TabsTrigger>
+                                <TabsTrigger value="transformations" className="flex items-center gap-2">
+                                    <ArrowRightLeft className="w-4 h-4" />
+                                    Logs de transformation
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="emails" className="space-y-4">
                         {/* Contrôles des logs */}
                         <div className="flex items-center justify-between flex-wrap gap-4">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -694,17 +763,17 @@ export default function MonitoringIndex({ diagnostics }: Props) {
 
                                 <Button
                                     onClick={() => cleanEmailLogs()}
-                                    disabled={loading.cleanLogs}
+                                    disabled={loading.cleanEmailLogs}
                                     variant="outline"
                                     size="sm"
                                     className="flex items-center gap-2"
                                 >
-                                    {loading.cleanLogs ? (
+                                    {loading.cleanEmailLogs ? (
                                         <RefreshCw className="w-4 h-4 animate-spin" />
                                     ) : (
                                         <Trash2 className="w-4 h-4" />
                                     )}
-                                    Nettoyer
+                                    Nettoyer (7j)
                                 </Button>
 
                                 {/* Sélecteur de nombre de lignes */}
@@ -800,6 +869,137 @@ export default function MonitoringIndex({ diagnostics }: Props) {
                                 {autoRefresh && 'Actualisation automatique activée'}
                             </div>
                         )}
+                            </TabsContent>
+
+                            <TabsContent value="transformations" className="space-y-4">
+                                {/* Contrôles des logs de transformation */}
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Button
+                                            onClick={() => loadTransformationLogs()}
+                                            disabled={loading.transformationLogs}
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex items-center gap-2"
+                                        >
+                                            {loading.transformationLogs ? (
+                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <RefreshCw className="w-4 h-4" />
+                                            )}
+                                            Actualiser
+                                        </Button>
+
+                                        <Button
+                                            onClick={() => cleanTransformationLogs()}
+                                            disabled={loading.cleanTransformationLogs}
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex items-center gap-2"
+                                        >
+                                            {loading.cleanTransformationLogs ? (
+                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="w-4 h-4" />
+                                            )}
+                                            Nettoyer (30j)
+                                        </Button>
+
+                                        {/* Sélecteur de nombre de lignes */}
+                                        <div className="flex items-center gap-2">
+                                            <Label htmlFor="transformationLogLines" className="text-sm whitespace-nowrap">Lignes:</Label>
+                                            <select
+                                                id="transformationLogLines"
+                                                value={logLines}
+                                                onChange={(e) => {
+                                                    const newLines = parseInt(e.target.value);
+                                                    setLogLines(newLines);
+                                                    loadTransformationLogs(newLines);
+                                                }}
+                                                className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value={50}>50</option>
+                                                <option value={100}>100</option>
+                                                <option value={150}>150</option>
+                                                <option value={200}>200</option>
+                                                <option value={300}>300</option>
+                                                <option value={500}>500</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={autoRefresh}
+                                                onChange={(e) => setAutoRefresh(e.target.checked)}
+                                                className="rounded"
+                                            />
+                                            <Clock className="w-4 h-4" />
+                                            Auto-actualisation
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Affichage des logs de transformation */}
+                                <div className="max-h-96 overflow-y-auto border rounded-lg">
+                                    {loading.transformationLogs ? (
+                                        <div className="flex items-center justify-center p-8">
+                                            <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                                            <span>Chargement des logs...</span>
+                                        </div>
+                                    ) : transformationLogs.length === 0 ? (
+                                        <div className="flex items-center justify-center p-8 text-muted-foreground">
+                                            <Receipt className="w-6 h-6 mr-2" />
+                                            <span>Aucun log de transformation trouvé</span>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1 p-2">
+                                            {transformationLogs.map((log, index) => {
+                                                const isSession = log.content?.includes('=== DÉBUT') || log.content?.includes('=== FIN') || log.content?.includes('=== TRANSFORMATION');
+                                                const isSeparator = log.content?.includes('============================');
+                                                const hasIcon = log.content?.includes('🚀') || log.content?.includes('✅') || log.content?.includes('❌') || log.content?.includes('📧') || log.content?.includes('🧾') || log.content?.includes('💰');
+
+                                                if (isSeparator) {
+                                                    return (
+                                                        <div key={index} className="text-gray-400 font-mono text-xs py-1">
+                                                            {log.content}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`text-xs font-mono p-2 rounded border-l-4 ${
+                                                            isSession
+                                                                ? 'bg-purple-50 border-purple-400 text-purple-800'
+                                                                : hasIcon
+                                                                ? getLogLevelStyle(log.level)
+                                                                : 'bg-gray-50 border-gray-300 text-gray-700'
+                                                        }`}
+                                                    >
+                                                        <div className="whitespace-pre-wrap break-all">
+                                                            {log.content}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Informations sur les logs de transformation */}
+                                {transformationLogs.length > 0 && (
+                                    <div className="text-xs text-muted-foreground">
+                                        {transformationLogs.length} lignes affichées (dernières {logLines} lignes) •
+                                        Logs stockés dans storage/logs/transformations.log •
+                                        {autoRefresh && 'Actualisation automatique activée'}
+                                    </div>
+                                )}
+                            </TabsContent>
+                        </Tabs>
                     </CardContent>
                 </Card>
             </div>

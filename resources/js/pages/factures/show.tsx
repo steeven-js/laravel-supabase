@@ -281,43 +281,6 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
         setIsPdfModalOpen(true);
     };
 
-    const handleSavePdf = async () => {
-        // Vérifications de sécurité approfondies
-        if (!facture?.numero_facture || !facture.client) {
-            console.error('Données de la facture manquantes');
-            toast.error('Données de la facture incomplètes.');
-            return;
-        }
-
-        toast.loading('Vérification du PDF...');
-
-        try {
-            router.post(`/factures/${facture.id}/ensure-pdf`, {}, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Le message de succès sera affiché automatiquement par Laravel
-                    setPdfStatus({
-                        exists: true,
-                        up_to_date: true,
-                        local_size: 0,
-                        last_modified: new Date().toISOString()
-                    });
-                },
-                onError: (errors) => {
-                    console.error('Erreur lors de la vérification du PDF:', errors);
-                    toast.error('Erreur lors de la vérification du PDF');
-                },
-                onFinish: () => {
-                    toast.dismiss();
-                }
-            });
-        } catch (error: unknown) {
-            console.error('Erreur lors de la sauvegarde du PDF:', error);
-            toast.error('Erreur de connexion');
-            toast.dismiss();
-        }
-    };
-
     // Préparer les données sécurisées pour le PDF
     const getSafeFactureData = () => {
         return {
@@ -343,69 +306,6 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
             name: 'Madin.IA',
             email: 'contact@madinia.fr'
         };
-    };
-
-    const renderDownload = (
-        <PDFDownloadLink
-            document={
-                facture ? <FacturePdfPreview facture={facture} madinia={madinia} /> : <span />
-            }
-            fileName={`${facture?.numero_facture || 'facture'}.pdf`}
-            style={{ textDecoration: 'none' }}
-        >
-            {({ loading }) => (
-                <Button variant="outline" size="sm" disabled={loading}>
-                    {loading ? (
-                        <>
-                            <Clock className="mr-2 h-4 w-4 animate-spin" />
-                            Génération...
-                        </>
-                    ) : (
-                        <>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Télécharger PDF
-                        </>
-                    )}
-                </Button>
-            )}
-        </PDFDownloadLink>
-    );
-
-    const handleRegeneratePdf = () => {
-        toast.loading('Régénération du PDF...');
-
-        try {
-            router.post(`/factures/${facture.id}/regenerer-pdf`, {}, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    // Le message de succès sera affiché automatiquement par Laravel
-                    setPdfStatus({
-                        exists: true,
-                        up_to_date: true,
-                        local_size: 0,
-                        last_modified: new Date().toISOString()
-                    });
-                },
-                onError: (errors) => {
-                    console.error('Erreur lors de la régénération du PDF:', errors);
-                    toast.error('Erreur lors de la régénération du PDF');
-                },
-                onFinish: () => {
-                    toast.dismiss();
-                }
-            });
-        } catch (error: unknown) {
-            console.error('Erreur lors de la régénération du PDF:', error);
-            toast.error('Erreur de connexion');
-            toast.dismiss();
-        }
-    };
-
-    const handleSyncSupabase = () => {
-        router.visit(`/factures/${facture.id}/sync-supabase`, {
-            method: 'get',
-            preserveScroll: true,
-        });
     };
 
     return (
@@ -540,7 +440,7 @@ export default function FactureShow({ facture, madinia, pdfStatus: initialPdfSta
                                     <PdfSaveButton
                                         pdfComponent={<FacturePdfPreview facture={facture} madinia={madinia} />}
                                         saveRoute={route('factures.save-react-pdf', facture.id)}
-                                        filename={`${facture.id}.pdf`}
+                                        filename={`${facture.numero_facture}.pdf`}
                                         type="facture"
                                         className="!bg-green-600 hover:!bg-green-700 active:!bg-green-800 focus:!border-green-900 focus:!ring-green-300"
                                     >

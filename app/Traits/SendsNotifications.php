@@ -12,21 +12,45 @@ use App\Notifications\ServiceNotification;
 
 trait SendsNotifications
 {
+    protected static $notificationsDisabled = false;
+
+    /**
+     * Désactiver temporairement les notifications automatiques
+     */
+    public static function disableNotifications()
+    {
+        static::$notificationsDisabled = true;
+    }
+
+    /**
+     * Réactiver les notifications automatiques
+     */
+    public static function enableNotifications()
+    {
+        static::$notificationsDisabled = false;
+    }
+
     protected static function bootSendsNotifications()
     {
         // Événement lors de la création
         static::created(function ($model) {
-            static::sendNotificationToAdmins($model, 'created');
+            if (!static::$notificationsDisabled) {
+                static::sendNotificationToAdmins($model, 'created');
+            }
         });
 
         // Événement lors de la mise à jour
         static::updated(function ($model) {
-            static::sendNotificationToAdmins($model, 'updated');
+            if (!static::$notificationsDisabled) {
+                static::sendNotificationToAdmins($model, 'updated');
+            }
         });
 
         // Événement lors de la suppression
         static::deleted(function ($model) {
-            static::sendNotificationToAdmins($model, 'deleted');
+            if (!static::$notificationsDisabled) {
+                static::sendNotificationToAdmins($model, 'deleted');
+            }
         });
     }
 

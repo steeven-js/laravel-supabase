@@ -14,6 +14,7 @@ use Inertia\Inertia;
 use Illuminate\Mail\Mailable;
 use App\Models\User;
 use App\Services\EmailLogService;
+use App\Services\TransformationLogService;
 
 class MonitoringController extends Controller
 {
@@ -301,5 +302,66 @@ class MonitoringController extends Controller
         ];
 
         return $diagnostics;
+    }
+
+    /**
+     * Récupérer les logs de transformation
+     */
+    public function getTransformationLogs(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!app()->environment('local') && (!$user || !$user->isSuperAdmin())) {
+            abort(404);
+        }
+
+        try {
+            $lines = $request->get('lines', 50);
+            $logs = TransformationLogService::getTransformationLogs($lines);
+
+            return response()->json([
+                'success' => true,
+                'logs' => $logs,
+                'total_lines' => count($logs),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des logs de transformation : ' . $e->getMessage(),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ], 500);
+        }
+    }
+
+    /**
+     * Nettoyer les anciens logs de transformation
+     */
+    public function cleanTransformationLogs(Request $request)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (!app()->environment('local') && (!$user || !$user->isSuperAdmin())) {
+            abort(404);
+        }
+
+        try {
+            $days = $request->get('days', 30);
+            $result = TransformationLogService::cleanOldLogs($days);
+
+            return response()->json([
+                'success' => $result,
+                'message' => "Logs de transformation antérieurs à {$days} jours supprimés avec succès",
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du nettoyage des logs de transformation : ' . $e->getMessage(),
+                'timestamp' => now()->format('d/m/Y H:i:s')
+            ], 500);
+        }
     }
 }

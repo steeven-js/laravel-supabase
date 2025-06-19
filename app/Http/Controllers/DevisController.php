@@ -9,10 +9,12 @@ use App\Services\DevisPdfService;
 use App\Services\EmailLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Services\TransformationLogService;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Exception;
@@ -645,7 +647,8 @@ class DevisController extends Controller
 
             if ($result) {
                 // Envoyer notification personnalisée pour l'acceptation
-                $devis->sendCustomNotification('accepted',
+                $devis->sendCustomNotification(
+                    'accepted',
                     "Le devis #{$devis->numero_devis} pour {$devis->client->prenom} {$devis->client->nom} a été accepté par le client"
                 );
 
@@ -665,7 +668,6 @@ class DevisController extends Controller
                 return back()
                     ->with('error', '❌ Échec de l\'acceptation du devis.');
             }
-
         } catch (Exception $e) {
             Log::error('Erreur lors de l\'acceptation de devis via interface', [
                 'devis_id' => $devis->getKey(),
@@ -694,7 +696,8 @@ class DevisController extends Controller
             $devis->refuser();
 
             // Envoyer notification personnalisée pour le refus
-            $devis->sendCustomNotification('refused',
+            $devis->sendCustomNotification(
+                'refused',
                 "Le devis #{$devis->numero_devis} pour {$devis->client->prenom} {$devis->client->nom} a été refusé par le client"
             );
 
@@ -941,7 +944,8 @@ class DevisController extends Controller
             ]);
 
             // Envoyer notification personnalisée pour l'envoi
-            $devis->sendCustomNotification('sent',
+            $devis->sendCustomNotification(
+                'sent',
                 "Le devis #{$devis->numero_devis} a été envoyé par email à {$devis->client->prenom} {$devis->client->nom} ({$devis->client->email})"
             );
 
@@ -1003,8 +1007,14 @@ class DevisController extends Controller
     {
         // Vérifier que le devis peut être transformé
         if (!$devis->peutEtreTransformeEnFacture()) {
-            return redirect()->back()
-                ->with('error', '❌ Ce devis ne peut pas être transformé en facture.');
+            // Vérifier si c'est parce qu'il a déjà une facture
+            if ($devis->facture) {
+                return redirect()->route('devis.show', $devis)
+                    ->with('info', '📄 Ce devis a déjà été transformé en facture ' . $devis->facture->numero_facture . '. Vous pouvez consulter la facture directement.');
+            }
+
+            return redirect()->route('devis.show', $devis)
+                ->with('error', '❌ Ce devis ne peut pas être transformé en facture. Seuls les devis acceptés peuvent être transformés.');
         }
 
         $devis->load(['client.entreprise']);
@@ -1042,6 +1052,9 @@ class DevisController extends Controller
      */
     public function confirmerTransformationFacture(Request $request, Devis $devis)
     {
+        // Augmenter le temps d'exécution pour les transformations lourdes
+        set_time_limit(120);
+
         // Vérifier que le devis peut être transformé
         if (!$devis->peutEtreTransformeEnFacture()) {
             return redirect()->back()
@@ -1056,27 +1069,110 @@ class DevisController extends Controller
             'envoyer_email_client' => 'boolean',
             'envoyer_email_admin' => 'boolean',
             'message_client' => 'nullable|string',
+            'pdf_blob' => 'nullable|string',
+            'filename' => 'nullable|string',
         ]);
 
         try {
-            // Transformer le devis en facture
-            $parametresFacture = [
-                'date_facture' => $validated['date_facture'],
-                'date_echeance' => $validated['date_echeance'],
-                'conditions_paiement' => $validated['conditions_paiement'] ?? null,
-                'notes' => $validated['notes_facture'] ?? null,
-            ];
+            // Démarrer la session de logs spécialisés
+            $sessionId = TransformationLogService::startTransformationSession(
+                $devis->numero_devis,
+                "{$devis->client->prenom} {$devis->client->nom}"
+            );
 
-            $facture = $devis->transformerEnFacture($parametresFacture);
+            $startTime = microtime(true);
 
-            // Envoyer notification pour la transformation
-            $devis->sendCustomNotification('transformed',
+            // Logger les paramètres de transformation
+            TransformationLogService::logTransformationParams($validated);
+
+            // Désactiver temporairement les notifications automatiques pour éviter le spam
+            \App\Models\Facture::disableNotifications();
+            TransformationLogService::logNotificationOptimization(true);
+
+            DB::transaction(function () use ($devis, $validated, &$facture) {
+                // Transformer le devis en facture
+                $parametresFacture = [
+                    'date_facture' => $validated['date_facture'],
+                    'date_echeance' => $validated['date_echeance'],
+                    'conditions_paiement' => $validated['conditions_paiement'] ?? null,
+                    'notes' => $validated['notes_facture'] ?? null,
+                ];
+
+                TransformationLogService::logEvent("🔄 Début de la transformation en base de données");
+
+                $facture = $devis->transformerEnFacture($parametresFacture);
+
+                TransformationLogService::logFactureCreated($facture->numero_facture);
+                TransformationLogService::logMontantsCalculated($facture->montant_ht, $facture->montant_ttc);
+
+                // Compter les lignes copiées
+                $nbLignes = $facture->lignes()->count();
+                TransformationLogService::logLignesCopied($nbLignes);
+
+                // Marquer la date d'envoi admin en une seule fois
+                $facture->date_envoi_admin = now();
+                $facture->save();
+
+                TransformationLogService::logEvent("📅 Date d'envoi admin définie");
+            });
+
+            // Réactiver les notifications
+            \App\Models\Facture::enableNotifications();
+            TransformationLogService::logNotificationOptimization(false);
+
+            // Traiter le PDF si fourni
+            if (!empty($validated['pdf_blob']) && !empty($validated['filename'])) {
+                try {
+                    TransformationLogService::logEvent("📄 Traitement du PDF de la facture");
+
+                    // Décoder le blob PDF
+                    $pdfContent = base64_decode($validated['pdf_blob']);
+
+                    if ($pdfContent !== false) {
+                        // Générer le nom de fichier basé sur le numéro de facture
+                        $nomFichier = "facture_{$facture->numero_facture}.pdf";
+
+                        // 1. Sauvegarder localement
+                        $this->sauvegarderPdfLocal($pdfContent, $nomFichier, 'factures');
+
+                        // 2. Sauvegarder sur Supabase
+                        $urlSupabase = $this->sauvegarderPdfSupabase($pdfContent, $nomFichier, 'factures');
+
+                        // 3. Mettre à jour la base de données avec les informations PDF
+                        $facture->update([
+                            'pdf_file' => $nomFichier,
+                            'pdf_url' => $urlSupabase,
+                        ]);
+
+                        TransformationLogService::logEvent("✅ PDF sauvegardé avec succès", [
+                            'nom_fichier' => $nomFichier,
+                            'url_supabase' => $urlSupabase,
+                            'taille' => strlen($pdfContent) . ' bytes'
+                        ]);
+                    } else {
+                        TransformationLogService::logError("❌ Erreur décodage PDF", new \Exception('Impossible de décoder le contenu PDF'));
+                    }
+                } catch (\Exception $e) {
+                    TransformationLogService::logError("❌ Erreur sauvegarde PDF", $e);
+                    // Ne pas faire échouer la transformation pour un problème de PDF
+                    Log::error('Erreur sauvegarde PDF lors de la transformation', [
+                        'facture_numero' => $facture->numero_facture,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Mesurer le temps d'exécution
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+            TransformationLogService::logPerformance($executionTime);
+
+            // Une seule notification globale après toute la transformation
+            $devis->sendCustomNotification(
+                'transformed',
                 "Le devis #{$devis->numero_devis} a été transformé en facture #{$facture->numero_facture} pour {$devis->client->prenom} {$devis->client->nom}"
             );
 
-            // Marquer la date d'envoi admin
-            $facture->date_envoi_admin = now();
-            $facture->save();
+            TransformationLogService::logEvent("🔔 Notification envoyée aux administrateurs");
 
             // Préparer les données pour les emails
             $donneesEmail = [
@@ -1091,19 +1187,25 @@ class DevisController extends Controller
 
             if ($validated['envoyer_email_client'] ?? false) {
                 try {
+                    TransformationLogService::logEvent("📧 Envoi email client en cours...");
                     $this->envoyerEmailClient($donneesEmail);
                     $facture->date_envoi_client = now();
                     $facture->marquerEnvoyee();
+                    TransformationLogService::logEmailSent('client', $devis->client->email);
                 } catch (\Exception $e) {
                     $erreursMails[] = 'Erreur lors de l\'envoi de l\'email au client : ' . $e->getMessage();
+                    TransformationLogService::logError("Échec envoi email client", $e);
                 }
             }
 
             if ($validated['envoyer_email_admin'] ?? false) {
                 try {
+                    TransformationLogService::logEvent("📨 Envoi email admin en cours...");
                     $this->envoyerEmailAdmin($donneesEmail);
+                    TransformationLogService::logEmailSent('admin', config('mail.admin_email', 'N/A'));
                 } catch (\Exception $e) {
                     $erreursMails[] = 'Erreur lors de l\'envoi de l\'email à l\'admin : ' . $e->getMessage();
+                    TransformationLogService::logError("Échec envoi email admin", $e);
                 }
             }
 
@@ -1111,13 +1213,39 @@ class DevisController extends Controller
 
             if (!empty($erreursMails)) {
                 $message .= ' Cependant, des erreurs sont survenues lors de l\'envoi des emails : ' . implode(', ', $erreursMails);
+                // Clôturer la session avec un succès partiel
+                TransformationLogService::endTransformationSession(true, [
+                    'facture_numero' => $facture->numero_facture,
+                    'execution_time_ms' => $executionTime,
+                    'email_errors' => $erreursMails
+                ]);
+
                 return redirect()->route('factures.show', $facture)
                     ->with('warning', $message);
             }
 
+            // Clôturer la session avec succès complet
+            TransformationLogService::endTransformationSession(true, [
+                'facture_numero' => $facture->numero_facture,
+                'execution_time_ms' => $executionTime
+            ]);
+
             return redirect()->route('factures.show', $facture)
                 ->with('success', $message);
         } catch (\Exception $e) {
+            // Logger l'erreur avec détails
+            TransformationLogService::logError("Échec de la transformation", $e);
+
+            // Clôturer la session de logs avec échec
+            TransformationLogService::endTransformationSession(false, [
+                'error_message' => $e->getMessage(),
+                'error_file' => basename($e->getFile()),
+                'error_line' => $e->getLine()
+            ]);
+
+            // Réactiver les notifications en cas d'erreur
+            \App\Models\Facture::enableNotifications();
+
             return redirect()->back()
                 ->with('error', '❌ Erreur lors de la transformation : ' . $e->getMessage());
         }
@@ -1537,7 +1665,6 @@ class DevisController extends Controller
             ]);
 
             return redirect()->back()->with('success', '✅ PDF généré et sauvegardé avec succès !');
-
         } catch (\Exception $e) {
             Log::error('Erreur sauvegarde PDF React', [
                 'devis_id' => $devis->id,
@@ -1599,7 +1726,7 @@ class DevisController extends Controller
                 'Authorization' => "Bearer {$serviceKey}",
                 'Content-Type' => 'application/pdf',
             ])->withBody($pdfContent, 'application/pdf')
-            ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/{$type}/{$nomFichier}");
+                ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/{$type}/{$nomFichier}");
 
             if ($response->successful()) {
                 $urlPublique = "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/{$type}/{$nomFichier}";
@@ -1663,7 +1790,6 @@ class DevisController extends Controller
             $status['supabase_url'] = $this->devisPdfService->getUrlSupabasePdf($devis);
 
             return $status;
-
         } catch (Exception $e) {
             Log::error('Erreur lors de la récupération du statut PDF pour show', [
                 'devis_id' => $devis->id,

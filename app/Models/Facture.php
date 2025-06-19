@@ -6,6 +6,7 @@ use App\Traits\HasHistorique;
 use App\Traits\SendsNotifications;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
 
 class Facture extends Model
 {
@@ -38,6 +39,7 @@ class Facture extends Model
         'date_envoi_client',
         'date_envoi_admin',
         'pdf_file',
+        'pdf_url',
     ];
 
     /**
@@ -420,4 +422,6 @@ class Facture extends Model
             default => 'gray'
         };
     }
+
+
 }

@@ -8,6 +8,7 @@ use App\Services\FacturePdfService;
 use App\Services\EmailLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -113,22 +114,11 @@ class FactureController extends Controller
             $facture->calculerMontants();
             $facture->save();
 
-            // Générer et sauvegarder le PDF
-            try {
-                $nomFichierPdf = $this->facturePdfService->genererEtSauvegarder($facture);
-                $facture->pdf_file = $nomFichierPdf;
-                $facture->save();
-
-                Log::info('PDF généré lors de la création de la facture', [
-                    'facture_id' => $facture->id,
-                    'fichier_pdf' => $nomFichierPdf
-                ]);
-            } catch (Exception $e) {
-                Log::error('Erreur génération PDF lors création facture', [
-                    'facture_id' => $facture->id,
-                    'error' => $e->getMessage()
-                ]);
-            }
+            // PDF sera généré par React uniquement (via generateAndSavePdf dans create.tsx)
+            Log::info('Facture créée - PDF sera généré côté client', [
+                'facture_id' => $facture->id,
+                'numero_facture' => $facture->numero_facture
+            ]);
 
             return redirect()->route('factures.show', $facture)
                 ->with('success', '✅ Facture ' . $facture->numero_facture . ' créée avec succès !');
@@ -139,6 +129,11 @@ class FactureController extends Controller
                 ->withInput()
                 ->with('error', '❌ Erreur de validation. Veuillez vérifier les informations saisies.');
         } catch (Exception $e) {
+            Log::error('Erreur lors de la création de la facture', [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
+            ]);
             return back()
                 ->withInput()
                 ->with('error', '❌ Une erreur est survenue lors de la création de la facture.');
@@ -151,6 +146,31 @@ class FactureController extends Controller
     public function show(Facture $facture)
     {
         $facture->load(['client.entreprise', 'devis', 'lignes.service', 'administrateur']);
+
+        // Récupérer l'historique des actions avec les utilisateurs
+        $historique = $facture->historique()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($action) {
+                return [
+                    'id' => $action->id,
+                    'action' => $action->action,
+                    'titre' => $action->titre,
+                    'description' => $action->description,
+                    'donnees_avant' => $action->donnees_avant,
+                    'donnees_apres' => $action->donnees_apres,
+                    'donnees_supplementaires' => $action->donnees_supplementaires,
+                    'created_at' => $action->created_at->toISOString(),
+                    'user' => $action->user ? [
+                        'id' => $action->user->id,
+                        'name' => $action->user->name,
+                        'email' => $action->user->email,
+                    ] : null,
+                    'user_nom' => $action->user_nom,
+                    'user_email' => $action->user_email,
+                ];
+            });
 
         // Récupérer les informations de Madinia
         $madinia = \App\Models\Madinia::getInstance();
@@ -239,6 +259,8 @@ class FactureController extends Controller
 
         return Inertia::render('factures/show', [
             'facture' => $factureFormatted,
+            'historique' => $historique,
+            'pdfStatus' => $pdfStatus,
             'madinia' => [
                 'id' => $madinia->id,
                 'name' => $madinia->name,
@@ -254,8 +276,7 @@ class FactureController extends Controller
                 'nom_banque' => $madinia->nom_banque,
                 'numero_compte' => $madinia->numero_compte,
                 'iban_bic_swift' => $madinia->iban_bic_swift,
-            ],
-            'pdfStatus' => $pdfStatus
+            ]
         ]);
     }
 
@@ -420,24 +441,6 @@ class FactureController extends Controller
             $facture->calculerMontants();
             $facture->save();
 
-            // Mettre à jour le PDF après modification - TOUJOURS régénérer
-            try {
-                $nomFichierPdf = $this->facturePdfService->mettreAJour($facture);
-                $facture->pdf_file = $nomFichierPdf;
-                $facture->save();
-
-                Log::info('PDF mis à jour lors de la modification de la facture', [
-                    'facture_id' => $facture->id,
-                    'fichier_pdf' => $nomFichierPdf
-                ]);
-            } catch (Exception $e) {
-                Log::error('Erreur mise à jour PDF lors modification facture', [
-                    'facture_id' => $facture->id,
-                    'error' => $e->getMessage()
-                ]);
-                // Ne pas bloquer la sauvegarde de la facture si le PDF échoue
-            }
-
             return redirect()->route('factures.index')
                 ->with('success', '🎉 Facture ' . $facture->numero_facture . ' mise à jour avec succès !');
 
@@ -592,7 +595,7 @@ class FactureController extends Controller
     public function envoyerEmail(Request $request, Facture $facture)
     {
         // Démarrer une session de logs d'email
-        $sessionId = EmailLogService::startEmailSession('facture_email', [
+        EmailLogService::startEmailSession('facture_email', [
             'recipient' => $facture->client->email,
             'facture_id' => $facture->id,
             'facture_numero' => $facture->numero_facture,
@@ -678,7 +681,7 @@ class FactureController extends Controller
                 'has_admin_copy' => $validated['envoyer_copie_admin'] ?? false,
             ]);
 
-            return redirect()->back()
+            return redirect()->route('factures.show', $facture)
                 ->with('success', '📧 Facture ' . $facture->numero_facture . ' envoyée avec succès au client !');
 
         } catch (\Exception $e) {
@@ -722,19 +725,16 @@ class FactureController extends Controller
             // Charger les relations nécessaires
             $facture->load('client.entreprise', 'devis', 'administrateur');
 
-            // Toujours régénérer le PDF avant l'envoi
-            Log::info('Régénération du PDF avant envoi email', [
+            // PDF sera utilisé depuis la version React existante
+            Log::info('Utilisation du PDF React existant pour l\'envoi email', [
                 'facture_numero' => $facture->numero_facture,
+                'fichier_pdf' => $facture->pdf_file,
             ]);
 
-            // Générer le PDF
-            $nomFichierPdf = $this->facturePdfService->genererEtSauvegarder($facture);
-            $facture->pdf_file = $nomFichierPdf;
-            $facture->save();
-
-            Log::info('PDF régénéré pour l\'envoi email', [
+            EmailLogService::logEvent('PDF_READY', 'INFO', [
                 'facture_numero' => $facture->numero_facture,
-                'fichier_pdf' => $nomFichierPdf,
+                'pdf_file' => $facture->pdf_file,
+                'pdf_exists' => !empty($facture->pdf_file),
             ]);
 
             // Créer un devis fictif pour la compatibilité avec FactureClientMail
@@ -891,12 +891,9 @@ class FactureController extends Controller
             $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
 
             if (!$cheminPdf || !file_exists($cheminPdf)) {
-                // Générer le PDF s'il n'existe pas
-                $nomFichier = $this->facturePdfService->genererEtSauvegarder($facture);
-                $facture->pdf_file = $nomFichier;
-                $facture->save();
-
-                $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+                // PDF manquant - rediriger vers la page show pour utiliser React
+                return redirect()->route('factures.show', $facture)
+                    ->with('error', '❌ PDF non trouvé. Veuillez d\'abord générer le PDF via le bouton "Sauvegarder PDF".');
             }
 
             if ($cheminPdf && file_exists($cheminPdf)) {
@@ -929,12 +926,9 @@ class FactureController extends Controller
             $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
 
             if (!$cheminPdf || !file_exists($cheminPdf)) {
-                // Générer le PDF s'il n'existe pas
-                $nomFichier = $this->facturePdfService->genererEtSauvegarder($facture);
-                $facture->pdf_file = $nomFichier;
-                $facture->save();
-
-                $cheminPdf = $this->facturePdfService->getCheminPdf($facture);
+                // PDF manquant - rediriger vers la page show pour utiliser React
+                return redirect()->route('factures.show', $facture)
+                    ->with('error', '❌ PDF non trouvé. Veuillez d\'abord générer le PDF via le bouton "Sauvegarder PDF".');
             }
 
             if ($cheminPdf && file_exists($cheminPdf)) {
@@ -1270,4 +1264,6 @@ class FactureController extends Controller
                 ->with('error', '❌ Erreur lors de la synchronisation : ' . $e->getMessage());
         }
     }
+
+
 }

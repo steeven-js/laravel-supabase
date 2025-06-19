@@ -183,12 +183,18 @@ class FacturePdfService
                 }
             };
 
-            $this->sauvegarderSupabase($pdf, $nomFichier);
+            $urlSupabase = $this->sauvegarderSupabase($pdf, $nomFichier);
+
+            // Mettre à jour l'URL en base de données si la sauvegarde a réussi
+            if ($urlSupabase) {
+                $facture->update(['pdf_url' => $urlSupabase]);
+            }
 
             Log::info('PDF synchronisé vers Supabase', [
                 'facture_id' => $facture->id,
                 'numero_facture' => $facture->numero_facture,
-                'fichier' => $nomFichier
+                'fichier' => $nomFichier,
+                'url_supabase' => $urlSupabase
             ]);
 
             return true;
@@ -224,7 +230,7 @@ class FacturePdfService
     /**
      * Sauvegarde le PDF sur Supabase Storage
      */
-    private function sauvegarderSupabase($pdf, string $nomFichier): void
+    private function sauvegarderSupabase($pdf, string $nomFichier): ?string
     {
         try {
             $supabaseUrl = config('supabase.url');
@@ -233,7 +239,7 @@ class FacturePdfService
 
             if (!$supabaseUrl || !$serviceKey) {
                 Log::warning('Configuration Supabase manquante pour upload PDF');
-                return;
+                return null;
             }
 
             // Obtenir le contenu binaire du PDF
@@ -246,23 +252,30 @@ class FacturePdfService
             ->put("{$supabaseUrl}/storage/v1/object/{$bucketName}/factures/{$nomFichier}");
 
             if ($response->successful()) {
+                $urlPublique = "{$supabaseUrl}/storage/v1/object/public/{$bucketName}/factures/{$nomFichier}";
+
                 Log::info('PDF sauvegardé sur Supabase', [
                     'fichier' => $nomFichier,
                     'bucket' => $bucketName,
-                    'taille' => strlen($pdfContent) . ' bytes'
+                    'taille' => strlen($pdfContent) . ' bytes',
+                    'url' => $urlPublique
                 ]);
+
+                return $urlPublique;
             } else {
                 Log::error('Erreur sauvegarde PDF Supabase', [
                     'fichier' => $nomFichier,
                     'status' => $response->status(),
                     'body' => $response->body()
                 ]);
+                return null;
             }
         } catch (Exception $e) {
             Log::error('Exception sauvegarde PDF Supabase', [
                 'fichier' => $nomFichier,
                 'error' => $e->getMessage()
             ]);
+            return null;
         }
     }
 

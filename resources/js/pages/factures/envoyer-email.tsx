@@ -20,8 +20,6 @@ import {
     Receipt,
     Send,
     Eye,
-    Settings,
-    Clock,
     Shield,
     CheckCircle2,
     Sparkles,

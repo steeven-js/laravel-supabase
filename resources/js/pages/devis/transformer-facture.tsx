@@ -29,10 +29,15 @@ import {
     Info,
     Receipt,
     RefreshCw,
-    CreditCard
+    CreditCard,
+    Loader2,
+    AlertCircle
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import FacturePdfPreview from '@/components/pdf/FacturePdfPreview';
+import { pdf } from '@react-pdf/renderer';
+import { route } from 'ziggy-js';
 
 interface Devis {
     id: number;
@@ -86,6 +91,7 @@ export default function TransformerFacture({
     date_echeance_defaut
 }: Props) {
     const [etapeActuelle, setEtapeActuelle] = useState(1);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const totalEtapes = 4;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -103,16 +109,68 @@ export default function TransformerFacture({
         // Ne rien faire ici - cette fonction ne doit pas déclencher la transformation
     };
 
-    const handleTransformerFacture = () => {
-        // Cette fonction ne se déclenche QUE sur clic explicite du bouton final
-        post(`/devis/${devis.id}/confirmer-transformation`, {
-            onSuccess: () => {
-                toast.success('Facture créée avec succès');
-            },
-            onError: () => {
-                toast.error('Une erreur est survenue lors de la transformation');
-            }
-        });
+    const handleTransformerFacture = async () => {
+        if (isGeneratingPdf || processing) return;
+
+        try {
+            setIsGeneratingPdf(true);
+            toast.info('🔄 Génération du PDF en cours...');
+
+            // 1. Créer une facture temporaire pour le PDF
+            const factureTemp = {
+                numero_facture: numero_facture_propose,
+                objet: devis.objet,
+                statut: 'en_attente',
+                date_facture: data.date_facture,
+                date_echeance: data.date_echeance,
+                montant_ht: devis.montant_ht,
+                taux_tva: devis.taux_tva,
+                montant_ttc: devis.montant_ttc,
+                conditions_paiement: data.conditions_paiement,
+                notes: data.notes_facture,
+                client: devis.client,
+                devis: {
+                    numero_devis: devis.numero_devis
+                }
+            };
+
+            // 2. Générer le PDF avec react-pdf/renderer
+            const pdfBlob = await pdf(<FacturePdfPreview facture={factureTemp} />).toBlob();
+
+            // 3. Convertir le blob en base64
+            const arrayBuffer = await pdfBlob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const binaryString = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+            const base64String = btoa(binaryString);
+
+            // 4. Mettre à jour les données avec le PDF
+            setData({
+                ...data,
+                pdf_blob: base64String,
+                filename: `facture_${numero_facture_propose}.pdf`,
+            } as any);
+
+            // 5. Envoyer la transformation
+            setTimeout(() => {
+                post(`/devis/${devis.id}/confirmer-transformation`, {
+                    onSuccess: () => {
+                        toast.success('✅ Facture créée avec succès !');
+                    },
+                    onError: (errors: any) => {
+                        console.error('Erreur transformation:', errors);
+                        toast.error('❌ Erreur lors de la transformation');
+                    },
+                    onFinish: () => {
+                        setIsGeneratingPdf(false);
+                    }
+                });
+            }, 100);
+
+        } catch (error) {
+            console.error('Erreur génération PDF:', error);
+            toast.error('❌ Erreur lors de la génération du PDF');
+            setIsGeneratingPdf(false);
+        }
     };
 
     const etapesSuivante = () => {
@@ -323,13 +381,13 @@ export default function TransformerFacture({
                                     <Button
                                         type="button"
                                         onClick={handleTransformerFacture}
-                                        disabled={processing}
+                                        disabled={processing || isGeneratingPdf}
                                         className="bg-green-600 hover:bg-green-700 min-w-[160px]"
                                     >
-                                        {processing ? (
+                                        {(processing || isGeneratingPdf) ? (
                                             <>
-                                                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-                                                Transformation...
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                {isGeneratingPdf ? 'Génération PDF...' : 'Transformation...'}
                                             </>
                                         ) : (
                                             <>
@@ -499,7 +557,7 @@ export default function TransformerFacture({
                                         />
                                         {errors.date_facture && (
                                             <div className="flex items-center gap-2 text-sm text-destructive">
-                                                <AlertTriangle className="h-4 w-4" />
+                                                <AlertCircle className="h-4 w-4" />
                                                 {errors.date_facture}
                                             </div>
                                         )}
@@ -524,7 +582,7 @@ export default function TransformerFacture({
                                         />
                                         {errors.date_echeance && (
                                             <div className="flex items-center gap-2 text-sm text-destructive">
-                                                <AlertTriangle className="h-4 w-4" />
+                                                <AlertCircle className="h-4 w-4" />
                                                 {errors.date_echeance}
                                             </div>
                                         )}
@@ -808,13 +866,13 @@ export default function TransformerFacture({
                                     <Button
                                         type="button"
                                         onClick={handleTransformerFacture}
-                                        disabled={processing}
+                                        disabled={processing || isGeneratingPdf}
                                         className="bg-green-600 hover:bg-green-700 min-w-[160px]"
                                     >
-                                        {processing ? (
+                                        {(processing || isGeneratingPdf) ? (
                                             <>
-                                                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
-                                                Transformation...
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                {isGeneratingPdf ? 'Génération PDF...' : 'Transformation...'}
                                             </>
                                         ) : (
                                             <>

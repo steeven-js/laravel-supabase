@@ -14,7 +14,7 @@ use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Settings\MadiniaController;
-use App\Http\Controllers\Settings\ProfileController;
+
 
 // Page d'accueil
 Route::get('/', function () {
@@ -62,24 +62,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('entreprises', EntrepriseController::class);
 
     // Routes pour les services
-    Route::prefix('services')->name('services.')->group(function () {
-        Route::get('/', [ServiceController::class, 'index'])->name('index');
-        Route::get('/create', [ServiceController::class, 'create'])->name('create');
-        Route::post('/', [ServiceController::class, 'store'])->name('store');
-        Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
-        Route::get('/{service}/edit', [ServiceController::class, 'edit'])->name('edit');
-        Route::patch('/{service}', [ServiceController::class, 'update'])->name('update');
-        Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('destroy');
+    Route::resource('services', ServiceController::class);
 
-        // Actions spéciales pour les services
-        Route::patch('/{service}/toggle', [ServiceController::class, 'toggle'])->name('toggle');
-        Route::post('/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('duplicate');
+    // Actions spéciales pour les services
+    Route::patch('services/{service}/toggle', [ServiceController::class, 'toggle'])->name('services.toggle');
+    Route::post('services/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('services.duplicate');
 
-        // Nouvelles routes pour améliorer la navigation
-        Route::get('/catalogue', [ServiceController::class, 'catalogue'])->name('catalogue');
-        Route::get('/actifs', [ServiceController::class, 'actifs'])->name('actifs');
-        Route::get('/statistiques', [ServiceController::class, 'statistiques'])->name('statistiques');
-    });
+    // Nouvelles routes pour améliorer la navigation
+    Route::get('services/catalogue', [ServiceController::class, 'catalogue'])->name('services.catalogue');
+    Route::get('services/actifs', [ServiceController::class, 'actifs'])->name('services.actifs');
+    Route::get('services/statistiques', [ServiceController::class, 'statistiques'])->name('services.statistiques');
 
     // Routes pour les devis
     Route::resource('devis', DevisController::class)->parameters(['devis' => 'devis']);
@@ -125,19 +117,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('factures/{facture}/sync-supabase', [FactureController::class, 'syncSupabase'])->name('factures.sync-supabase');
     Route::post('factures/{facture}/save-react-pdf', [FactureController::class, 'saveReactPdf'])->name('factures.save-react-pdf');
 
-    // Routes pour le profil utilisateur
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     // Routes pour la gestion des avatars
-    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
-    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
-
-    // Routes pour les services
-    Route::resource('services', ServiceController::class);
-    Route::patch('/services/{service}/toggle', [ServiceController::class, 'toggle'])->name('services.toggle');
-    Route::post('/services/{service}/duplicate', [ServiceController::class, 'duplicate'])->name('services.duplicate');
+    Route::post('/profile/avatar', [\App\Http\Controllers\Settings\ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [\App\Http\Controllers\Settings\ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
     // Routes pour l'entreprise Madinia
     Route::get('/madinia', [MadiniaController::class, 'show'])->name('madinia.show');
@@ -223,6 +205,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Routes pour les logs d'emails
         Route::get('email-logs', [MonitoringController::class, 'getEmailLogs'])->name('email-logs');
         Route::post('clean-email-logs', [MonitoringController::class, 'cleanEmailLogs'])->name('clean-email-logs');
+
+        // Routes pour les logs de transformation
+        Route::get('transformation-logs', [MonitoringController::class, 'getTransformationLogs'])->name('transformation-logs');
+        Route::post('clean-transformation-logs', [MonitoringController::class, 'cleanTransformationLogs'])->name('clean-transformation-logs');
         });
     });
 });
