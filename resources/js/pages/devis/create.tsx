@@ -159,7 +159,7 @@ export default function DevisCreate({ clients, services, administrateurs, numero
             service_id: undefined,
             quantite: 1,
             prix_unitaire_ht: 0,
-            taux_tva: 20,
+            taux_tva: 2.5,
             montant_ht: 0,
             montant_tva: 0,
             montant_ttc: 0,
@@ -174,13 +174,22 @@ export default function DevisCreate({ clients, services, administrateurs, numero
         const ligne = { ...newLignes[index] };
 
         if (field === 'service_id') {
-            const service = services.find(s => s.id.toString() === value);
-            if (service) {
-                ligne.service_id = service.id;
-                ligne.service = service;
-                ligne.prix_unitaire_ht = service.prix_ht;
-                ligne.quantite = service.qte_defaut || 1;
-                ligne.description_personnalisee = service.description;
+            if (value === '' || value === null || value === undefined) {
+                // Vider le service
+                ligne.service_id = undefined;
+                ligne.service = undefined;
+                ligne.prix_unitaire_ht = 0;
+                ligne.quantite = 1;
+                ligne.description_personnalisee = '';
+            } else {
+                const service = services.find(s => s.id.toString() === value);
+                if (service) {
+                    ligne.service_id = service.id;
+                    ligne.service = service;
+                    ligne.prix_unitaire_ht = service.prix_ht;
+                    ligne.quantite = service.qte_defaut || 1;
+                    ligne.description_personnalisee = service.description;
+                }
             }
         } else {
             (ligne as any)[field] = value;
@@ -360,6 +369,10 @@ export default function DevisCreate({ clients, services, administrateurs, numero
         }).format(price);
     };
 
+    const formatDecimal = (value: number) => {
+        return value.toFixed(2);
+    };
+
     const { sousTotal, totalTva, total } = calculateTotals();
 
     return (
@@ -408,87 +421,100 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Devis de</h3>
                                     </div>
 
-                                    <div>
-                                        <Label htmlFor="administrateur_id">Administrateur assigné *</Label>
-                                        <Select value={data.administrateur_id || ''} onValueChange={(value) => setData('administrateur_id', value)}>
-                                            <SelectTrigger className="w-full mt-1">
-                                                <SelectValue placeholder="Sélectionner un administrateur" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {administrateurs.map((admin) => (
-                                                    <SelectItem key={admin.id} value={admin.id.toString()}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium text-left">{admin.name}</span>
-                                                            <span className="text-xs text-gray-500">{admin.email}</span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {errors.administrateur_id && (
-                                            <p className="text-sm text-red-500 mt-1">{errors.administrateur_id}</p>
-                                        )}
-                                    </div>
-
                                     <div className="space-y-3">
                                         <div>
-                                            <p className="font-semibold text-gray-900 dark:text-gray-100">
-                                                {madinia?.name || 'Madin.IA'}
-                                            </p>
-                                            {madinia?.adresse && (
-                                                <p className="text-gray-600 dark:text-gray-400 text-sm">{madinia.adresse}</p>
-                                            )}
-                                            {madinia?.pays && (
-                                                <p className="text-gray-600 dark:text-gray-400 text-sm">{madinia.pays}</p>
-                                            )}
-                                            <div className="flex flex-col gap-1 mt-3">
-                                                {madinia?.telephone && (
-                                                    <div className="flex items-center gap-2">
-                                                        <Phone className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                        <span className="text-gray-600 dark:text-gray-400 text-sm">{madinia.telephone}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                    <span className="text-gray-600 dark:text-gray-400 text-sm">
-                                                        {data.administrateur_id ? (() => {
-                                                            const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
-                                                            return admin ? admin.email : 'd.brault@madin-ia.com';
-                                                        })() : 'd.brault@madin-ia.com'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {madinia?.siret && (
-                                                <div className="text-xs text-gray-500 mt-2">
-                                                    SIRET: {madinia.siret}
-                                                </div>
+                                            <Label htmlFor="administrateur_id">Administrateur assigné *</Label>
+                                            <Select value={data.administrateur_id || ''} onValueChange={(value) => setData('administrateur_id', value)}>
+                                                <SelectTrigger className="w-full mt-1">
+                                                    <SelectValue placeholder="Sélectionner un administrateur" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {administrateurs.map((admin) => (
+                                                        <SelectItem key={admin.id} value={admin.id.toString()}>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-left">{admin.name}</span>
+                                                                <span className="text-xs text-gray-500">{admin.email}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.administrateur_id && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.administrateur_id}</p>
                                             )}
                                         </div>
 
-                                        {data.administrateur_id && (
-                                            <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg text-sm space-y-1">
-                                                {(() => {
-                                                    const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
-                                                    return admin ? (
-                                                        <>
-                                                            <p className="font-medium text-gray-900 dark:text-gray-100">{admin.name}</p>
-                                                            <div className="flex items-center gap-2">
-                                                                <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                                <span className="text-gray-600 dark:text-gray-400">{admin.email}</span>
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <p className="font-medium text-gray-900 dark:text-gray-100">David Brault</p>
-                                                            <div className="flex items-center gap-2">
-                                                                <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                                                                <span className="text-gray-600 dark:text-gray-400">d.brault@madin-ia.com</span>
-                                                            </div>
-                                                        </>
-                                                    );
-                                                })()}
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg text-sm space-y-3">
+                                            {/* Informations de l'entreprise */}
+                                            <div className="pb-2 border-b border-gray-200 dark:border-gray-600">
+                                                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Entreprise</h4>
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {madinia?.name || 'Madin.IA'}
+                                                </p>
+                                                {(madinia?.adresse || madinia?.pays) && (
+                                                    <div className="flex items-start gap-2 mt-1">
+                                                        <MapPin className="h-3 w-3 text-gray-400 dark:text-gray-500 mt-0.5" />
+                                                        <div className="text-gray-600 dark:text-gray-400">
+                                                            {madinia?.adresse && <div>{madinia.adresse}</div>}
+                                                            {madinia?.pays && <div>{madinia.pays}</div>}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col gap-1 mt-2">
+                                                    {madinia?.telephone && (
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                            <span className="text-gray-600 dark:text-gray-400">{madinia.telephone}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                        <span className="text-gray-600 dark:text-gray-400">
+                                                            {madinia?.email || 'contact@madinia.fr'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {madinia?.siret && (
+                                                    <div className="text-xs text-gray-500 mt-2">
+                                                        SIRET: {madinia.siret}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
+
+                                            {/* Informations de l'administrateur */}
+                                            {data.administrateur_id ? (
+                                                <div>
+                                                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Administrateur</h4>
+                                                    {(() => {
+                                                        const admin = administrateurs.find(a => a.id.toString() === data.administrateur_id);
+                                                        return admin ? (
+                                                            <>
+                                                                <p className="font-medium text-gray-900 dark:text-gray-100">{admin.name}</p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                                    <span className="text-gray-600 dark:text-gray-400">{admin.email}</span>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <p className="font-medium text-gray-900 dark:text-gray-100">David Brault</p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <Mail className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                                                    <span className="text-gray-600 dark:text-gray-400">d.brault@madin-ia.com</span>
+                                                                </div>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Administrateur</h4>
+                                                    <p className="text-gray-500 dark:text-gray-400 text-sm italic">
+                                                        Sélectionnez un administrateur pour voir ses informations
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -503,7 +529,7 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                         <div>
                                             <Label htmlFor="client_id">Client *</Label>
                                             <Select value={data.client_id || ''} onValueChange={(value) => setData('client_id', value)}>
-                                                <SelectTrigger className="w-full">
+                                                <SelectTrigger className="w-full mt-1">
                                                     <SelectValue placeholder="Sélectionner un client" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -756,12 +782,12 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                         <thead className="bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
                                             <tr>
                                                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-8">#</th>
-                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-56">Service</th>
+                                                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-64">Service</th>
                                                 <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
                                                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">Qté</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Prix unit.</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">TVA</th>
-                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Total</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Prix unit.</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">TVA</th>
+                                                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Total</th>
                                                 <th className="px-3 py-3 w-12"></th>
                                             </tr>
                                         </thead>
@@ -772,24 +798,57 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                                         {index + 1}
                                                     </td>
                                                     <td className="px-3 py-3">
-                                                        <Select
-                                                            value={ligne.service_id?.toString() || ''}
-                                                            onValueChange={(value) => updateLigne(index, 'service_id', value)}
-                                                        >
-                                                            <SelectTrigger className="w-full text-xs">
-                                                                <SelectValue placeholder="Sélectionner..." />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {services.map((service) => (
-                                                                    <SelectItem key={service.id} value={service.id.toString()}>
-                                                                        <div className="flex flex-col">
-                                                                            <span className="text-xs font-medium">{service.nom}</span>
-                                                                            <span className="text-xs text-gray-500">{service.code}</span>
-                                                                        </div>
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
+                                                        {ligne.service ? (
+                                                            <div className="space-y-1">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p
+                                                                            className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate max-w-[200px]"
+                                                                            title={ligne.service.nom}
+                                                                        >
+                                                                            {ligne.service.nom}
+                                                                        </p>
+                                                                        <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                                                            {ligne.service.code}
+                                                                        </p>
+                                                                        {ligne.service.unite && (
+                                                                            <p className="text-xs text-blue-600 dark:text-blue-400 capitalize">
+                                                                                {ligne.service.unite}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => updateLigne(index, 'service_id', '')}
+                                                                        className="ml-2 h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                                                                        title="Changer de service"
+                                                                    >
+                                                                        <Edit3 className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <Select
+                                                                value={ligne.service_id?.toString() || ''}
+                                                                onValueChange={(value) => updateLigne(index, 'service_id', value)}
+                                                            >
+                                                                <SelectTrigger className="w-full text-xs">
+                                                                    <SelectValue placeholder="Sélectionner..." />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {services.map((service) => (
+                                                                        <SelectItem key={service.id} value={service.id.toString()}>
+                                                                            <div className="flex flex-col">
+                                                                                <span className="text-xs font-medium">{service.nom}</span>
+                                                                                <span className="text-xs text-gray-500">{service.code}</span>
+                                                                            </div>
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        )}
                                                     </td>
                                                     <td className="px-3 py-3">
                                                         <Textarea
@@ -814,9 +873,10 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                                             type="number"
                                                             min="0"
                                                             step="0.01"
-                                                            value={ligne.prix_unitaire_ht.toString()}
+                                                            value={ligne.prix_unitaire_ht}
                                                             onChange={(e) => updateLigne(index, 'prix_unitaire_ht', parseFloat(e.target.value) || 0)}
                                                             className="text-right text-xs"
+                                                            placeholder="0,00"
                                                         />
                                                     </td>
                                                     <td className="px-3 py-3">
@@ -825,9 +885,10 @@ export default function DevisCreate({ clients, services, administrateurs, numero
                                                             min="0"
                                                             max="100"
                                                             step="0.1"
-                                                            value={ligne.taux_tva.toString()}
+                                                            value={ligne.taux_tva}
                                                             onChange={(e) => updateLigne(index, 'taux_tva', parseFloat(e.target.value) || 0)}
                                                             className="text-right text-xs"
+                                                            placeholder="20,0"
                                                         />
                                                     </td>
                                                     <td className="px-3 py-3 text-right font-medium text-xs">
