@@ -20,14 +20,14 @@ return new class extends Migration
             $table->date('date_echeance');
             $table->enum('statut', ['brouillon', 'envoyee', 'payee', 'en_retard', 'annulee'])->default('brouillon');
             $table->enum('statut_envoi', ['non_envoyee', 'envoyee', 'echec_envoi'])
-                  ->default('non_envoyee')
-                  ->comment('Statut d\'envoi de la facture au client');
+                ->default('non_envoyee')
+                ->comment('Statut d\'envoi de la facture au client');
             $table->string('pdf_file')->nullable();
             $table->string('pdf_url')->nullable()->comment('URL publique Supabase du PDF');
             $table->string('objet');
             $table->text('description')->nullable();
             $table->decimal('montant_ht', 10, 2)->default(0);
-            $table->decimal('taux_tva', 5, 2)->default(20.00);
+            $table->decimal('taux_tva', 5, 2)->default(8.5);
             $table->decimal('montant_tva', 10, 2)->default(0);
             $table->decimal('montant_ttc', 10, 2)->default(0);
             $table->text('conditions_paiement')->nullable();

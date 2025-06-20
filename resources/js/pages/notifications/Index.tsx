@@ -13,7 +13,19 @@ import {
     AlertCircle,
     Clock
 } from 'lucide-react';
+import { type BreadcrumbItem } from '@/types';
 import { cn } from '@/lib/utils';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+    },
+    {
+        title: 'Notifications',
+        href: '/notifications',
+    },
+];
 
 interface Props {
     notifications: {
@@ -112,19 +124,19 @@ export default function NotificationsIndex({ notifications }: Props) {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Notifications" />
 
-            <div className="page-container">
-                <div className="page-header-card">
-                    <div className="page-header">
-                        <h1 className="page-title">
-                            <AlertCircle className="page-title-icon" />
-                            Notifications
-                        </h1>
-                        <p className="text-muted-foreground">
-                            Gérez toutes vos notifications administratives
-                        </p>
+            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+                {/* En-tête */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+                            <p className="text-muted-foreground">
+                                Gérez toutes vos notifications administratives
+                            </p>
+                        </div>
                     </div>
                 </div>
 

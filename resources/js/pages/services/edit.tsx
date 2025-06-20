@@ -155,8 +155,8 @@ export default function ServiceEdit({ service }: Props) {
         }
     ] as const;
 
-    // Calcul du prix TTC (20% par défaut)
-    const prixTTC = data.prix_ht ? parseFloat(data.prix_ht) * 1.20 : 0;
+    // Calcul du prix TTC (8.5% par défaut)
+    const prixTTC = data.prix_ht ? parseFloat(data.prix_ht) * 1.085 : 0;
     const montantLigneDefaut = data.prix_ht && data.qte_defaut ?
         parseFloat(data.prix_ht) * parseInt(data.qte_defaut) : 0;
 

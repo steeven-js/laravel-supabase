@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('objet')->nullable(); // Nullable - peut être généré depuis les lignes
             $table->text('description')->nullable();
             $table->decimal('montant_ht', 10, 2)->default(0);
-            $table->decimal('taux_tva', 5, 2)->default(20.00);
+            $table->decimal('taux_tva', 5, 2)->default(8.5);
             $table->decimal('montant_tva', 10, 2)->default(0);
             $table->decimal('montant_ttc', 10, 2)->default(0);
             $table->text('conditions')->nullable();

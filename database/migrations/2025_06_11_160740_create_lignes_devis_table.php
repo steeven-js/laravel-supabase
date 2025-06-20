@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('service_id')->nullable()->constrained('services')->onDelete('cascade');
             $table->integer('quantite')->default(1);
             $table->decimal('prix_unitaire_ht', 10, 2)->comment('Prix unitaire HT au moment du devis');
-            $table->decimal('taux_tva', 5, 2)->default(20.00)->comment('Taux TVA applicable');
+            $table->decimal('taux_tva', 5, 2)->default(8.5)->comment('Taux TVA applicable');
             $table->decimal('montant_ht', 10, 2)->comment('Montant total HT de la ligne (quantite * prix_unitaire_ht)');
             $table->decimal('montant_tva', 10, 2)->comment('Montant TVA de la ligne');
             $table->decimal('montant_ttc', 10, 2)->comment('Montant total TTC de la ligne');

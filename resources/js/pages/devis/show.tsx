@@ -266,7 +266,7 @@ export default function DevisShow({ devis, historique, madinia, pdfStatus: initi
             id: 1,
             quantite: 1,
             prix_unitaire_ht: devis.montant_ht,
-            taux_tva: devis.taux_tva || 20,
+            taux_tva: devis.taux_tva || 8.5,
             montant_ht: devis.montant_ht,
             montant_tva: devis.montant_ttc - devis.montant_ht,
             montant_ttc: devis.montant_ttc,

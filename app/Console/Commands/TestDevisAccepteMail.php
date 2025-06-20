@@ -60,7 +60,7 @@ class TestDevisAccepteMail extends Command
             'conditions' => 'Paiement en 3 fois : 40% à la commande, 40% à mi-parcours, 20% à la livraison.',
             'notes' => 'Projet prioritaire - Délai souhaité : 6 semaines',
             'montant_ht' => 8500.00,
-            'taux_tva' => 20.00,
+            'taux_tva' => 8.5,
             'montant_ttc' => 10200.00,
             'date_devis' => now()->subDays(7),
             'date_validite' => now()->addDays(23),

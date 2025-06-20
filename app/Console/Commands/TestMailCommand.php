@@ -47,8 +47,8 @@ class TestMailCommand extends Command
             'objet' => 'Test de devis pour l\'envoi d\'email',
             'description' => 'Description de test pour le devis',
             'montant_ht' => 1000.00,
-            'taux_tva' => 20.0,
-            'montant_ttc' => 1200.00,
+            'taux_tva' => 8.5,
+            'montant_ttc' => 1085.00,
         ]);
 
         $facture = new Facture([
@@ -58,8 +58,8 @@ class TestMailCommand extends Command
             'objet' => 'Test de facture pour l\'envoi d\'email',
             'description' => 'Description de test pour la facture',
             'montant_ht' => 1000.00,
-            'taux_tva' => 20.0,
-            'montant_ttc' => 1200.00,
+            'taux_tva' => 8.5,
+            'montant_ttc' => 1085.00,
             'statut' => 'brouillon',
             'conditions_paiement' => 'Paiement à 30 jours par virement bancaire.',
             'notes' => 'Ceci est une facture de test.',

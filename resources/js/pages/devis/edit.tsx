@@ -245,7 +245,7 @@ export default function DevisEdit({ devis, clients, services, administrateurs, m
             service_id: undefined,
             quantite: 1,
             prix_unitaire_ht: 0,
-            taux_tva: 20,
+            taux_tva: 8.5,
             montant_ht: 0,
             montant_tva: 0,
             montant_ttc: 0,

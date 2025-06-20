@@ -159,7 +159,7 @@ export default function DevisCreate({ clients, services, administrateurs, numero
             service_id: undefined,
             quantite: 1,
             prix_unitaire_ht: 0,
-            taux_tva: 2.5,
+            taux_tva: 8.5,
             montant_ht: 0,
             montant_tva: 0,
             montant_ttc: 0,
