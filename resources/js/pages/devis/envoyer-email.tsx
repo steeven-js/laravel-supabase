@@ -475,6 +475,59 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                 </Card>
 
                 <form onSubmit={handleSubmit}>
+                    {/* Navigation entre les étapes - En bas */}
+                    <Card className="mb-5">
+                        <CardContent className="p-4">
+                            <div className="flex justify-between items-center">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={etapePrecedente}
+                                    disabled={etapeActuelle === 1}
+                                    className="min-w-[120px]"
+                                >
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Précédent
+                                </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Clock className="h-4 w-4" />
+                                    Étape {etapeActuelle} sur {totalEtapes}
+                                </div>
+
+                                {etapeActuelle < totalEtapes ? (
+                                    <Button
+                                        type="button"
+                                        onClick={etapesSuivante}
+                                        className="min-w-[120px]"
+                                    >
+                                        Suivant
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="button"
+                                        onClick={handleEnvoyerEmail}
+                                        disabled={processing}
+                                        className="bg-green-600 hover:bg-green-700 min-w-[150px]"
+                                    >
+                                        {processing ? (
+                                            <>
+                                                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                                                Envoi en cours...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className="mr-2 h-4 w-4" />
+                                                Envoyer le devis
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Étape 1: Vérification des informations */}
                     {etapeActuelle === 1 && (
                         <Card className="transition-all duration-300 animate-in fade-in-50">
@@ -626,19 +679,17 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                                         <div className="space-y-3">
                                             {/* Envoi initial */}
                                             <div
-                                                className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
-                                                    typeEnvoi === 'initial'
+                                                className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${typeEnvoi === 'initial'
                                                         ? 'border-primary bg-primary/5'
                                                         : 'border-border hover:border-primary/50'
-                                                }`}
+                                                    }`}
                                                 onClick={() => setTypeEnvoi('initial')}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
-                                                        typeEnvoi === 'initial'
+                                                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${typeEnvoi === 'initial'
                                                             ? 'border-primary bg-primary'
                                                             : 'border-muted-foreground'
-                                                    }`}>
+                                                        }`}>
                                                         {typeEnvoi === 'initial' && (
                                                             <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
                                                         )}
@@ -660,19 +711,17 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                                             {/* Rappel - seulement si déjà envoyé */}
                                             {!isEnvoiInitial && (
                                                 <div
-                                                    className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
-                                                        typeEnvoi === 'rappel'
+                                                    className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${typeEnvoi === 'rappel'
                                                             ? 'border-primary bg-primary/5'
                                                             : 'border-border hover:border-primary/50'
-                                                    }`}
+                                                        }`}
                                                     onClick={() => setTypeEnvoi('rappel')}
                                                 >
                                                     <div className="flex items-start gap-3">
-                                                        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
-                                                            typeEnvoi === 'rappel'
+                                                        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${typeEnvoi === 'rappel'
                                                                 ? 'border-primary bg-primary'
                                                                 : 'border-muted-foreground'
-                                                        }`}>
+                                                            }`}>
                                                             {typeEnvoi === 'rappel' && (
                                                                 <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
                                                             )}
@@ -690,19 +739,17 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                                             {/* Relance - seulement si déjà envoyé */}
                                             {!isEnvoiInitial && (
                                                 <div
-                                                    className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
-                                                        typeEnvoi === 'relance'
+                                                    className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${typeEnvoi === 'relance'
                                                             ? 'border-primary bg-primary/5'
                                                             : 'border-border hover:border-primary/50'
-                                                    }`}
+                                                        }`}
                                                     onClick={() => setTypeEnvoi('relance')}
                                                 >
                                                     <div className="flex items-start gap-3">
-                                                        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
-                                                            typeEnvoi === 'relance'
+                                                        <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${typeEnvoi === 'relance'
                                                                 ? 'border-primary bg-primary'
                                                                 : 'border-muted-foreground'
-                                                        }`}>
+                                                            }`}>
                                                             {typeEnvoi === 'relance' && (
                                                                 <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
                                                             )}
@@ -767,19 +814,17 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                                                         .map((modele) => (
                                                             <div
                                                                 key={modele.id}
-                                                                className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${
-                                                                    modeleSelectionne?.id === modele.id
+                                                                className={`cursor-pointer transition-all duration-200 border rounded-lg p-3 hover:shadow-sm ${modeleSelectionne?.id === modele.id
                                                                         ? 'border-primary bg-primary/5'
                                                                         : 'border-border hover:border-primary/50'
-                                                                }`}
+                                                                    }`}
                                                                 onClick={() => selectionnerModele(modele)}
                                                             >
                                                                 <div className="flex items-start gap-3">
-                                                                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${
-                                                                        modeleSelectionne?.id === modele.id
+                                                                    <div className={`w-4 h-4 rounded-full border-2 mt-0.5 transition-colors ${modeleSelectionne?.id === modele.id
                                                                             ? 'border-primary bg-primary'
                                                                             : 'border-muted-foreground'
-                                                                    }`}>
+                                                                        }`}>
                                                                         {modeleSelectionne?.id === modele.id && (
                                                                             <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1" />
                                                                         )}
@@ -810,10 +855,10 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                                                         if (typeEnvoi === 'relance') return modele.category === 'relance';
                                                         return false;
                                                     }).length === 0 && (
-                                                        <div className="col-span-full text-center py-4 text-muted-foreground text-sm">
-                                                            Aucun modèle disponible pour ce type d'envoi
-                                                        </div>
-                                                    )}
+                                                            <div className="col-span-full text-center py-4 text-muted-foreground text-sm">
+                                                                Aucun modèle disponible pour ce type d'envoi
+                                                            </div>
+                                                        )}
                                                 </div>
                                             </div>
                                         )}
@@ -1074,7 +1119,7 @@ export default function EnvoyerEmail({ devis, modeles_email, madinia }: Props) {
                     )}
 
                     {/* Navigation entre les étapes - En bas */}
-                    <Card>
+                    <Card className="mt-5">
                         <CardContent className="p-4">
                             <div className="flex justify-between items-center">
                                 <Button
