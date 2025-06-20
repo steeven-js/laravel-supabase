@@ -19,6 +19,9 @@ class FactureClientMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $tries = 3;  // ⭐ Limiter les tentatives
+    public $timeout = 60;  // ⭐ Timeout après 60 secondes
+
     public Devis $devis;
     public Facture $facture;
     public Client $client;
