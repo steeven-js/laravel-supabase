@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Profile settings',
+        title: 'Paramètres du profil',
         href: '/settings/profile',
     },
 ];
@@ -108,7 +108,7 @@ export default function Profile({ mustVerifyEmail, status, user }: {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
+            <Head title="Paramètres du profil" />
 
             <SettingsLayout>
                 <div className="space-y-8">

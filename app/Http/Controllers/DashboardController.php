@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Entreprise;
 use App\Models\Devis;
 use App\Models\Facture;
+use App\Models\User;
 use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 
@@ -41,17 +42,44 @@ class DashboardController extends Controller
 
         // Récupérer les données détaillées pour le filtrage temporel
         $devis_data = Devis::where('archive', false)
-            ->select('id', 'statut', 'created_at')
+            ->select('id', 'statut', 'created_at', 'administrateur_id')
+            ->with('administrateur:id,name')
             ->get();
 
         $factures_data = Facture::where('archive', false)
             ->select('id', 'statut', 'montant_ttc', 'created_at')
             ->get();
 
+        // Données pour le graphique des devis par administrateur
+        $devis_par_admin = Devis::where('archive', false)
+            ->whereNotNull('administrateur_id')
+            ->with('administrateur.userRole:id,name')
+            ->get()
+            ->groupBy('administrateur_id')
+            ->map(function ($devis, $adminId) {
+                $admin = $devis->first()->administrateur;
+                // Normaliser le nom (éviter les doublons de casse)
+                $nomNormalise = trim($admin->name ?? 'Admin inconnu');
+
+                return [
+                    'admin_id' => $adminId,
+                    'admin_nom' => $nomNormalise,
+                    'admin_email' => $admin->email ?? '',
+                    'admin_role' => $admin->userRole->name ?? 'admin',
+                    'nombre_devis' => $devis->count(),
+                    'devis_acceptes' => $devis->where('statut', 'accepte')->count(),
+                    'devis_en_cours' => $devis->whereIn('statut', ['brouillon', 'en_attente', 'envoye'])->count(),
+                ];
+            })
+            ->sortByDesc('nombre_devis')
+            ->values()
+            ->toArray();
+
         return Inertia::render('dashboard', [
             'stats' => $stats,
             'devis_data' => $devis_data,
             'factures_data' => $factures_data,
+            'devis_par_admin' => $devis_par_admin,
             'isLocal' => App::environment('local')
         ]);
     }

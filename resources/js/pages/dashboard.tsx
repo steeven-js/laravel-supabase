@@ -53,6 +53,11 @@ interface DevisItem {
     id: number;
     statut: string;
     created_at: string;
+    administrateur_id?: number;
+    administrateur?: {
+        id: number;
+        name: string;
+    };
 }
 
 interface FactureItem {
@@ -62,10 +67,21 @@ interface FactureItem {
     created_at: string;
 }
 
+interface DevisParAdmin {
+    admin_id: number;
+    admin_nom: string;
+    admin_email: string;
+    admin_role: string;
+    nombre_devis: number;
+    devis_acceptes: number;
+    devis_en_cours: number;
+}
+
 interface Props {
     stats: DashboardStats;
     devis_data?: DevisItem[];
     factures_data?: FactureItem[];
+    devis_par_admin?: DevisParAdmin[];
     isLocal: boolean;
     auth?: {
         user?: {
@@ -96,7 +112,20 @@ const COLORS = {
         payee: '#10b981',     // emerald-500
         en_retard: '#ef4444', // red-500
         annulee: '#6b7280',   // gray-500
-    }
+    },
+    // Palette de couleurs pour les administrateurs
+    admins: [
+        '#3b82f6', // blue-500
+        '#10b981', // emerald-500
+        '#f59e0b', // amber-500
+        '#ef4444', // red-500
+        '#8b5cf6', // violet-500
+        '#06b6d4', // cyan-500
+        '#f97316', // orange-500
+        '#84cc16', // lime-500
+        '#ec4899', // pink-500
+        '#6366f1', // indigo-500
+    ]
 };
 
 // Fonctions utilitaires déclarées en dehors du composant
@@ -122,7 +151,7 @@ const formatStatut = (type: 'devis' | 'facture', statut: string) => {
     }
 };
 
-export default function Dashboard({ stats, devis_data = [], factures_data = [], isLocal, auth }: Props) {
+export default function Dashboard({ stats, devis_data = [], factures_data = [], devis_par_admin = [], isLocal, auth }: Props) {
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
     const { post } = useForm();
 
@@ -247,6 +276,19 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
         return monthlyData;
     }, [devis_data, factures_data, monthOptions]);
 
+    // Données pour le graphique des devis par administrateur
+    const devisParAdminChartData = useMemo(() => {
+        return devis_par_admin.map((admin, index) => ({
+            name: admin.admin_nom,
+            value: admin.nombre_devis,
+            acceptes: admin.devis_acceptes,
+            en_cours: admin.devis_en_cours,
+            email: admin.admin_email,
+            role: admin.admin_role,
+            fill: COLORS.admins[index % COLORS.admins.length]
+        }));
+    }, [devis_par_admin]);
+
     const handleDevAction = (action: string, route: string) => {
         if (confirm(`Êtes-vous sûr de vouloir ${action} ?`)) {
             setLoadingAction(action);
@@ -295,6 +337,46 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
                             {`${entry.dataKey}: ${entry.value}`}
                         </p>
                     ))}
+                </div>
+            );
+        }
+        return null;
+    };
+
+    // Tooltip spécialisé pour les administrateurs
+    const AdminTooltip = ({ active, payload }: any) => {
+        if (active && payload?.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-w-xs">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: data.fill }}
+                        />
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                            {data.name}
+                        </p>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Email: {data.email}
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Rôle: {data.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                        </p>
+                        <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
+                            <p className="font-medium text-blue-600 dark:text-blue-400">
+                                Total: {data.value} devis
+                            </p>
+                            <p className="text-green-600 dark:text-green-400">
+                                Acceptés: {data.acceptes}
+                            </p>
+                            <p className="text-orange-600 dark:text-orange-400">
+                                En cours: {data.en_cours}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -629,10 +711,106 @@ export default function Dashboard({ stats, devis_data = [], factures_data = [], 
                                 </Link>
                             </Button>
                         </CardContent>
-                    </Card>
-                </div>
+                                    </Card>
+            </div>
 
-                {/* Graphique d'évolution annuelle */}
+            {/* Graphique des devis par administrateur */}
+            <Card className="border-0 shadow-md">
+                <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-indigo-600" />
+                        Devis par administrateur
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {devisParAdminChartData.length > 0 ? (
+                        <div className="space-y-6">
+                            {/* Graphique en barres */}
+                            <div className="h-80">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={devisParAdminChartData}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                        <XAxis
+                                            dataKey="name"
+                                            className="text-sm"
+                                            angle={-45}
+                                            textAnchor="end"
+                                            height={80}
+                                            interval={0}
+                                        />
+                                        <YAxis className="text-sm" />
+                                        <Tooltip content={<AdminTooltip />} />
+                                        <Bar
+                                            dataKey="value"
+                                            name="Nombre de devis"
+                                            radius={[2, 2, 0, 0]}
+                                        >
+                                            {devisParAdminChartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Légende avec détails */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {devisParAdminChartData.map((admin, index) => (
+                                    <div
+                                        key={admin.name}
+                                        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+                                    >
+                                        <div
+                                            className="w-4 h-4 rounded-full"
+                                            style={{ backgroundColor: admin.fill }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm truncate">
+                                                {admin.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {admin.value} devis ({admin.acceptes} acceptés)
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="h-80 flex items-center justify-center text-muted-foreground">
+                            <div className="text-center">
+                                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                <p>Aucun devis assigné aux administrateurs</p>
+                                <p className="text-sm mt-1">
+                                    Les devis doivent être assignés à un administrateur pour apparaître ici
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    <Separator className="my-4" />
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <Button variant="outline" size="sm" asChild className="flex-1">
+                            <Link href="/devis">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Voir tous les devis
+                            </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild className="flex-1">
+                            <Link href="/admin/users/admins">
+                                <Users className="mr-2 h-4 w-4" />
+                                Gérer les admins
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Graphique d'évolution annuelle */}
                 <Card className="border-0 shadow-md">
                     <CardHeader className="pb-4">
                         <CardTitle className="flex items-center gap-2">
