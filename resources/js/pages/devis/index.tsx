@@ -46,6 +46,11 @@ interface Devis {
             nom_commercial?: string;
         };
     };
+    administrateur?: {
+        id: number;
+        name: string;
+        email: string;
+    };
     created_at: string;
 }
 
@@ -658,12 +663,21 @@ export default function DevisIndex({ devis }: Props) {
                                                 />
                                             </TableCell>
                                             <TableCell className="font-medium whitespace-nowrap">
-                                                <Link
-                                                    href={`/devis/${item.id}`}
-                                                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                                                >
-                                                    {item.numero_devis}
-                                                </Link>
+                                                <div className="space-y-1">
+                                                    <div>
+                                                        <Link
+                                                            href={`/devis/${item.id}`}
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                        >
+                                                            {item.numero_devis}
+                                                        </Link>
+                                                    </div>
+                                                    {item.administrateur && (
+                                                        <div className="text-sm text-muted-foreground">
+                                                            {item.administrateur.name}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="max-w-[200px] truncate">

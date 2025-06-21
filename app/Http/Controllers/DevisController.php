@@ -51,7 +51,7 @@ class DevisController extends Controller
      */
     public function index()
     {
-        $devis = Devis::with(['client.entreprise'])
+        $devis = Devis::with(['client.entreprise', 'administrateur'])
             ->actifs()
             ->orderBy('created_at', 'desc')
             ->get()
@@ -69,6 +69,7 @@ class DevisController extends Controller
                     'montant_ttc' => (float) $devis->montant_ttc,
                     'peut_etre_envoye' => $devis->peutEtreEnvoye(),
                     'client' => [
+                        'id' => $devis->client->id,
                         'nom' => $devis->client->nom,
                         'prenom' => $devis->client->prenom,
                         'email' => $devis->client->email,
@@ -77,6 +78,11 @@ class DevisController extends Controller
                             'nom_commercial' => $devis->client->entreprise->nom_commercial,
                         ] : null
                     ],
+                    'administrateur' => $devis->administrateur ? [
+                        'id' => $devis->administrateur->id,
+                        'name' => $devis->administrateur->name,
+                        'email' => $devis->administrateur->email,
+                    ] : null,
                     'created_at' => $devis->created_at->toISOString(),
                 ];
             });
